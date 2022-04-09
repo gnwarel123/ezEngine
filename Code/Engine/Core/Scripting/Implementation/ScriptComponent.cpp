@@ -162,3 +162,49 @@ bool ezScriptComponent::GetParameter(const char* szKey, ezVariant& out_value) co
   out_value = m_Parameters.GetValue(it);
   return true;
 }
+
+void ezScriptComponent::InstantiateScript()
+{
+  ClearCaches();
+
+  ezResourceLock<ezScriptResource> pScript(m_hScript, ezResourceAcquireMode::BlockTillLoaded_NeverFail);
+  if (pScript.GetAcquireResult() == ezResourceAcquireResult::MissingFallback)
+  {
+    ezLog::Error("Failed to load script '{}'", GetScriptFile());
+    return;
+  }
+
+  const ezRTTI* pScriptType = pScript->GetScriptType();
+  if (pScriptType->IsDerivedFrom(ezGetStaticRTTI<ezComponent>()) == false)
+  {
+    ezLog::Error("Script type '{}' is not a component", pScriptType->GetTypeName());
+    return;
+  }
+
+  for (auto pFunction : pScriptType->GetFunctions())
+  {
+    // only void function with 0 arguments
+    if (pFunction->GetReturnType() != nullptr || pFunction->GetArgumentCount() > 0)
+      continue;
+
+    ezTempHashedString sFunctionName(pFunction->GetPropertyName());
+
+    if (sFunctionName == ezTempHashedString("Initialize"))
+    {
+      m_pInitializeFunction = pFunction;
+    }
+  }
+
+  m_pMessageDispatchType = pScriptType;
+  
+  m_pContext = pScript->CreateScriptContext();
+  m_pContext->ApplyParameters(m_Parameters);  
+}
+
+void ezScriptComponent::ClearCaches()
+{
+  m_pContext = nullptr;
+  m_pInitializeFunction = nullptr;
+
+  m_pMessageDispatchType = GetDynamicRTTI();
+}

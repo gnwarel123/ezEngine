@@ -2,7 +2,6 @@
 
 #include <Core/Scripting/ScriptResource.h>
 #include <Core/World/EventMessageHandlerComponent.h>
-#include <Foundation/Containers/ArrayMap.h>
 #include <Foundation/Types/RangeView.h>
 
 using ezScriptComponentManager = ezComponentManager<class ezScriptComponent, ezBlockStorageType::FreeList>;
@@ -59,6 +58,9 @@ public:
   bool GetParameter(const char* szKey, ezVariant& out_value) const;
 
 private:
+  void InstantiateScript();
+  void ClearCaches();
+
   struct EventSender
   {
     const ezRTTI* m_pMsgType = nullptr;
@@ -71,4 +73,7 @@ private:
 
   ezScriptResourceHandle m_hScript;
   ezTime m_UpdateInterval = ezTime::Zero();
+
+  ezUniquePtr<ezScriptContext> m_pContext;
+  ezAbstractFunctionProperty* m_pInitializeFunction = nullptr;
 };
