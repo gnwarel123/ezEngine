@@ -6,11 +6,12 @@
 
 using ezScriptResourceHandle = ezTypedResourceHandle<class ezScriptResource>;
 
-class EZ_CORE_DLL ezScriptContext
+class EZ_CORE_DLL ezScriptInstance
 {
 public:
-  virtual ~ezScriptContext() {}
+  virtual ~ezScriptInstance() {}
   virtual void ApplyParameters(const ezArrayMap<ezHashedString, ezVariant>& parameters) = 0;
+  virtual const ezRTTI* GetType() const = 0;
 };
 
 class EZ_CORE_DLL ezScriptResource : public ezResource
@@ -22,10 +23,5 @@ public:
   ezScriptResource();
 
   virtual bool InstantiateWhenSimulationStarted() const { return false; }
-  virtual ezUniquePtr<ezScriptContext> CreateScriptContext() const = 0;
-
-  const ezRTTI* GetScriptType() const { return m_pRtti.Borrow(); }
-
-private:
-  ezUniquePtr<ezRTTI> m_pRtti;
+  virtual ezUniquePtr<ezScriptInstance> Instantiate(const ezReflectedClass* pContext) const = 0;
 };

@@ -74,6 +74,6 @@ private:
   ezScriptResourceHandle m_hScript;
   ezTime m_UpdateInterval = ezTime::Zero();
 
-  ezUniquePtr<ezScriptContext> m_pContext;
+  ezUniquePtr<ezScriptInstance> m_pInstance;
   ezAbstractFunctionProperty* m_pInitializeFunction = nullptr;
 };
