@@ -5,6 +5,10 @@ export enum CameraMode {  PerspectiveFixedFovX = 1, PerspectiveFixedFovY = 2, Or
 export enum CameraUsageHint {  None = 0, MainView = 1, EditorView = 2, RenderTarget = 3, Culling = 4, Thumbnail = 7 }
 export enum GreyBoxShape {  Box = 0, RampX = 1, RampY = 2, Column = 3, StairsX = 4, StairsY = 5, ArchX = 6, ArchY = 7, SpiralStairs = 8 }
 export enum InputMessageGranularity {  PressOnly = 0, PressAndRelease = 1, PressReleaseAndDown = 2 }
+export enum JoltConstraintDriveMode {  NoDrive = 0, DriveVelocity = 1, DrivePosition = 2 }
+export enum JoltConstraintLimitMode {  NoLimit = 0, HardLimit = 1 }
+export enum JoltRagdollStart {  BindPose = 0, WaitForPose = 1, Wait = 2 }
+export enum JoltSteppingMode {  Variable = 0, Fixed = 1, SemiFixed = 2 }
 export enum OnComponentFinishedAction {  None = 0, DeleteComponent = 1, DeleteGameObject = 2 }
 export enum OnComponentFinishedAction2 {  None = 0, DeleteComponent = 1, DeleteGameObject = 2, Restart = 3 }
 export enum PropertyAnimMode {  Once = 0, Loop = 1, BackAndForth = 2 }
