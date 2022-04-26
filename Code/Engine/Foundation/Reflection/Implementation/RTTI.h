@@ -140,7 +140,7 @@ public:
                                                        "you may have forgotten to instantiate an ezPlugin object inside your plugin DLL.");
 
     const ezUInt32 uiIndex = id - m_uiMsgIdOffset;
-    return uiIndex < m_DynamicMessageHandlers.GetCount() && m_DynamicMessageHandlers[uiIndex] != nullptr;
+    return uiIndex < m_DynamicMessageHandlers.GetCount() && m_DynamicMessageHandlers.GetData()[uiIndex] != nullptr;
   }
 
   EZ_ALWAYS_INLINE const ezArrayPtr<ezMessageSenderInfo>& GetMessageSender() const { return m_MessageSenders; }

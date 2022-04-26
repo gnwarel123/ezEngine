@@ -334,7 +334,7 @@ bool ezRTTI::DispatchMessage(void* pInstance, ezMessage& msg) const
   // m_DynamicMessageHandlers contains all message handlers of this type and all base types
   if (uiIndex < m_DynamicMessageHandlers.GetCount())
   {
-    ezAbstractMessageHandler* pHandler = m_DynamicMessageHandlers[uiIndex];
+    ezAbstractMessageHandler* pHandler = m_DynamicMessageHandlers.GetData()[uiIndex];
     if (pHandler != nullptr)
     {
       (*pHandler)(pInstance, msg);
@@ -356,7 +356,7 @@ bool ezRTTI::DispatchMessage(const void* pInstance, ezMessage& msg) const
   // m_DynamicMessageHandlers contains all message handlers of this type and all base types
   if (uiIndex < m_DynamicMessageHandlers.GetCount())
   {
-    ezAbstractMessageHandler* pHandler = m_DynamicMessageHandlers[uiIndex];
+    ezAbstractMessageHandler* pHandler = m_DynamicMessageHandlers.GetData()[uiIndex];
     if (pHandler != nullptr && pHandler->IsConst())
     {
       (*pHandler)(pInstance, msg);
