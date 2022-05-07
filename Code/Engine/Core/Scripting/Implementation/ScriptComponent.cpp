@@ -10,7 +10,7 @@ EZ_BEGIN_COMPONENT_TYPE(ezScriptComponent, 1, ezComponentMode::Static)
   EZ_BEGIN_PROPERTIES
   {
     EZ_ACCESSOR_PROPERTY("UpdateInterval", GetUpdateInterval, SetUpdateInterval)->AddAttributes(new ezClampValueAttribute(ezTime::Zero(), ezVariant())),
-    EZ_ACCESSOR_PROPERTY("Script", GetScriptFile, SetScriptFile)->AddAttributes(new ezAssetBrowserAttribute("Script")),
+    EZ_ACCESSOR_PROPERTY("Script", GetScriptFile, SetScriptFile)->AddAttributes(new ezAssetBrowserAttribute("TypeScript")),
     EZ_MAP_ACCESSOR_PROPERTY("Parameters", GetParameters, GetParameter, SetParameter, RemoveParameter)->AddAttributes(new ezExposedParametersAttribute("Script")),
   }
   EZ_END_PROPERTIES;
@@ -71,6 +71,13 @@ void ezScriptComponent::DeserializeComponent(ezWorldReader& stream)
 void ezScriptComponent::Initialize()
 {
   SUPER::Initialize();
+
+  if (m_hScript.IsValid())
+  {
+    InstantiateScript();
+  }
+
+  CallScriptFunction(m_pInitializeFunction);
 }
 
 void ezScriptComponent::BroadcastEventMsg(ezEventMessage& msg)
@@ -92,7 +99,15 @@ void ezScriptComponent::BroadcastEventMsg(ezEventMessage& msg)
 
 void ezScriptComponent::SetScript(const ezScriptResourceHandle& hScript)
 {
+  if (m_hScript == hScript)
+    return;
+
   m_hScript = hScript;
+
+  if (m_hScript.IsValid())
+  {
+    InstantiateScript();
+  }
 }
 
 void ezScriptComponent::SetScriptFile(const char* szFile)
@@ -209,4 +224,13 @@ void ezScriptComponent::ClearCaches()
   m_pInitializeFunction = nullptr;
 
   m_pMessageDispatchType = GetDynamicRTTI();
+}
+
+void ezScriptComponent::CallScriptFunction(ezAbstractFunctionProperty* pFunction)
+{
+  if (pFunction != nullptr)
+  {
+    ezVariant returnValue;
+    pFunction->Execute(m_pInstance.Borrow(), ezArrayPtr<ezVariant>(), returnValue);
+  }
 }

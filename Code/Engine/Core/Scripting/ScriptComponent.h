@@ -60,6 +60,7 @@ public:
 private:
   void InstantiateScript();
   void ClearCaches();
+  void CallScriptFunction(ezAbstractFunctionProperty* pFunction);
 
   struct EventSender
   {
