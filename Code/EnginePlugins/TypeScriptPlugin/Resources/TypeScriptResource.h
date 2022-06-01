@@ -7,7 +7,6 @@ class EZ_TYPESCRIPTPLUGIN_DLL ezTypeScriptInstance : public ezScriptInstance
 {
 public:
   virtual void ApplyParameters(const ezArrayMap<ezHashedString, ezVariant>& parameters) override;
-  virtual const ezRTTI* GetType() const override;
 };
 
 class EZ_TYPESCRIPTPLUGIN_DLL ezTypeScriptResource : public ezScriptResource

@@ -1,15 +1,11 @@
 #include <TypeScriptPlugin/TypeScriptPluginPCH.h>
 
+#include <Core/World/Component.h>
 #include <Foundation/Configuration/Startup.h>
 #include <TypeScriptPlugin/Resources/TypeScriptResource.h>
 
 void ezTypeScriptInstance::ApplyParameters(const ezArrayMap<ezHashedString, ezVariant>& parameters)
 {
-}
-
-const ezRTTI* ezTypeScriptInstance::GetType() const
-{
-  return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -45,6 +41,10 @@ ezTypeScriptResource::~ezTypeScriptResource() = default;
 
 ezResourceLoadDesc ezTypeScriptResource::UnloadData(Unload WhatToUnload)
 {
+  m_pType = nullptr;
+  m_Functions.Clear();
+  m_MessageHandlers.Clear();
+
   ezResourceLoadDesc ld;
   ld.m_State = ezResourceState::Unloaded;
   ld.m_uiQualityLevelsDiscardable = 0;
@@ -75,7 +75,10 @@ ezResourceLoadDesc ezTypeScriptResource::UpdateContent(ezStreamReader* pStream)
   ezAssetFileHeader AssetHash;
   AssetHash.Read(*pStream).IgnoreResult();
 
-  // TODO loading here
+  const char* name = "TypescriptTest";
+  const ezRTTI* pParentType = ezGetStaticRTTI<ezComponent>();
+
+  CreateScriptType(name, pParentType);  
 
   ld.m_State = ezResourceState::Loaded;
 

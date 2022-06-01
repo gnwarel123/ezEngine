@@ -11,7 +11,7 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{9663339125735048354,4805506592402586356}}
-		u4 %Hash{5792137735484553573}
+		u4 %Hash{1525788200191515384}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %References
@@ -169,7 +169,7 @@ o
 		b %HandleGlobalEvents{0}
 		VarDict %Parameters{}
 		b %PassThroughUnhandledEvents{0}
-		s %Script{""}
+		s %Script{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
 		Time %UpdateInterval{d{0}}
 	}
 }
@@ -434,7 +434,7 @@ o
 		s %PluginName{"Static"}
 		VarArray %Properties{}
 		s %TypeName{"ezScriptComponent"}
-		u3 %TypeSize{176}
+		u3 %TypeSize{200}
 		u3 %TypeVersion{1}
 	}
 }

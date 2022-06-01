@@ -189,9 +189,7 @@ void ezScriptComponent::InstantiateScript()
     return;
   }
 
-  auto pInstance = pScript->Instantiate(this);
-
-  const ezRTTI* pScriptType = pInstance->GetType();
+  const ezRTTI* pScriptType = pScript->GetType();
   if (pScriptType->IsDerivedFrom(ezGetStaticRTTI<ezComponent>()) == false)
   {
     ezLog::Error("Script type '{}' is not a component", pScriptType->GetTypeName());
@@ -214,7 +212,7 @@ void ezScriptComponent::InstantiateScript()
 
   m_pMessageDispatchType = pScriptType;
   
-  m_pInstance = std::move(pInstance);
+  m_pInstance = pScript->Instantiate(this);
   m_pInstance->ApplyParameters(m_Parameters);
 }
 
