@@ -183,7 +183,7 @@ void ezScriptComponent::InstantiateScript()
   ClearCaches();
 
   ezResourceLock<ezScriptResource> pScript(m_hScript, ezResourceAcquireMode::BlockTillLoaded_NeverFail);
-  if (pScript.GetAcquireResult() == ezResourceAcquireResult::MissingFallback)
+  if (pScript.GetAcquireResult() != ezResourceAcquireResult::Final)
   {
     ezLog::Error("Failed to load script '{}'", GetScriptFile());
     return;

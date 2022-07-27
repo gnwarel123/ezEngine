@@ -844,6 +844,22 @@ export class RotorComponent extends TransformComponent
   set Deceleration(value: number) { __CPP_ComponentProperty_set(this, 3503289027, value); }
 }
 
+export class ScriptComponent extends EventMessageHandlerComponent
+{
+  public static GetTypeNameHash(): number { return 1614462437; }
+  get UpdateInterval(): number { return __CPP_ComponentProperty_get(this, 3597189607); }
+  set UpdateInterval(value: number) { __CPP_ComponentProperty_set(this, 3597189607, value); }
+  get Script(): string { return __CPP_ComponentProperty_get(this, 3623751459); }
+  set Script(value: string) { __CPP_ComponentProperty_set(this, 3623751459, value); }
+}
+
+export class ScriptExtension_Component extends Component
+{
+  public static GetTypeNameHash(): number { return 939037706; }
+  get IsActive(): boolean { return __CPP_ComponentProperty_get(this, 305355179); }
+  set IsActive(value: boolean) { __CPP_ComponentProperty_set(this, 305355179, value); }
+}
+
 export class SensorComponent extends Component
 {
   public static GetTypeNameHash(): number { return 1950355900; }
