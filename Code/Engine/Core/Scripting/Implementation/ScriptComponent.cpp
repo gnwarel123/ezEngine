@@ -77,7 +77,35 @@ void ezScriptComponent::Initialize()
     InstantiateScript();
   }
 
-  CallScriptFunction(m_pInitializeFunction);
+  CallScriptFunction(m_pFunctionTable->m_pInitializeFunction);
+}
+
+void ezScriptComponent::Deinitialize()
+{
+  SUPER::Deinitialize();
+
+  CallScriptFunction(m_pFunctionTable->m_pDeinitializeFunction);
+}
+
+void ezScriptComponent::OnActivated()
+{
+  SUPER::OnActivated();
+
+  CallScriptFunction(m_pFunctionTable->m_pOnActivatedFunction);
+}
+
+void ezScriptComponent::OnDeactivated()
+{
+  SUPER::OnDeactivated();
+
+  CallScriptFunction(m_pFunctionTable->m_pOnDeactivatedFunction);
+}
+
+void ezScriptComponent::OnSimulationStarted()
+{
+  SUPER::OnSimulationStarted();
+
+  CallScriptFunction(m_pFunctionTable->m_pOnSimulationStartedFunction);
 }
 
 void ezScriptComponent::BroadcastEventMsg(ezEventMessage& msg)
@@ -104,7 +132,7 @@ void ezScriptComponent::SetScript(const ezScriptResourceHandle& hScript)
 
   m_hScript = hScript;
 
-  if (m_hScript.IsValid())
+  if (IsActiveAndInitialized() && m_hScript.IsValid())
   {
     InstantiateScript();
   }
@@ -145,7 +173,8 @@ const ezRangeView<const char*, ezUInt32> ezScriptComponent::GetParameters() cons
     { return m_Parameters.GetCount(); },
     [](ezUInt32& it)
     { ++it; },
-    [this](const ezUInt32& it) -> const char* { return m_Parameters.GetKey(it).GetString().GetData(); });
+    [this](const ezUInt32& it) -> const char*
+    { return m_Parameters.GetKey(it).GetString().GetData(); });
 }
 
 void ezScriptComponent::SetParameter(const char* szKey, const ezVariant& value)
@@ -196,37 +225,27 @@ void ezScriptComponent::InstantiateScript()
     return;
   }
 
-  for (auto pFunction : pScriptType->GetFunctions())
-  {
-    // only void function with 0 arguments
-    if (pFunction->GetReturnType() != nullptr || pFunction->GetArgumentCount() > 0)
-      continue;
-
-    ezTempHashedString sFunctionName(pFunction->GetPropertyName());
-
-    if (sFunctionName == ezTempHashedString("Initialize"))
-    {
-      m_pInitializeFunction = pFunction;
-    }
-  }
-
+  m_pFunctionTable = static_cast<const ezScriptFunctionTable_Component*>(pScript->GetFunctionTable());
   m_pMessageDispatchType = pScriptType;
-  
-  m_pInstance = pScript->Instantiate(this);
-  m_pInstance->ApplyParameters(m_Parameters);
+
+  m_pInstance = pScript->Instantiate(*this, *GetWorld());
+  if (m_pInstance != nullptr)
+  {
+    m_pInstance->ApplyParameters(m_Parameters);
+  }
 }
 
 void ezScriptComponent::ClearCaches()
 {
   m_pInstance = nullptr;
-  m_pInitializeFunction = nullptr;
+  m_pFunctionTable = nullptr;
 
   m_pMessageDispatchType = GetDynamicRTTI();
 }
 
 void ezScriptComponent::CallScriptFunction(ezAbstractFunctionProperty* pFunction)
 {
-  if (pFunction != nullptr)
+  if (m_pInstance != nullptr && pFunction != nullptr)
   {
     ezVariant returnValue;
     pFunction->Execute(m_pInstance.Borrow(), ezArrayPtr<ezVariant>(), returnValue);

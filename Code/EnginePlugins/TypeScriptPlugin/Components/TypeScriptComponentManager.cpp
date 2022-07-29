@@ -20,6 +20,8 @@ void ezTypeScriptComponentManager::Initialize()
   desc.m_Phase = UpdateFunctionDesc::Phase::PreAsync;
 
   RegisterUpdateFunction(desc);
+
+  m_TsBinding.Initialize(*GetWorld()).IgnoreResult();
 }
 
 void ezTypeScriptComponentManager::Deinitialize()

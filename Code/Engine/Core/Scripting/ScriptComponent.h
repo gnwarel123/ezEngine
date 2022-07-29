@@ -17,10 +17,10 @@ protected:
   virtual void SerializeComponent(ezWorldWriter& stream) const override;
   virtual void DeserializeComponent(ezWorldReader& stream) override;
   virtual void Initialize() override;
-  /*virtual void Deinitialize() override;
+  virtual void Deinitialize() override;
   virtual void OnActivated() override;
   virtual void OnDeactivated() override;
-  virtual void OnSimulationStarted() override;*/
+  virtual void OnSimulationStarted() override;
 
   /*virtual bool OnUnhandledMessage(ezMessage& msg, bool bWasPostedMsg) override;
   virtual bool OnUnhandledMessage(ezMessage& msg, bool bWasPostedMsg) const override;
@@ -76,5 +76,5 @@ private:
   ezTime m_UpdateInterval = ezTime::Zero();
 
   ezUniquePtr<ezScriptInstance> m_pInstance;
-  ezAbstractFunctionProperty* m_pInitializeFunction = nullptr;
+  const ezScriptFunctionTable_Component* m_pFunctionTable = nullptr;
 };

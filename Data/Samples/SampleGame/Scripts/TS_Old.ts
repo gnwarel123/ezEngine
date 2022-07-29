@@ -17,13 +17,24 @@ export class TS_Old extends ez.TickedTypescriptComponent {
         ez.TypescriptComponent.RegisterMessageHandler(ez.MsgSetColor, "OnMsgSetColor");
     }
 
-    // Initialize(): void { }
-    // Deinitialize(): void { }
-    // OnActivated(): void { }
-    // OnDeactivated(): void { }
+    Initialize(): void {
+        ez.Log.Info(this.GetOwner().GetName() + ": Initialized called. My color is: " + JSON.stringify(this.TestColor));
+    }
+
+    Deinitialize(): void {
+        ez.Log.Info(this.GetOwner().GetName() + ": Deinitialized called");
+    }
+
+    OnActivated(): void {
+        ez.Log.Info(this.GetOwner().GetName() + ": OnActivated called");
+    }
+
+    OnDeactivated(): void {
+        ez.Log.Info(this.GetOwner().GetName() + ": OnDeactivated called");
+    }
 
     OnSimulationStarted(): void {
-        //this.SetTickInterval(ez.Time.Milliseconds(100));
+        ez.Log.Info(this.GetOwner().GetName() + ": OnSimulationStarted called");
     }
 
     OnMsgSetColor(msg: ez.MsgSetColor): void {

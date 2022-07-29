@@ -11,7 +11,7 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{9663339125735048354,4805506592402586356}}
-		u4 %Hash{1525788200191515384}
+		u4 %Hash{10988897075022617949}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %References
@@ -111,7 +111,7 @@ o
 		b %HandleGlobalEvents{0}
 		VarDict %Parameters
 		{
-			Color %TestColor{f{0,0x0000803F,0xD414A93A,0x0000803F}}
+			Color %TestColor{f{0,0x0000803F,0,0x0000803F}}
 		}
 		b %PassThroughUnhandledEvents{0}
 		s %Script{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
@@ -167,7 +167,10 @@ o
 	{
 		b %Active{1}
 		b %HandleGlobalEvents{0}
-		VarDict %Parameters{}
+		VarDict %Parameters
+		{
+			Color %TestColor{f{0,0,0x0000803F,0x0000803F}}
+		}
 		b %PassThroughUnhandledEvents{0}
 		s %Script{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
 		Time %UpdateInterval{d{0}}
