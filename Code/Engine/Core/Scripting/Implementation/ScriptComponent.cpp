@@ -1,6 +1,7 @@
 #include <Core/CorePCH.h>
 
 #include <Core/Scripting/ScriptComponent.h>
+#include <Core/Scripting/ScriptWorldModule.h>
 #include <Core/WorldSerializer/WorldReader.h>
 #include <Core/WorldSerializer/WorldWriter.h>
 
@@ -158,6 +159,11 @@ const char* ezScriptComponent::GetScriptFile() const
 void ezScriptComponent::SetUpdateInterval(ezTime interval)
 {
   m_UpdateInterval = interval;
+
+  if (IsActiveAndInitialized())
+  {
+    UpdateScheduling();
+  }
 }
 
 ezTime ezScriptComponent::GetUpdateInterval() const
@@ -209,7 +215,7 @@ bool ezScriptComponent::GetParameter(const char* szKey, ezVariant& out_value) co
 
 void ezScriptComponent::InstantiateScript()
 {
-  ClearCaches();
+  ClearInstance();
 
   ezResourceLock<ezScriptResource> pScript(m_hScript, ezResourceAcquireMode::BlockTillLoaded_NeverFail);
   if (pScript.GetAcquireResult() != ezResourceAcquireResult::Final)
@@ -233,10 +239,18 @@ void ezScriptComponent::InstantiateScript()
   {
     m_pInstance->ApplyParameters(m_Parameters);
   }
+
+  UpdateScheduling();
 }
 
-void ezScriptComponent::ClearCaches()
+void ezScriptComponent::ClearInstance()
 {
+  if (m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr && m_pInstance != nullptr)
+  {
+    auto pModule = GetWorld()->GetOrCreateModule<ezScriptWorldModule>();
+    pModule->RemoveUpdateFunctionToSchedule(m_pFunctionTable->m_pUpdateFunction, m_pInstance.Borrow());
+  }
+
   m_pInstance = nullptr;
   m_pFunctionTable = nullptr;
 
@@ -249,5 +263,14 @@ void ezScriptComponent::CallScriptFunction(ezAbstractFunctionProperty* pFunction
   {
     ezVariant returnValue;
     pFunction->Execute(m_pInstance.Borrow(), ezArrayPtr<ezVariant>(), returnValue);
+  }
+}
+
+void ezScriptComponent::UpdateScheduling()
+{
+  if (m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr && m_pInstance != nullptr)
+  {
+    auto pModule = GetWorld()->GetOrCreateModule<ezScriptWorldModule>();
+    pModule->AddUpdateFunctionToSchedule(m_pFunctionTable->m_pUpdateFunction, m_pInstance.Borrow(), m_UpdateInterval);
   }
 }

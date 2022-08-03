@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Core/CoreDLL.h>
 #include <Core/ResourceManager/Resource.h>
 #include <Foundation/Containers/ArrayMap.h>
 

@@ -59,9 +59,10 @@ public:
 
 private:
   void InstantiateScript();
-  void ClearCaches();
+  void ClearInstance();
   void CallScriptFunction(ezAbstractFunctionProperty* pFunction);
-
+  void UpdateScheduling();
+  
   struct EventSender
   {
     const ezRTTI* m_pMsgType = nullptr;
