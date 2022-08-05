@@ -313,29 +313,6 @@ private:
   bool m_bCanMove = false;
 };
 
-/// \brief Limits setting of pointer properties to derived types that have the given constant property and value
-///
-/// The szConstantValueProperty is a sibling property of the property this attribute is assigned to,
-class EZ_FOUNDATION_DLL ezConstrainPointerAttribute : public ezPropertyAttribute
-{
-  EZ_ADD_DYNAMIC_REFLECTION(ezConstrainPointerAttribute, ezPropertyAttribute);
-
-public:
-  ezConstrainPointerAttribute() = default;
-  ezConstrainPointerAttribute(const char* szConstantName, const char* szConstantValueProperty)
-  {
-    m_sConstantName = szConstantName;
-    m_sConstantValueProperty = szConstantValueProperty;
-  }
-
-  const ezUntrackedString& GetConstantName() const { return m_sConstantName; }
-  const ezUntrackedString& GetConstantValueProperty() const { return m_sConstantValueProperty; }
-
-private:
-  ezUntrackedString m_sConstantName;
-  ezUntrackedString m_sConstantValueProperty;
-};
-
 /// \brief A property attribute that indicates that the string property should display a file browsing button.
 ///
 /// Allows to specify the title for the browse dialog and the allowed file types.

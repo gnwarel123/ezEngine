@@ -18,6 +18,7 @@ EZ_BEGIN_COMPONENT_TYPE(ezScriptComponent, 1, ezComponentMode::Static)
   EZ_BEGIN_ATTRIBUTES
   {
     new ezCategoryAttribute("Scripting"),
+    new ezInDevelopmentAttribute(ezInDevelopmentAttribute::Phase::Alpha),
   }
   EZ_END_ATTRIBUTES;
 }
