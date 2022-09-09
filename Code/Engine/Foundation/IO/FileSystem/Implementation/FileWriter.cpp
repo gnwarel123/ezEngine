@@ -32,6 +32,7 @@ void ezFileWriter::Close()
 ezResult ezFileWriter::Flush()
 {
   const ezResult res = m_pDataDirWriter->Write(&m_Cache[0], m_uiCacheWritePosition);
+  m_pDataDirWriter->Flush();
   m_uiCacheWritePosition = 0;
 
   return res;

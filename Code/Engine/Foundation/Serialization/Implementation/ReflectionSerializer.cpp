@@ -105,6 +105,10 @@ void* ezReflectionSerializer::ReadObjectFromBinary(ezStreamReader& stream, const
   EZ_ASSERT_DEV(pRootNode != nullptr, "invalid document");
 
   pRtti = ezRTTI::FindTypeByName(pRootNode->GetType());
+  if(pRtti == nullptr)
+  {
+    pRtti = ezRTTI::FindTypeByName(pRootNode->GetType());
+  }
 
   void* pTarget = context.CreateObject(pRootNode->GetGuid(), pRtti);
 

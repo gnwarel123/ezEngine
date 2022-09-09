@@ -176,6 +176,8 @@ public:
   /// \brief Reads the entire file content into the given array
   ezUInt64 ReadAll(ezDynamicArray<ezUInt8>& out_FileContent); // [tested]
 
+  void Flush();
+
   /// \brief Returns the name of the file that is currently opened. Returns an empty string, if no file is open.
   const char* GetOpenFileName() const { return m_sFileName.GetData(); } // [tested]
 

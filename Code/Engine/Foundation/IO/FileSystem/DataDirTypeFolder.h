@@ -110,6 +110,7 @@ namespace ezDataDirectory
 
     virtual ezResult Write(const void* pBuffer, ezUInt64 uiBytes) override;
     virtual ezUInt64 GetFileSize() const override;
+    virtual void Flush() override;
 
   protected:
     virtual ezResult InternalOpen(ezFileShareMode::Enum FileShareMode) override;

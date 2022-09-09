@@ -92,7 +92,7 @@ void ezLogWriter::HTML::LogMessageHandler(const ezLoggingEventData& eventData)
   ezStringBuilder sTimestamp;
   ezLog::GenerateFormattedTimestamp(m_TimestampMode, sTimestamp);
 
-  bool bFlushWriteCache = false;
+  bool bFlushWriteCache = true;
 
   ezStringBuilder sText;
 

@@ -188,6 +188,14 @@ ezResult ezOSFile::InternalWrite(const void* pBuffer, ezUInt64 uiBytes)
   return EZ_SUCCESS;
 }
 
+void ezOSFile::Flush()
+{
+  if(m_FileData.m_pFileHandle != nullptr)
+  {
+    fflush(m_FileData.m_pFileHandle);
+  }
+}
+
 ezUInt64 ezOSFile::InternalRead(void* pBuffer, ezUInt64 uiBytes)
 {
   ezUInt64 uiBytesRead = 0;

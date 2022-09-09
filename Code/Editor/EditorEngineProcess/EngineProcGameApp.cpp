@@ -13,6 +13,8 @@
 #include <RendererCore/RenderContext/RenderContext.h>
 #include <RendererCore/RenderWorld/RenderWorld.h>
 
+#include <ToolsFoundation/Application/ApplicationServices.h>
+
 ezEngineProcessGameApplication::ezEngineProcessGameApplication()
   : ezGameApplication("ezEditorEngineProcess", nullptr)
 {
@@ -52,6 +54,19 @@ void ezEngineProcessGameApplication::AfterCoreSystemsStartup()
 #endif
 
   WaitForDebugger();
+
+#if (EZ_ENABLED(EZ_PLATFORM_WINDOWS_DESKTOP) || EZ_ENABLED(EZ_PLATFORM_LINUX)) && EZ_ENABLED(EZ_COMPILE_FOR_DEVELOPMENT)
+  {
+    EZ_PROFILE_SCOPE("Logging");
+    ezString sUserData = ezApplicationServices::GetSingleton()->GetApplicationUserDataFolder();
+    ezFileSystem::AddDataDirectory(sUserData, "AppData", "appdata", ezFileSystem::AllowWrites).IgnoreResult(); // for writing app user data
+
+    ezStringBuilder sLogFile = ":appdata/Log.html";
+    m_LogHTML.BeginLog(sLogFile, GetApplicationName());
+
+    ezGlobalLog::AddLogWriter(ezLoggingEvent::Handler(&ezLogWriter::HTML::LogMessageHandler, &m_LogHTML));
+  }
+#endif
 
   DisableErrorReport();
 
@@ -479,8 +494,7 @@ ezEngineProcessDocumentContext* ezEngineProcessGameApplication::CreateDocumentCo
 
 void ezEngineProcessGameApplication::Init_LoadProjectPlugins()
 {
-  m_CustomPluginConfig.m_Plugins.Sort([](const ezApplicationPluginConfig::PluginConfig& lhs, const ezApplicationPluginConfig::PluginConfig& rhs) -> bool
-    {
+  m_CustomPluginConfig.m_Plugins.Sort([](const ezApplicationPluginConfig::PluginConfig& lhs, const ezApplicationPluginConfig::PluginConfig& rhs) -> bool {
     const bool isEnginePluginLhs = lhs.m_sAppDirRelativePath.FindSubString_NoCase("EnginePlugin") != nullptr;
     const bool isEnginePluginRhs = rhs.m_sAppDirRelativePath.FindSubString_NoCase("EnginePlugin") != nullptr;
 

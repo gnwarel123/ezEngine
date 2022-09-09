@@ -50,6 +50,8 @@ namespace ezDataDirectory
 
   ezResult FolderWriter::Write(const void* pBuffer, ezUInt64 uiBytes) { return m_File.Write(pBuffer, uiBytes); }
 
+  void FolderWriter::Flush() { return m_File.Flush(); }
+
   ezUInt64 FolderWriter::GetFileSize() const { return m_File.GetFileSize(); }
 
   ezDataDirectoryType* FolderType::Factory(const char* szDataDirectory, const char* szGroup, const char* szRootName, ezFileSystem::DataDirUsage Usage)

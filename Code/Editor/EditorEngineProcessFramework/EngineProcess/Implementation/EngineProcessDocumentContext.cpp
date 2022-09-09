@@ -214,6 +214,8 @@ void ezEngineProcessDocumentContext::HandleMessage(const ezEditorEngineDocumentM
   else if (pMsg->GetDynamicRTTI()->IsDerivedFrom<ezCreateThumbnailMsgToEngine>())
   {
     // ignore when this is a remote process
+    // The Vulkan renderer on linux can currently not render thumbnails.
+      // Immediately send back a thumbnail answer to the editor so the editor knows we can't generate a thumbnail.
     if (bIsRemoteProcess)
       return;
 

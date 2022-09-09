@@ -6,6 +6,7 @@
 #include <Foundation/Application/Config/PluginConfig.h>
 #include <Foundation/Types/UniquePtr.h>
 #include <GameEngine/GameApplication/GameApplication.h>
+#include <Foundation/Logging/HTMLWriter.h>
 
 class ezEditorEngineProcessApp;
 class ezDocumentOpenMsgToEngine;
@@ -72,4 +73,6 @@ private:
 
   ezUInt32 m_uiRedrawCountReceived = 0;
   ezUInt32 m_uiRedrawCountExecuted = 0;
+
+  ezLogWriter::HTML m_LogHTML;
 };

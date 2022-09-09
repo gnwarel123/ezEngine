@@ -134,6 +134,8 @@ public:
   /// \brief Returns the current total size of the file.
   virtual ezUInt64 GetFileSize() const = 0;
 
+  virtual void Flush() {}
+
   ezInt32 GetDataDirUserData() const { return m_iDataDirUserData; }
 
 protected:

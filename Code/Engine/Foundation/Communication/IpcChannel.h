@@ -5,6 +5,7 @@
 #include <Foundation/Communication/RemoteMessage.h>
 #include <Foundation/Threading/ThreadSignal.h>
 #include <Foundation/Types/UniquePtr.h>
+#include <Foundation/IO/FileSystem/FileWriter.h>
 
 class ezIpcChannel;
 class ezMessageLoop;
@@ -127,4 +128,6 @@ protected:
   ezMutex m_IncomingQueueMutex;
   ezDeque<ezUniquePtr<ezProcessMessage>> m_IncomingQueue;
   ezThreadSignal m_IncomingMessages;
+
+  ezFileWriter m_logger;
 };
