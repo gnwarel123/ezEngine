@@ -11,6 +11,8 @@
 #  include <poll.h>
 #  include <unistd.h>
 
+#  include <Foundation/TraceProvider.h>
+
 ezMessageLoop_linux::ezMessageLoop_linux()
 {
   int fds[2];
@@ -41,6 +43,7 @@ ezMessageLoop_linux::~ezMessageLoop_linux()
 
 bool ezMessageLoop_linux::WaitForMessages(ezInt32 iTimeout, ezIpcChannel* pFilter)
 {
+  TraceLoggingWrite(FoundationProvider, "ezMessageLoop_linux_WaitForMessages", TraceLoggingValue(iTimeout, "iTimeout"));
   EZ_ASSERT_ALWAYS(pFilter == nullptr, "Not implemented");
 
   while (m_numPendingPollModifications > 0)
@@ -50,6 +53,7 @@ bool ezMessageLoop_linux::WaitForMessages(ezInt32 iTimeout, ezIpcChannel* pFilte
 
   ezLock lock{m_pollMutex};
   int result = poll(m_pollInfos.GetData(), m_pollInfos.GetCount(), iTimeout);
+  TraceLoggingWrite(FoundationProvider, "ezMessageLoop_linux_WaitForMessages_poll", TraceLoggingValue(result, "result"));
   if (result > 0)
   {
     // Result at index 0 is special and means there was a WakeUp
@@ -58,6 +62,7 @@ bool ezMessageLoop_linux::WaitForMessages(ezInt32 iTimeout, ezIpcChannel* pFilte
       ezUInt8 wakeupByte;
       auto readResult = read(m_wakeupPipeReadEndFd, &wakeupByte, sizeof(wakeupByte));
       m_pollInfos[0].revents = 0;
+      TraceLoggingWrite(FoundationProvider, "ezMessageLoop_linux_WaitForMessages_wakeup");
       return true;
     }
 
