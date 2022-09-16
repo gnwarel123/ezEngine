@@ -25,3 +25,7 @@ if(EZ_3RDPARTY_GLFW_SUPPORT AND EZ_CMAKE_PLATFORM_LINUX)
   find_package(X11 REQUIRED)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_X11_LIB})
 endif()
+
+if(EZ_CMAKE_PLATFORM_LINUX)
+  target_link_libraries(${PROJECT_NAME} PRIVATE tracelogging)
+endif()

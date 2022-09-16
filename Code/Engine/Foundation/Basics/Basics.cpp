@@ -14,9 +14,23 @@ typedef ezAlignedHeapAllocator DefaultAlignedHeapType;
 typedef ezHeapAllocator DefaultStaticHeapType;
 #endif
 
-//798c51ab-4d4f-4cea-9466-38eee628b6de
-// (0xb3864c38, 0x4273, 0x58c5, 0x54, 0x5b, 0x8b, 0x36, 0x08, 0x34, 0x34, 0x71),
+// 798c51ab-4d4f-4cea-9466-38eee628b6de
 TRACELOGGING_DEFINE_PROVIDER(FoundationProvider, "ezEngine.Foundation", (0x798c51ab, 0x4d4f, 0x4cea, 0x94, 0x66, 0x38, 0xee, 0xe6,0x28, 0xb6, 0xde));
+
+struct TraceProviderRegisterHelper
+{
+  TraceProviderRegisterHelper()
+  {
+    TraceLoggingRegister(FoundationProvider);
+  }
+
+  ~TraceProviderRegisterHelper()
+  {
+    TraceLoggingUnregister(FoundationProvider);
+  }
+};
+
+TraceProviderRegisterHelper g_FoundationProviderRegister;
 
 enum
 {

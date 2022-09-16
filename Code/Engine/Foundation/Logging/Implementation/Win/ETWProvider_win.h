@@ -2,7 +2,7 @@
 
 #include <Foundation/Basics.h>
 
-#if EZ_ENABLED(EZ_PLATFORM_WINDOWS)
+#if EZ_ENABLED(EZ_PLATFORM_WINDOWS) || EZ_ENABLED(EZ_PLATFORM_LINUX)
 
 #  include <Foundation/FoundationInternal.h>
 #  include <Foundation/Logging/Log.h>

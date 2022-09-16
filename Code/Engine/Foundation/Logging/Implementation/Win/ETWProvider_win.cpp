@@ -2,20 +2,25 @@
 
 #include <Foundation/Logging/Implementation/Win/ETWProvider_win.h>
 
-#if EZ_ENABLED(EZ_PLATFORM_WINDOWS)
+#if EZ_ENABLED(EZ_PLATFORM_WINDOWS) || EZ_ENABLED(EZ_PLATFORM_LINUX)
 
-#  include <Foundation/Basics/Platform/Win/IncludeWindows.h>
-#  include <TraceLoggingProvider.h>
+#  if EZ_ENABLED(EZ_PLATFORM_WINDOWS)
+#    include <Foundation/Basics/Platform/Win/IncludeWindows.h>
+#    include <TraceLoggingProvider.h>
 
 // Workaround to support TraceLoggingProvider.h and /utf-8 compiler switch.
-#  undef _TlgPragmaUtf8Begin
-#  undef _TlgPragmaUtf8End
-#  define _TlgPragmaUtf8Begin
-#  define _TlgPragmaUtf8End
-#  undef _tlgPragmaUtf8Begin
-#  undef _tlgPragmaUtf8End
-#  define _tlgPragmaUtf8Begin
-#  define _tlgPragmaUtf8End
+#    undef _TlgPragmaUtf8Begin
+#    undef _TlgPragmaUtf8End
+#    define _TlgPragmaUtf8Begin
+#    define _TlgPragmaUtf8End
+#    undef _tlgPragmaUtf8Begin
+#    undef _tlgPragmaUtf8End
+#    define _tlgPragmaUtf8Begin
+#    define _tlgPragmaUtf8End
+#  else
+#    include <tracelogging/TraceLoggingProvider.h>
+#  endif
+
 
 TRACELOGGING_DECLARE_PROVIDER(g_ezETWLogProvider);
 
@@ -37,8 +42,39 @@ ezETWProvider::~ezETWProvider()
 
 void ezETWProvider::LogMessge(ezLogMsgType::Enum eventType, ezUInt8 uiIndentation, const char* szText)
 {
-  TraceLoggingWrite(g_ezETWLogProvider, "LogMessge", TraceLoggingValue((int)eventType, "Type"), TraceLoggingValue(uiIndentation, "Indentation"),
-    TraceLoggingValue(szText, "Text"));
+  switch (eventType)
+  {
+    case ezLogMsgType::ErrorMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Error",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::SeriousWarningMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "SeriousWarning",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::WarningMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Warning",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::SuccessMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Success",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::InfoMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Info",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::DevMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Dev",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    case ezLogMsgType::DebugMsg:
+      TraceLoggingWrite(g_ezETWLogProvider, "Debug",
+        TraceLoggingValue(szText, "Text"));
+      break;
+    default:
+      break;
+  }
 }
 
 ezETWProvider& ezETWProvider::GetInstance()

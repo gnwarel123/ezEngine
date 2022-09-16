@@ -128,6 +128,4 @@ protected:
   ezMutex m_IncomingQueueMutex;
   ezDeque<ezUniquePtr<ezProcessMessage>> m_IncomingQueue;
   ezThreadSignal m_IncomingMessages;
-
-  ezFileWriter m_logger;
 };

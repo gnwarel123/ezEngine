@@ -2,6 +2,7 @@
 
 #include <Foundation/Basics/Platform/Win/IncludeWindows.h>
 #include <Foundation/System/SystemInformation.h>
+#include <Foundation/Logging/ETWWriter.h>
 
 #include <Core/Console/QuakeConsole.h>
 #include <EditorEngineProcess/EngineProcGameApp.h>
@@ -65,6 +66,7 @@ void ezEngineProcessGameApplication::AfterCoreSystemsStartup()
     m_LogHTML.BeginLog(sLogFile, GetApplicationName());
 
     ezGlobalLog::AddLogWriter(ezLoggingEvent::Handler(&ezLogWriter::HTML::LogMessageHandler, &m_LogHTML));
+    ezGlobalLog::AddLogWriter(ezLogWriter::ETW::LogMessageHandler);
   }
 #endif
 

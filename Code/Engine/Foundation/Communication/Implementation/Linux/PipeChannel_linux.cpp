@@ -7,6 +7,7 @@
 #  include <Foundation/Communication/Implementation/Linux/MessageLoop_linux.h>
 #  include <Foundation/IO/OSFile.h>
 #  include <Foundation/Logging/Log.h>
+#  include <Foundation/TraceProvider.h>
 
 #  include <fcntl.h>
 #  include <sys/socket.h>
@@ -173,14 +174,21 @@ void ezPipeChannel_linux::InternalSend()
   while (true)
   {
 
-    ezUInt64 uiToWrite = storage->GetStorageSize64();
-    ezUInt64 uiNextOffset = 0;
+    ezUInt64 uiToWrite = storage->GetStorageSize64() - m_previousSendOffset;
+    ezUInt64 uiNextOffset = m_previousSendOffset;
     while (uiToWrite > 0)
     {
       const ezArrayPtr<const ezUInt8> range = storage->GetContiguousMemoryRange(uiNextOffset);
-      uiToWrite -= range.GetCount();
+
+      TraceLoggingWrite(FoundationProvider, "ezPipeChannel_linux_InternalSend",
+        TraceLoggingValue(range.GetCount(), "numBytes"),
+        TraceLoggingValue(uiNextOffset, "uiNextOffset"),
+        TraceLoggingPointer(storage, "storage"));
 
       int res = send(m_clientSocketFd, range.GetPtr(), range.GetCount(), 0);
+
+      TraceLoggingWrite(FoundationProvider, "ezPipeChannel_linux_InternalSend_result",
+        TraceLoggingValue(res, "res"));
 
       if (res < 0)
       {
@@ -188,6 +196,7 @@ void ezPipeChannel_linux::InternalSend()
         // We can't send at the moment. Wait until we can send again.
         if (errorCode == EWOULDBLOCK)
         {
+          m_previousSendOffset = uiNextOffset;
           static_cast<ezMessageLoop_linux*>(m_pOwner)->RegisterWait(this, ezMessageLoop_linux::WaitType::Send, m_clientSocketFd);
           return;
         }
@@ -196,8 +205,10 @@ void ezPipeChannel_linux::InternalSend()
         return;
       }
 
-      uiNextOffset += range.GetCount();
+      uiToWrite -= static_cast<ezUInt64>(res);
+      uiNextOffset += res;
     }
+    m_previousSendOffset = 0;
 
     {
       EZ_LOCK(m_OutputQueueMutex);
@@ -253,6 +264,8 @@ void ezPipeChannel_linux::ProcessIncomingPackages()
   while (true)
   {
     ssize_t recieveResult = recv(m_clientSocketFd, m_InputBuffer, EZ_ARRAY_SIZE(m_InputBuffer), 0);
+    TraceLoggingWrite(FoundationProvider, "ezPipeChannel_linux_ProcessIncomingPackages",
+      TraceLoggingValue(recieveResult, "recieveResult"));
     if (recieveResult == 0)
     {
       InternalDisconnect();

@@ -6,6 +6,7 @@
 #include <Foundation/Communication/RemoteMessage.h>
 #include <Foundation/Logging/Log.h>
 #include <Foundation/Serialization/ReflectionSerializer.h>
+#include <Foundation/TraceProvider.h>
 
 #if EZ_ENABLED(EZ_PLATFORM_WINDOWS_DESKTOP)
 #  include <Foundation/Communication/Implementation/Win/PipeChannel_win.h>
@@ -17,9 +18,6 @@ ezIpcChannel::ezIpcChannel(const char* szAddress, Mode::Enum mode)
   : m_Mode(mode)
   , m_pOwner(ezMessageLoop::GetSingleton())
 {
-  ezStringBuilder path;
-  path.Format(":appdata/ipc{}.txt", ezArgP(this));
-  m_logger.Open(path.GetData()).IgnoreResult();
 }
 
 ezIpcChannel::~ezIpcChannel()
@@ -77,14 +75,6 @@ void ezIpcChannel::Disconnect()
 
 bool ezIpcChannel::Send(ezProcessMessage* pMsg)
 {
-  if (m_logger.IsOpen())
-  {
-    ezStringBuilder msg;
-    msg.Format("Sending message {}\n", pMsg->GetDynamicRTTI()->GetTypeName());
-    auto view = msg.GetView();
-    m_logger.WriteBytes(view.GetStartPointer(), view.GetElementCount()).IgnoreResult();
-    m_logger.Flush().IgnoreResult();
-  }
   {
     EZ_LOCK(m_OutputQueueMutex);
     ezMemoryStreamStorageInterface& storage = m_OutputQueue.ExpandAndGetRef();
@@ -123,6 +113,9 @@ bool ezIpcChannel::ProcessMessages()
     return false;
   }
 
+  TraceLoggingWrite(FoundationProvider, "ezIpcChannel_ProcessMessages",
+    TraceLoggingValue(messages.GetCount(), "MessageCount"));
+
   while (!messages.IsEmpty())
   {
     ezUniquePtr<ezProcessMessage> msg = std::move(messages.PeekFront());
@@ -138,20 +131,15 @@ void ezIpcChannel::WaitForMessages()
   if (m_Connected)
   {
     m_IncomingMessages.WaitForSignal();
+
+    TraceLoggingWrite(FoundationProvider, "ezIpcChannel_WaitForMessages_IncomingMessages");
+
     ProcessMessages();
   }
 }
 
 void ezIpcChannel::ReceiveMessageData(ezArrayPtr<const ezUInt8> data)
 {
-  if (m_logger.IsOpen())
-  {
-    ezStringBuilder msg;
-    msg.Format("ReceiveMessageData {}\n", data.GetCount());
-    auto view = msg.GetView();
-    m_logger.WriteBytes(view.GetStartPointer(), view.GetElementCount()).IgnoreResult();
-    m_logger.Flush().IgnoreResult();
-  }
   ezArrayPtr<const ezUInt8> remainingData = data;
   while (true)
   {
@@ -201,14 +189,10 @@ void ezIpcChannel::ReceiveMessageData(ezArrayPtr<const ezUInt8> data)
       const ezRTTI* pRtti = nullptr;
 
       ezProcessMessage* pMsg = (ezProcessMessage*)ezReflectionSerializer::ReadObjectFromBinary(reader, pRtti);
-      if (m_logger.IsOpen() && pRtti)
-      {
-        ezStringBuilder msg;
-        msg.Format("ReceiveMessageData {}\n", pRtti->GetTypeName());
-        auto view = msg.GetView();
-        m_logger.WriteBytes(view.GetStartPointer(), view.GetElementCount()).IgnoreResult();
-        m_logger.Flush().IgnoreResult();
-      }
+
+      TraceLoggingWrite(FoundationProvider, "ezIpcChannel_ReceiveMessageData_Complete",
+        TraceLoggingValue(pRtti ? pRtti->GetTypeName() : "<failure>", "TypeName"));
+
       ezUniquePtr<ezProcessMessage> msg(pMsg, ezFoundation::GetDefaultAllocator());
       if (msg != nullptr)
       {

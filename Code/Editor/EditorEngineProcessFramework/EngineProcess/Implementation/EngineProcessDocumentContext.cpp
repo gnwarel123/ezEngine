@@ -7,6 +7,7 @@
 #include <EditorEngineProcessFramework/EngineProcess/EngineProcessMessages.h>
 #include <EditorEngineProcessFramework/EngineProcess/RemoteViewContext.h>
 #include <EditorEngineProcessFramework/Gizmos/GizmoHandle.h>
+#include <EditorEngineProcessFramework/TraceProvider.h>
 #include <RendererCore/Pipeline/View.h>
 #include <RendererCore/RenderWorld/RenderWorld.h>
 #include <RendererCore/Textures/TextureUtils.h>
@@ -108,6 +109,10 @@ ezEngineProcessDocumentContext::~ezEngineProcessDocumentContext()
 
 void ezEngineProcessDocumentContext::Initialize(const ezUuid& DocumentGuid, const ezVariant& metaData, ezEngineProcessCommunicationChannel* pIPC)
 {
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezEngineProcessDocumentContext_Initialize",
+    TraceLoggingGuid(DocumentGuid, "DocumentGuid"),
+    TraceLoggingValue(GetDynamicRTTI()->GetTypeName(), "ContextType"));
+
   m_DocumentGuid = DocumentGuid;
   m_MetaData = metaData;
   m_pIPC = pIPC;
@@ -129,6 +134,9 @@ void ezEngineProcessDocumentContext::Initialize(const ezUuid& DocumentGuid, cons
 
 void ezEngineProcessDocumentContext::Deinitialize()
 {
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezEngineProcessDocumentContext_Deinitialize",
+    TraceLoggingGuid(m_DocumentGuid, "DocumentGuid"));
+
   OnDeinitialize();
 
   ClearViewContexts();
@@ -214,8 +222,6 @@ void ezEngineProcessDocumentContext::HandleMessage(const ezEditorEngineDocumentM
   else if (pMsg->GetDynamicRTTI()->IsDerivedFrom<ezCreateThumbnailMsgToEngine>())
   {
     // ignore when this is a remote process
-    // The Vulkan renderer on linux can currently not render thumbnails.
-      // Immediately send back a thumbnail answer to the editor so the editor knows we can't generate a thumbnail.
     if (bIsRemoteProcess)
       return;
 
@@ -424,6 +430,10 @@ void ezEngineProcessDocumentContext::UpdateDocumentContext()
     ezResourceManager::ForceNoFallbackAcquisition(3);
     m_uiThumbnailConvergenceFrames++;
 
+    TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezEngineProcessDocumentContext_UpdateDocumentContext_UpdateThumbnail",
+      TraceLoggingGuid(m_DocumentGuid, "DocumentGuid"),
+      TraceLoggingValue(m_uiThumbnailConvergenceFrames, "m_uiThumbnailConvergenceFrames"));
+
     if (!UpdateThumbnailViewContext(m_pThumbnailViewContext))
     {
       m_uiThumbnailConvergenceFrames = 0;
@@ -431,6 +441,8 @@ void ezEngineProcessDocumentContext::UpdateDocumentContext()
 
     if (m_uiThumbnailConvergenceFrames > ThumbnailConvergenceFramesTarget)
     {
+      TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezEngineProcessDocumentContext_UpdateDocumentContext_ThumbnailReady",
+        TraceLoggingGuid(m_DocumentGuid, "DocumentGuid"));
       ezCreateThumbnailMsgToEditor ret;
       ret.m_DocumentGuid = GetDocumentGuid();
 
@@ -503,6 +515,9 @@ bool ezEngineProcessDocumentContext::ExportDocument(const ezExportDocumentMsgToE
 
 void ezEngineProcessDocumentContext::CreateThumbnailViewContext(const ezCreateThumbnailMsgToEngine* pMsg)
 {
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezEngineProcessDocumentContext_CreateThumbnailViewContext",
+    TraceLoggingGuid(m_DocumentGuid, "DocumentGuid"));
+
   EZ_ASSERT_DEV(!ezEditorEngineProcessApp::GetSingleton()->IsRemoteMode(), "Wrong mode for thumbnail creation");
   EZ_ASSERT_DEV(m_pThumbnailViewContext == nullptr, "Thumbnail rendering already in progress.");
   EZ_CHECK_AT_COMPILETIME_MSG((ThumbnailSuperscaleFactor & (ThumbnailSuperscaleFactor - 1)) == 0, "ThumbnailSuperscaleFactor must be power of 2.");

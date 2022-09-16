@@ -3,6 +3,8 @@
 #include <EditorEngineProcessFramework/IPC/ProcessCommunicationChannel.h>
 #include <Foundation/Communication/IpcChannel.h>
 
+#include <EditorEngineProcessFramework/TraceProvider.h>
+
 ezProcessCommunicationChannel::ezProcessCommunicationChannel() {}
 
 ezProcessCommunicationChannel::~ezProcessCommunicationChannel()
@@ -30,6 +32,9 @@ void ezProcessCommunicationChannel::SendMessage(ezProcessMessage* pMessage)
     if (m_pChannel == nullptr)
       return;
 
+    TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezProcessCommunicationChannel_SendMessage",
+      TraceLoggingValue(pMessage->GetDynamicRTTI()->GetTypeName(), "type"));
+
     m_pChannel->Send(pMessage);
   }
 }
@@ -54,6 +59,8 @@ void ezProcessCommunicationChannel::WaitForMessages()
 void ezProcessCommunicationChannel::MessageFunc(const ezProcessMessage* msg)
 {
   const ezRTTI* pRtti = msg->GetDynamicRTTI();
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezProcessCommunicationChannel_MessageFunc",
+    TraceLoggingValue(pRtti->GetTypeName(), "type"));
 
   if (m_pWaitForMessageType != nullptr && msg->GetDynamicRTTI()->IsDerivedFrom(m_pWaitForMessageType))
   {
@@ -85,6 +92,9 @@ ezResult ezProcessCommunicationChannel::WaitForMessage(const ezRTTI* pMessageTyp
   EZ_ASSERT_DEV(m_pChannel != nullptr, "Need to connect first before waiting for a message.");
   // EZ_ASSERT_DEV(ezThreadUtils::IsMainThread(), "This function is not thread safe");
   EZ_ASSERT_DEV(m_pWaitForMessageType == nullptr, "Already waiting for another message!");
+
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezProcessCommunicationChannel_WaitForMessage_Begin",
+    TraceLoggingValue(pMessageType->GetTypeName(), "typeName"));
 
   m_pWaitForMessageType = pMessageType;
   if (pMessageCallack)
@@ -118,6 +128,9 @@ ezResult ezProcessCommunicationChannel::WaitForMessage(const ezRTTI* pMessageTyp
       }
     }
   }
+
+  TraceLoggingWrite(EditorEngineProcessFrameworkProvider, "ezProcessCommunicationChannel_WaitForMessage_End",
+    TraceLoggingValue(pMessageType->GetTypeName(), "typeName"));
 
   return EZ_SUCCESS;
 }
