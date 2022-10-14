@@ -1,0 +1,208 @@
+HeaderV2
+{
+o
+{
+	Uuid %id{u4{17692183871835810964,5003559314165804503}}
+	s %t{"ezAssetDocumentInfo"}
+	u3 %v{2}
+	s %n{"Header"}
+	p
+	{
+		s %AssetType{"Jolt_Colmesh_Triangle"}
+		VarArray %Dependencies
+		{
+			s{"FleetOps/Cassiopeia_data/cassiopeia.obj"}
+		}
+		Uuid %DocumentID{u4{17692183871835810964,5003559314165804503}}
+		u4 %Hash{8702307923074622344}
+		VarArray %MetaInfo{}
+		VarArray %Outputs{}
+		VarArray %References
+		{
+			s{"{ 0b139c36-e5f9-4e88-b2a9-148d54c34031 }"}
+		}
+	}
+}
+}
+Objects
+{
+o
+{
+	Uuid %id{u4{3088202581622798210,5293530174140230078}}
+	s %t{"ezJoltCollisionMeshAssetProperties"}
+	u3 %v{1}
+	p
+	{
+		s %ConvexMeshType{"ezJoltConvexCollisionMeshType::ConvexHull"}
+		u1 %Detail{1}
+		b %FlipForwardDir{0}
+		f %Height{0x0000803F}
+		b %IsConvexMesh{0}
+		u2 %MaxConvexPieces{2}
+		s %MeshFile{"FleetOps/Cassiopeia_data/cassiopeia.obj"}
+		f %Radius{0x0000003F}
+		f %Radius2{0x0000003F}
+		s %RightDir{"ezBasisAxis::PositiveX"}
+		VarArray %Surfaces
+		{
+			Uuid{u4{2162818772192158082,5417718454758716625}}
+		}
+		f %UniformScaling{0x0AD7233C}
+		s %UpDir{"ezBasisAxis::PositiveY"}
+	}
+}
+o
+{
+	Uuid %id{u4{2162818772192158082,5417718454758716625}}
+	s %t{"ezJoltSurfaceResourceSlot"}
+	u3 %v{1}
+	p
+	{
+		s %Label{"DefaultMaterial"}
+		s %Resource{"{ 0b139c36-e5f9-4e88-b2a9-148d54c34031 }"}
+	}
+}
+o
+{
+	Uuid %id{u4{18096612296587978288,6449934965513159559}}
+	s %t{"ezDocumentRoot"}
+	u3 %v{1}
+	s %n{"ObjectTree"}
+	p
+	{
+		VarArray %Children
+		{
+			Uuid{u4{3088202581622798210,5293530174140230078}}
+		}
+	}
+}
+}
+Types
+{
+o
+{
+	Uuid %id{u4{17999953918963139426,3797774724330577832}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::IsEnum|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezEnumBase"}
+		s %PluginName{"ezEditorPluginJolt"}
+		VarArray %Properties{}
+		s %TypeName{"ezJoltConvexCollisionMeshType"}
+		u3 %TypeSize{1}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{17627676062673229848,4160480872240254573}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{""}
+		s %PluginName{"ezEditorPluginJolt"}
+		VarArray %Properties{}
+		s %TypeName{"ezJoltSurfaceResourceSlot"}
+		u3 %TypeSize{128}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{721132921943597409,7082307521322309138}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezReflectedClass"}
+		s %PluginName{"ezEditorPluginJolt"}
+		VarArray %Properties{}
+		s %TypeName{"ezJoltCollisionMeshAssetProperties"}
+		u3 %TypeSize{1160}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{6089094783765586323,8705960867921430659}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezReflectedClass"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezDocumentRoot"}
+		u3 %TypeSize{72}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{2947336711354777548,15013008608905564043}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{""}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezEnumBase"}
+		u3 %TypeSize{1}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{14469700887475489738,16951777026318265606}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::IsEnum|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezEnumBase"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezBasisAxis"}
+		u3 %TypeSize{1}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{983387834180907111,17935407260904399048}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{""}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezReflectedClass"}
+		u3 %TypeSize{8}
+		u3 %TypeVersion{1}
+	}
+}
+}
