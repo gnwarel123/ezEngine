@@ -338,10 +338,10 @@ ezUniquePtr<ezWindow> ezGameState::CreateMainWindow()
 
   if (sWndCfg.IsEmpty())
   {
-    if (ezFileSystem::ExistsFile(":appdata/Window.ddl"))
-      sWndCfg = ":appdata/Window.ddl";
+    if (ezFileSystem::ExistsFile(":appdata/RuntimeConfigs/Window.ddl"))
+      sWndCfg = ":appdata/RuntimeConfigs/Window.ddl";
     else
-      sWndCfg = ":project/Window.ddl";
+      sWndCfg = ":project/RuntimeConfigs/Window.ddl";
   }
 
   ezWindowCreationDesc wndDesc;

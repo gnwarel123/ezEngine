@@ -535,7 +535,7 @@ QStringList ezSceneAction::GetPlayerCommandLine(ezStringBuilder& out_SingleLine)
   }
 
   ezStringBuilder sWndCfgPath = ezApplicationServices::GetSingleton()->GetProjectPreferencesFolder();
-  sWndCfgPath.AppendPath("Window.ddl");
+  sWndCfgPath.AppendPath("RuntimeConfigs/Window.ddl");
 
   if (ezOSFile::ExistsFile(sWndCfgPath))
   {

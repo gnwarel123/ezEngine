@@ -298,7 +298,7 @@ void ezPhysX::LoadCollisionFilters()
 {
   EZ_LOG_BLOCK("ezPhysX::LoadCollisionFilters");
 
-  if (m_CollisionFilterConfig.Load("RuntimeConfigs/CollisionLayers.cfg").Failed())
+  if (m_CollisionFilterConfig.Load("RuntimeConfigs/CollisionLayers.cfg").Failed() && m_CollisionFilterConfig.Load("CollisionLayers.cfg").Failed())
   {
     ezLog::Info("Collision filter config file could not be found ('RuntimeConfigs/CollisionLayers.cfg'). Using default values.");
 

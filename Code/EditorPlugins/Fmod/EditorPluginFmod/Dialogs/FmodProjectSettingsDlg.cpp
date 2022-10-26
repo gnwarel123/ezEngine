@@ -30,7 +30,7 @@ ezQtFmodProjectSettingsDlg::ezQtFmodProjectSettingsDlg(QWidget* parent)
 }
 ezResult ezQtFmodProjectSettingsDlg::Save()
 {
-  const char* szFile = ":project/FmodConfig.ddl";
+  const char* szFile = ":project/RuntimeConfigs/FmodConfig.ddl";
   if (m_Configs.Save(szFile).Failed())
   {
     ezStringBuilder sError;
@@ -46,7 +46,11 @@ ezResult ezQtFmodProjectSettingsDlg::Save()
 
 void ezQtFmodProjectSettingsDlg::Load()
 {
-  m_Configs.Load(":project/FmodConfig.ddl").IgnoreResult();
+  if (m_Configs.Load(":project/RuntimeConfigs/FmodConfig.ddl").Failed())
+  {
+    // old fallback location
+    m_Configs.Load(":project/FmodConfig.ddl").IgnoreResult();
+  }
 
   m_ConfigsOld = m_Configs;
 }

@@ -11,7 +11,7 @@ ezStatus ezQtEditorApp::SaveTagRegistry()
 
   ezStringBuilder sPath;
   sPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
-  sPath.AppendPath("Tags.ddl");
+  sPath.AppendPath("RuntimeConfigs/Tags.ddl");
 
   ezDeferredFileWriter file;
   file.SetOutput(sPath);
@@ -33,10 +33,14 @@ void ezQtEditorApp::ReadTagRegistry()
 
   ezStringBuilder sPath;
   sPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
-  sPath.AppendPath("Tags.ddl");
+  sPath.AppendPath("RuntimeConfigs/Tags.ddl");
+
+  ezStringBuilder sFallbackPath;
+  sFallbackPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
+  sFallbackPath.AppendPath("Tags.ddl");
 
   ezFileReader file;
-  if (file.Open(sPath).Failed())
+  if (file.Open(sPath).Failed() && file.Open(sFallbackPath).Failed())
   {
     ezLog::Warning("Could not open tags config file '{0}'", sPath);
 

@@ -12,10 +12,14 @@ void UpdateInputDynamicEnumValues()
 
   ezStringBuilder sPath = ezToolsProject::GetSingleton()->GetProjectFile();
   sPath.PathParentDirectory();
-  sPath.AppendPath("InputConfig.ddl");
+  sPath.AppendPath("RuntimeConfigs/InputConfig.ddl");
+
+  ezStringBuilder sFallbackPath = ezToolsProject::GetSingleton()->GetProjectFile();
+  sFallbackPath.PathParentDirectory();
+  sFallbackPath.AppendPath("InputConfig.ddl");
 
   ezFileReader file;
-  if (file.Open(sPath).Failed())
+  if (file.Open(sPath).Failed() && file.Open(sFallbackPath).Failed())
     return;
 
   ezGameAppInputConfig::ReadFromDDL(file, Actions);
@@ -167,10 +171,14 @@ void ezQtInputConfigDlg::LoadActions()
 
   ezStringBuilder sPath = ezToolsProject::GetSingleton()->GetProjectFile();
   sPath.PathParentDirectory();
-  sPath.AppendPath("InputConfig.ddl");
+  sPath.AppendPath("RuntimeConfigs/InputConfig.ddl");
+
+  ezStringBuilder sFallbackPath = ezToolsProject::GetSingleton()->GetProjectFile();
+  sFallbackPath.PathParentDirectory();
+  sFallbackPath.AppendPath("InputConfig.ddl");
 
   ezFileReader file;
-  if (file.Open(sPath).Failed())
+  if (file.Open(sPath).Failed() && file.Open(sFallbackPath).Failed())
     return;
 
   ezGameAppInputConfig::ReadFromDDL(file, m_Actions);
@@ -180,7 +188,7 @@ void ezQtInputConfigDlg::SaveActions()
 {
   ezStringBuilder sPath = ezToolsProject::GetSingleton()->GetProjectFile();
   sPath.PathParentDirectory();
-  sPath.AppendPath("InputConfig.ddl");
+  sPath.AppendPath("RuntimeConfigs/InputConfig.ddl");
 
   ezDeferredFileWriter file;
   file.SetOutput(sPath);

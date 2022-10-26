@@ -75,13 +75,16 @@ void ezQtWindowCfgDlg::UpdateUI()
 
 void ezQtWindowCfgDlg::LoadDescs()
 {
-  ezStringBuilder sPath;
+  ezStringBuilder sPath, sFallbackPath;
 
   {
     sPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
-    sPath.AppendPath("Window.ddl");
+    sPath.AppendPath("RuntimeConfigs/Window.ddl");
 
-    if (m_Descs[0].LoadFromDDL(sPath).Failed())
+    sFallbackPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
+    sFallbackPath.AppendPath("Window.ddl");
+
+    if (m_Descs[0].LoadFromDDL(sPath).Failed() && m_Descs[0].LoadFromDDL(sFallbackPath).Failed())
     {
       m_Descs[0].SaveToDDL(sPath).IgnoreResult(); // make sure the file exists
     }
@@ -91,9 +94,12 @@ void ezQtWindowCfgDlg::LoadDescs()
 
   {
     sPath = ezApplicationServices::GetSingleton()->GetProjectPreferencesFolder();
-    sPath.AppendPath("Window.ddl");
+    sPath.AppendPath("RuntimeConfigs/Window.ddl");
 
-    m_bOverrideProjectDefault[1] = m_Descs[1].LoadFromDDL(sPath).Succeeded();
+    sFallbackPath = ezApplicationServices::GetSingleton()->GetProjectPreferencesFolder();
+    sFallbackPath.AppendPath("Window.ddl");
+
+    m_bOverrideProjectDefault[1] = m_Descs[1].LoadFromDDL(sPath).Succeeded() || m_Descs[1].LoadFromDDL(sFallbackPath).Succeeded();
   }
 }
 
@@ -103,14 +109,14 @@ void ezQtWindowCfgDlg::SaveDescs()
 
   {
     sPath = ezToolsProject::GetSingleton()->GetProjectDirectory();
-    sPath.AppendPath("Window.ddl");
+    sPath.AppendPath("RuntimeConfigs/Window.ddl");
 
     m_Descs[0].SaveToDDL(sPath).IgnoreResult();
   }
 
   {
     sPath = ezApplicationServices::GetSingleton()->GetProjectPreferencesFolder();
-    sPath.AppendPath("Window.ddl");
+    sPath.AppendPath("RuntimeConfigs/Window.ddl");
 
     if (m_bOverrideProjectDefault[1])
     {

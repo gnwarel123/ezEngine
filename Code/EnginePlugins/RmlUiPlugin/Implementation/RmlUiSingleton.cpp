@@ -105,8 +105,8 @@ ezRmlUi::ezRmlUi()
   Rml::Factory::RegisterContextInstancer(&m_pData->m_ContextInstancer);
   Rml::Factory::RegisterEventListenerInstancer(&m_pData->m_EventListenerInstancer);
 
-  const char* szFile = ":project/RmlUiConfig.ddl";
-  if (m_pData->m_Config.Load(szFile).Failed())
+  const char* szFile = ":project/RuntimeConfigs/RmlUiConfig.ddl";
+  if (m_pData->m_Config.Load(szFile).Failed() && m_pData->m_Config.Load(":project/RmlUiConfig.ddl").Failed())
   {
     ezLog::Warning("No valid RmlUi configuration file available in '{0}'.", szFile);
     return;

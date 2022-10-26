@@ -188,7 +188,7 @@ void ezGameApplicationBase::Init_ConfigureTags()
   EZ_LOG_BLOCK("Reading Tags", "Tags.ddl");
 
   ezFileReader file;
-  if (file.Open(":project/Tags.ddl").Failed())
+  if (file.Open(":project/RuntimeConfigs/Tags.ddl").Failed() && file.Open(":project/Tags.ddl").Failed())
   {
     ezLog::Dev("'Tags.ddl' does not exist");
     return;

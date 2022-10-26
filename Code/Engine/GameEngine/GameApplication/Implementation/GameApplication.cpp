@@ -366,7 +366,7 @@ void ezGameApplication::Init_ConfigureInput()
 
   {
     ezFileReader file;
-    if (file.Open(":project/InputConfig.ddl").Succeeded())
+    if (file.Open(":project/RuntimeConfigs/InputConfig.ddl").Succeeded())
     {
       ezHybridArray<ezGameAppInputConfig, 32> InputActions;
 

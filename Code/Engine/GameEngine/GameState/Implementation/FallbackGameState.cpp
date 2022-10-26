@@ -74,7 +74,7 @@ void ezFallbackGameState::ConfigureInputActions()
 {
   g_AllInput.Clear();
 
-  // if ( !ezFileSystem::ExistsFile( ":project/InputConfig.ddl" ) )
+  // if ( !ezFileSystem::ExistsFile( ":project/RuntimeConfigs/InputConfig.ddl" ) )
   {
     RegisterInputAction("Game", "MoveForwards", ezInputSlot_KeyW);
     RegisterInputAction("Game", "MoveBackwards", ezInputSlot_KeyS);
@@ -95,7 +95,7 @@ void ezFallbackGameState::ConfigureInputActions()
     // if ( !g_AllInput.IsEmpty() )
     //{
     //	ezFileWriter file;
-    //	if ( file.Open( ":project/InputConfig.ddl" ).Succeeded() )
+    //	if ( file.Open( ":project/RuntimeConfigs/InputConfig.ddl" ).Succeeded() )
     //	{
     //		ezGameAppInputConfig::WriteToDDL( file, g_AllInput );
     //	}

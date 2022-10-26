@@ -88,6 +88,11 @@ ezResult ezQtPhysxProjectSettingsDlg::Load()
 
   if (res.Failed())
   {
+    res = m_Config.Load(":project/CollisionLayers.cfg");
+  }
+
+  if (res.Failed())
+  {
     m_Config.SetGroupName(0, "Default");
     m_Config.SetGroupName(1, "Transparent");
     m_Config.SetGroupName(2, "Debris");

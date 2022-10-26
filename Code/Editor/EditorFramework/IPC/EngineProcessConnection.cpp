@@ -146,7 +146,7 @@ void ezEditorEngineProcessConnection::Initialize(const ezRTTI* pFirstAllowedMess
 
   {
     ezStringBuilder sWndCfgPath = ezApplicationServices::GetSingleton()->GetProjectPreferencesFolder();
-    sWndCfgPath.AppendPath("Window.ddl");
+    sWndCfgPath.AppendPath("RuntimeConfigs/Window.ddl");
 
     args << "-wnd";
     args << sWndCfgPath.GetData();

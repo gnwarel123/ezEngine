@@ -60,7 +60,7 @@ ezResult ezApplicationFileSystemConfig::Save(const char* szPath)
   return EZ_SUCCESS;
 }
 
-void ezApplicationFileSystemConfig::Load(const char* szPath /*= ":project/DataDirectories.ddl"*/)
+void ezApplicationFileSystemConfig::Load(const char* szPath /*= ":project/RuntimeConfigs/DataDirectories.ddl"*/)
 {
   EZ_LOG_BLOCK("ezApplicationFileSystemConfig::Load()");
 

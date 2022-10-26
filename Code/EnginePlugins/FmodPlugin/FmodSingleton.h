@@ -61,7 +61,7 @@ public:
   FMOD::System* GetLowLevelSystem() const { return m_pLowLevelSystem; }
 
   /// \brief Can be called before startup to load the fmod configs from a different file.
-  /// Otherwise will automatically be loaded by fmod startup with the default path ":project/FmodConfig.ddl"
+  /// Otherwise will automatically be loaded by fmod startup with the default path ":project/RuntimeConfigs/FmodConfig.ddl"
   virtual void LoadConfiguration(const char* szFile) override;
 
   /// \brief By default the fmod integration will auto-detect the platform (and thus the config) to use.

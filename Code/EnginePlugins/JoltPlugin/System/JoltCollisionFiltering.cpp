@@ -30,7 +30,7 @@ namespace ezJoltCollisionFiltering
   {
     EZ_LOG_BLOCK("ezJoltCore::LoadCollisionFilters");
 
-    if (s_CollisionFilterConfig.Load("RuntimeConfigs/CollisionLayers.cfg").Failed())
+    if (s_CollisionFilterConfig.Load("RuntimeConfigs/CollisionLayers.cfg").Failed() && s_CollisionFilterConfig.Load("CollisionLayers.cfg").Failed())
     {
       ezLog::Info("Collision filter config file could not be found ('RuntimeConfigs/CollisionLayers.cfg'). Using default values.");
 

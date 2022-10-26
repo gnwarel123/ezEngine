@@ -5,6 +5,7 @@
 #include <FmodPlugin/Resources/FmodSoundBankResource.h>
 #include <FmodPlugin/Resources/FmodSoundEventResource.h>
 #include <Foundation/Configuration/CVar.h>
+#include <Foundation/IO/FileSystem/FileSystem.h>
 #include <GameEngine/GameApplication/GameApplication.h>
 
 EZ_IMPLEMENT_SINGLETON(ezFmod);
@@ -40,7 +41,11 @@ void ezFmod::Startup()
 
   if (m_pData->m_Configs.m_AssetProfiles.IsEmpty())
   {
-    const char* szFile = ":project/FmodConfig.ddl";
+    const char* szFile = ":project/RuntimeConfigs/FmodConfig.ddl";
+
+    if (!ezFileSystem::ExistsFile(szFile))
+      szFile = ":project/FmodConfig.ddl";
+
     LoadConfiguration(szFile);
 
     if (m_pData->m_Configs.m_AssetProfiles.IsEmpty())
