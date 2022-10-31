@@ -94,7 +94,8 @@ const ezVisualScriptNodeDescriptor* ezVisualScriptTypeRegistry::GetDescriptorFor
 
 void ezVisualScriptTypeRegistry::PhantomTypeRegistryEventHandler(const ezPhantomRttiManagerEvent& e)
 {
-  if (e.m_Type == ezPhantomRttiManagerEvent::Type::TypeAdded || e.m_Type == ezPhantomRttiManagerEvent::Type::TypeChanged)
+  if ((e.m_Type == ezPhantomRttiManagerEvent::Type::TypeAdded && m_NodeDescriptors.Contains(e.m_pChangedType) == false) ||
+    e.m_Type == ezPhantomRttiManagerEvent::Type::TypeChanged)
   {
     UpdateNodeType(e.m_pChangedType);
   }
@@ -108,7 +109,7 @@ void ezVisualScriptTypeRegistry::UpdateNodeTypes()
   if (m_pBaseType == nullptr)
   {
     ezReflectedTypeDescriptor desc;
-    desc.m_sTypeName = "ezVisualScriptNodeBase";
+    desc.m_sTypeName = "ezVisualScriptNodeBase_Legacy";
     desc.m_sPluginName = "VisualScriptTypes";
     desc.m_sParentTypeName = ezGetStaticRTTI<ezReflectedClass>()->GetTypeName();
     desc.m_Flags = ezTypeFlags::Phantom | ezTypeFlags::Abstract | ezTypeFlags::Class;

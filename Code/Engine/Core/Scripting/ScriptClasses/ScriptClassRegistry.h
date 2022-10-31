@@ -6,6 +6,17 @@
 #include <Foundation/Strings/HashedString.h>
 #include <Foundation/Types/UniquePtr.h>
 
+class EZ_CORE_DLL ezScriptExtension : public ezPropertyAttribute
+{
+  EZ_ADD_DYNAMIC_REFLECTION(ezScriptExtension, ezPropertyAttribute);
+
+public:
+  ezScriptExtension() = default;
+  ezScriptExtension(const char* szTypeName) { m_sTypeName = szTypeName; }
+
+  ezUntrackedString m_sTypeName;
+};
+
 struct ezScriptFunctionTable_Base
 {
   EZ_DECLARE_POD_TYPE();

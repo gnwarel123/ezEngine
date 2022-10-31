@@ -1,6 +1,7 @@
 #include <EditorPluginAssets/EditorPluginAssetsPCH.h>
 
 #include <EditorPluginVisualScript/VisualScriptGraph/VisualScriptGraph.h>
+#include <EditorPluginVisualScript/VisualScriptGraph/VisualScriptNodeRegistry.h>
 
 // clang-format off
 EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezVisualScriptPin, 1, ezRTTINoAllocator)
@@ -19,12 +20,7 @@ ezVisualScriptNodeManager::~ezVisualScriptNodeManager() = default;
 
 bool ezVisualScriptNodeManager::InternalIsNode(const ezDocumentObject* pObject) const
 {
-  /*if (pObject != nullptr)
-  {
-    auto pType = pObject->GetTypeAccessor().GetType();
-    return pType->IsDerivedFrom<ezVisualScriptNodeBase>();
-  }*/
-  return false;
+  return pObject->GetType()->IsDerivedFrom(ezVisualScriptNodeRegistry::GetSingleton()->GetNodeBaseType());
 }
 
 ezStatus ezVisualScriptNodeManager::InternalCanConnect(const ezPin& source, const ezPin& target, CanConnectResult& out_Result) const
@@ -41,6 +37,13 @@ void ezVisualScriptNodeManager::InternalCreatePins(const ezDocumentObject* pObje
 
 void ezVisualScriptNodeManager::GetCreateableTypes(ezHybridArray<const ezRTTI*, 32>& Types) const
 {
-  //Types.PushBack(ezGetStaticRTTI<ezVisualScriptNode>());
-  //Types.PushBack(ezGetStaticRTTI<ezVisualScriptNodeAny>());
+  const ezRTTI* pNodeBaseType = ezVisualScriptNodeRegistry::GetSingleton()->GetNodeBaseType();
+
+  for (auto pRtti = ezRTTI::GetFirstInstance(); pRtti != nullptr; pRtti = pRtti->GetNextInstance())
+  {
+    if (pRtti->IsDerivedFrom(pNodeBaseType) && !pRtti->GetTypeFlags().IsSet(ezTypeFlags::Abstract))
+    {
+      Types.PushBack(pRtti);
+    }
+  }
 }

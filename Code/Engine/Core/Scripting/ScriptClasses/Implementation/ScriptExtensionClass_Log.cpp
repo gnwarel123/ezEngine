@@ -10,6 +10,11 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(ezScriptExtensionClass_Log, ezNoBase, 1, ezRTTINo
     EZ_SCRIPT_FUNCTION_PROPERTY(Info, In, "Text"),
   }
   EZ_END_FUNCTIONS;
+  EZ_BEGIN_ATTRIBUTES
+  {
+    new ezScriptExtension("Log"),
+  }
+  EZ_END_ATTRIBUTES;
 }
 EZ_END_STATIC_REFLECTED_TYPE;
 // clang-format on

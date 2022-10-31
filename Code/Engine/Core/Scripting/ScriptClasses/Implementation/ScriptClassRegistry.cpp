@@ -2,6 +2,19 @@
 
 #include <Core/Scripting/ScriptClasses/ScriptClassRegistry.h>
 
+// clang-format off
+EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezScriptExtension, 1, ezRTTIDefaultAllocator<ezScriptExtension>)
+{
+  EZ_BEGIN_PROPERTIES
+  {
+    EZ_MEMBER_PROPERTY("TypeName", m_sTypeName),
+  }
+  EZ_END_PROPERTIES;
+}
+EZ_END_DYNAMIC_REFLECTED_TYPE;
+// clang-format on
+
+
 ezScriptClassRegistry::ezScriptClassRegistry() = default;
 
 // static

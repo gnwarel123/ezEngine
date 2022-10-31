@@ -21,6 +21,8 @@ class ezQtVisualScriptNode : public ezQtNode
 {
 public:
   ezQtVisualScriptNode();
+
+  virtual void UpdateState() override;
 };
 
 class ezQtVisualScriptNodeScene : public ezQtNodeScene
