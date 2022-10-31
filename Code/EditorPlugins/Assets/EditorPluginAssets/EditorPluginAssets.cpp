@@ -350,21 +350,21 @@ static void ConfigureVisualScriptAsset()
 
   // Menu Bar
   {
-    ezActionMapManager::RegisterActionMap("VisualScriptAssetMenuBar").IgnoreResult();
-    ezStandardMenus::MapActions("VisualScriptAssetMenuBar", ezStandardMenuTypes::File | ezStandardMenuTypes::Edit | ezStandardMenuTypes::Panels | ezStandardMenuTypes::Help);
-    ezProjectActions::MapActions("VisualScriptAssetMenuBar");
-    ezDocumentActions::MapActions("VisualScriptAssetMenuBar", "Menu.File", false);
-    ezCommandHistoryActions::MapActions("VisualScriptAssetMenuBar", "Menu.Edit");
-    ezEditActions::MapActions("VisualScriptAssetMenuBar", "Menu.Edit", false, false);
+    ezActionMapManager::RegisterActionMap("VisualScriptAssetMenuBar_Legacy").IgnoreResult();
+    ezStandardMenus::MapActions("VisualScriptAssetMenuBar_Legacy", ezStandardMenuTypes::File | ezStandardMenuTypes::Edit | ezStandardMenuTypes::Panels | ezStandardMenuTypes::Help);
+    ezProjectActions::MapActions("VisualScriptAssetMenuBar_Legacy");
+    ezDocumentActions::MapActions("VisualScriptAssetMenuBar_Legacy", "Menu.File", false);
+    ezCommandHistoryActions::MapActions("VisualScriptAssetMenuBar_Legacy", "Menu.Edit");
+    ezEditActions::MapActions("VisualScriptAssetMenuBar_Legacy", "Menu.Edit", false, false);
   }
 
   // Tool Bar
   {
-    ezActionMapManager::RegisterActionMap("VisualScriptAssetToolBar").IgnoreResult();
-    ezDocumentActions::MapActions("VisualScriptAssetToolBar", "", true);
-    ezCommandHistoryActions::MapActions("VisualScriptAssetToolBar", "");
-    ezAssetActions::MapActions("VisualScriptAssetToolBar", true);
-    ezVisualScriptActions::MapActions("VisualScriptAssetToolBar", "");
+    ezActionMapManager::RegisterActionMap("VisualScriptAssetToolBar_Legacy").IgnoreResult();
+    ezDocumentActions::MapActions("VisualScriptAssetToolBar_Legacy", "", true);
+    ezCommandHistoryActions::MapActions("VisualScriptAssetToolBar_Legacy", "");
+    ezAssetActions::MapActions("VisualScriptAssetToolBar_Legacy", true);
+    ezVisualScriptActions::MapActions("VisualScriptAssetToolBar_Legacy", "");
   }
 }
 

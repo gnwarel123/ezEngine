@@ -42,8 +42,7 @@ QRectF ezQtStateMachinePin::GetPinRect() const
 
 //////////////////////////////////////////////////////////////////////////
 
-ezQtStateMachineConnection::ezQtStateMachineConnection(QGraphicsItem* parent /*= nullptr*/)
-  : ezQtConnection(parent)
+ezQtStateMachineConnection::ezQtStateMachineConnection()
 {
   setFlag(QGraphicsItem::ItemIsSelectable);
 }

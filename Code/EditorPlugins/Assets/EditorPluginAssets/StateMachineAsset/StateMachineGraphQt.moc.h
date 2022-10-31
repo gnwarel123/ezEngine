@@ -17,7 +17,7 @@ public:
 class ezQtStateMachineConnection : public ezQtConnection
 {
 public:
-  ezQtStateMachineConnection(QGraphicsItem* parent = nullptr);
+  ezQtStateMachineConnection();
 };
 
 class ezQtStateMachineNode : public ezQtNode

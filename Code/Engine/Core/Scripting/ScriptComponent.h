@@ -62,7 +62,6 @@ public:
 private:
   void InstantiateScript();
   void ClearInstance();
-  void CallScriptFunction(ezAbstractFunctionProperty* pFunction);
   void UpdateScheduling();
 
   struct EventSender

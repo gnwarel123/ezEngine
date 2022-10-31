@@ -5,9 +5,8 @@
 
 class EZ_CORE_DLL ezScriptBaseClass_Component : public ezComponent
 {
+  EZ_ADD_DYNAMIC_REFLECTION(ezScriptBaseClass_Component, ezComponent);
 };
-
-EZ_DECLARE_REFLECTABLE_TYPE(EZ_CORE_DLL, ezScriptBaseClass_Component);
 
 struct ezScriptFunctionTable_Component : public ezScriptFunctionTable_Base
 {

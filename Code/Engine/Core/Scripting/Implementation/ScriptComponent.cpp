@@ -24,7 +24,14 @@ EZ_BEGIN_COMPONENT_TYPE(ezScriptComponent, 1, ezComponentMode::Static)
   EZ_END_ATTRIBUTES;
 }
 EZ_END_DYNAMIC_REFLECTED_TYPE;
-// clang-format on
+  // clang-format on
+
+#define CALL_SCRIPT_FUNCTION(pFunction)                                              \
+  if (m_pInstance != nullptr && m_pFunctionTable != nullptr && pFunction != nullptr) \
+  {                                                                                  \
+    ezVariant returnValue;                                                           \
+    pFunction->Execute(m_pInstance.Borrow(), ezArrayPtr<ezVariant>(), returnValue);  \
+  }
 
 ezScriptComponent::ezScriptComponent() = default;
 ezScriptComponent::~ezScriptComponent() = default;
@@ -80,35 +87,35 @@ void ezScriptComponent::Initialize()
     InstantiateScript();
   }
 
-  CallScriptFunction(m_pFunctionTable->m_pInitializeFunction);
+  CALL_SCRIPT_FUNCTION(m_pFunctionTable->m_pInitializeFunction);
 }
 
 void ezScriptComponent::Deinitialize()
 {
   SUPER::Deinitialize();
 
-  CallScriptFunction(m_pFunctionTable->m_pDeinitializeFunction);
+  CALL_SCRIPT_FUNCTION(m_pFunctionTable->m_pDeinitializeFunction);
 }
 
 void ezScriptComponent::OnActivated()
 {
   SUPER::OnActivated();
 
-  CallScriptFunction(m_pFunctionTable->m_pOnActivatedFunction);
+  CALL_SCRIPT_FUNCTION(m_pFunctionTable->m_pOnActivatedFunction);
 }
 
 void ezScriptComponent::OnDeactivated()
 {
   SUPER::OnDeactivated();
 
-  CallScriptFunction(m_pFunctionTable->m_pOnDeactivatedFunction);
+  CALL_SCRIPT_FUNCTION(m_pFunctionTable->m_pOnDeactivatedFunction);
 }
 
 void ezScriptComponent::OnSimulationStarted()
 {
   SUPER::OnSimulationStarted();
 
-  CallScriptFunction(m_pFunctionTable->m_pOnSimulationStartedFunction);
+  CALL_SCRIPT_FUNCTION(m_pFunctionTable->m_pOnSimulationStartedFunction);
 }
 
 void ezScriptComponent::BroadcastEventMsg(ezEventMessage& msg)
@@ -181,8 +188,7 @@ const ezRangeView<const char*, ezUInt32> ezScriptComponent::GetParameters() cons
     { return m_Parameters.GetCount(); },
     [](ezUInt32& it)
     { ++it; },
-    [this](const ezUInt32& it) -> const char*
-    { return m_Parameters.GetKey(it).GetString().GetData(); });
+    [this](const ezUInt32& it) -> const char* { return m_Parameters.GetKey(it).GetString().GetData(); });
 }
 
 void ezScriptComponent::SetParameter(const char* szKey, const ezVariant& value)
@@ -227,9 +233,9 @@ void ezScriptComponent::InstantiateScript()
   }
 
   const ezRTTI* pScriptType = pScript->GetType();
-  if (pScriptType->IsDerivedFrom(ezGetStaticRTTI<ezComponent>()) == false)
+  if (pScriptType == nullptr || pScriptType->IsDerivedFrom(ezGetStaticRTTI<ezComponent>()) == false)
   {
-    ezLog::Error("Script type '{}' is not a component", pScriptType->GetTypeName());
+    ezLog::Error("Script type '{}' is not a component", pScriptType != nullptr ? pScriptType->GetTypeName() : "NULL");
     return;
   }
 
@@ -247,7 +253,7 @@ void ezScriptComponent::InstantiateScript()
 
 void ezScriptComponent::ClearInstance()
 {
-  if (m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr && m_pInstance != nullptr)
+  if (m_pInstance != nullptr && m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr)
   {
     auto pModule = GetWorld()->GetOrCreateModule<ezScriptWorldModule>();
     pModule->RemoveUpdateFunctionToSchedule(m_pFunctionTable->m_pUpdateFunction, m_pInstance.Borrow());
@@ -259,20 +265,13 @@ void ezScriptComponent::ClearInstance()
   m_pMessageDispatchType = GetDynamicRTTI();
 }
 
-void ezScriptComponent::CallScriptFunction(ezAbstractFunctionProperty* pFunction)
-{
-  if (m_pInstance != nullptr && pFunction != nullptr)
-  {
-    ezVariant returnValue;
-    pFunction->Execute(m_pInstance.Borrow(), ezArrayPtr<ezVariant>(), returnValue);
-  }
-}
-
 void ezScriptComponent::UpdateScheduling()
 {
-  if (m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr && m_pInstance != nullptr)
+  if (m_pInstance != nullptr && m_pFunctionTable != nullptr && m_pFunctionTable->m_pUpdateFunction != nullptr)
   {
     auto pModule = GetWorld()->GetOrCreateModule<ezScriptWorldModule>();
     pModule->AddUpdateFunctionToSchedule(m_pFunctionTable->m_pUpdateFunction, m_pInstance.Borrow(), m_UpdateInterval);
   }
 }
+
+#undef CALL_SCRIPT_FUNCTION

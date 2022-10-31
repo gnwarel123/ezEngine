@@ -4,7 +4,7 @@
 #include <Foundation/Strings/HashedString.h>
 
 // clang-format off
-EZ_BEGIN_STATIC_REFLECTED_TYPE(ezScriptBaseClass_Component, ezComponent, 1, ezRTTINoAllocator)
+EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezScriptBaseClass_Component, 1, ezRTTINoAllocator)
 {
   EZ_BEGIN_PROPERTIES
   {
@@ -12,7 +12,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(ezScriptBaseClass_Component, ezComponent, 1, ezRT
   }
   EZ_END_PROPERTIES;
 }
-EZ_END_STATIC_REFLECTED_TYPE;
+EZ_END_DYNAMIC_REFLECTED_TYPE;
 // clang-format on
 
 //////////////////////////////////////////////////////////////////////////

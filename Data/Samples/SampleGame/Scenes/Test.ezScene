@@ -11,14 +11,14 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{9663339125735048354,4805506592402586356}}
-		u4 %Hash{10988897075022617949}
+		u4 %Hash{7422971921482682190}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %References
 		{
 			s{"{ 0b202e08-a64f-465d-b38e-15b81d161822 }"}
 			s{"{ 618ee743-ed04-4fac-bf5f-572939db2f1d }"}
-			s{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
+			s{"{ 76fd3681-7cbb-48f0-9b9b-1dc5ff1757c7 }"}
 		}
 	}
 }
@@ -75,50 +75,6 @@ o
 }
 o
 {
-	Uuid %id{u4{16563188133678297997,4934430524657589672}}
-	s %t{"ezGameObject"}
-	u3 %v{1}
-	p
-	{
-		b %Active{1}
-		VarArray %Children{}
-		VarArray %Components
-		{
-			Uuid{u4{16453517460383330719,5148972384581481524}}
-			Uuid{u4{14195022790350226071,4986253169807004245}}
-		}
-		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0x00004040,0x0000A0C0,0}}
-		Quat %LocalRotation{f{0,0,0,0x0000803F}}
-		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
-		f %LocalUniformScaling{0x0000803F}
-		s %Mode{"ezObjectMode::Automatic"}
-		s %Name{"Old TS"}
-		VarArray %Tags
-		{
-			s{"CastShadow"}
-		}
-	}
-}
-o
-{
-	Uuid %id{u4{14195022790350226071,4986253169807004245}}
-	s %t{"ezTypeScriptComponent"}
-	u3 %v{4}
-	p
-	{
-		b %Active{1}
-		b %HandleGlobalEvents{0}
-		VarDict %Parameters
-		{
-			Color %TestColor{f{0,0x0000803F,0,0x0000803F}}
-		}
-		b %PassThroughUnhandledEvents{0}
-		s %Script{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
-	}
-}
-o
-{
 	Uuid %id{u4{3100737113475741317,5026131914826687171}}
 	s %t{"ezCameraComponent"}
 	u3 %v{10}
@@ -167,26 +123,10 @@ o
 	{
 		b %Active{1}
 		b %HandleGlobalEvents{0}
-		VarDict %Parameters
-		{
-			Color %TestColor{f{0,0,0x0000803F,0x0000803F}}
-		}
+		VarDict %Parameters{}
 		b %PassThroughUnhandledEvents{0}
-		s %Script{"{ 7181cca5-63a4-42b3-b617-c0a1b6898f8a }"}
+		s %ScriptClass{"{ 76fd3681-7cbb-48f0-9b9b-1dc5ff1757c7 }"}
 		Time %UpdateInterval{d{0}}
-	}
-}
-o
-{
-	Uuid %id{u4{16453517460383330719,5148972384581481524}}
-	s %t{"ezMeshComponent"}
-	u3 %v{3}
-	p
-	{
-		b %Active{1}
-		Color %Color{f{0x0000803F,0x0000803F,0x0000803F,0x0000803F}}
-		VarArray %Materials{}
-		s %Mesh{"{ 618ee743-ed04-4fac-bf5f-572939db2f1d }"}
 	}
 }
 o
@@ -302,7 +242,6 @@ o
 			Uuid{u4{6748743675953750426,5292599083132208464}}
 			Uuid{u4{18184963157338067607,5568223387360395424}}
 			Uuid{u4{16641243497108890523,4808492958926252913}}
-			Uuid{u4{16563188133678297997,4934430524657589672}}
 			Uuid{u4{14314929761848262433,10268233622312706889}}
 		}
 		Uuid %Settings{u4{66144980889641367,5060779224526666900}}
@@ -319,8 +258,8 @@ o
 		VarArray %Children{}
 		VarArray %Components
 		{
-			Uuid{u4{14205259088553295155,10482775482236598741}}
 			Uuid{u4{8878531296591070607,5091621017790812600}}
+			Uuid{u4{14205259088553295155,10482775482236598741}}
 		}
 		s %GlobalKey{""}
 		Vec3 %LocalPosition{f{0x00004040,0x000060C0,0}}
@@ -328,7 +267,7 @@ o
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
 		s %Mode{"ezObjectMode::Automatic"}
-		s %Name{"New TS"}
+		s %Name{""}
 		VarArray %Tags
 		{
 			s{"CastShadow"}
@@ -655,24 +594,6 @@ o
 		s %TypeName{"ezDirectionalLightComponent"}
 		u3 %TypeSize{96}
 		u3 %TypeVersion{3}
-	}
-}
-o
-{
-	Uuid %id{u4{11568452837770943362,10420668725217181016}}
-	s %t{"ezReflectedTypeDescriptor"}
-	u3 %v{1}
-	p
-	{
-		VarArray %Attributes{}
-		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
-		VarArray %Functions{}
-		s %ParentTypeName{"ezEventMessageHandlerComponent"}
-		s %PluginName{"ezEditorPluginTypeScript"}
-		VarArray %Properties{}
-		s %TypeName{"ezTypeScriptComponent"}
-		u3 %TypeSize{200}
-		u3 %TypeVersion{4}
 	}
 }
 o

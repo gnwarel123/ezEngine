@@ -18,7 +18,7 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(TypeScript, Resource)
   ON_CORESYSTEMS_STARTUP 
   {
     ezResourceManager::RegisterResourceOverrideType(ezGetStaticRTTI<ezVisualScriptClassResource>(), [](const ezStringBuilder& sResourceID) -> bool  {
-        return sResourceID.HasExtension(".ezVisualScriptClass");
+        return sResourceID.HasExtension(".ezVisualScriptClassBin");
       });
   }
 
