@@ -41,9 +41,9 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(EditorPluginAssets, VisualScript)
     ezVisualScriptTypeRegistry::GetSingleton()->UpdateNodeTypes();
     const ezRTTI* pBaseType = ezVisualScriptTypeRegistry::GetSingleton()->GetNodeBaseType();
 
-    ezQtNodeScene::GetPinFactory().RegisterCreator(ezGetStaticRTTI<ezVisualScriptPin>(), [](const ezRTTI* pRtti)->ezQtPin* { return new ezQtVisualScriptPin(); });
-    ezQtNodeScene::GetConnectionFactory().RegisterCreator(ezGetStaticRTTI<ezVisualScriptConnection>(), [](const ezRTTI* pRtti)->ezQtConnection* { return new ezQtVisualScriptConnection(); });
-    ezQtNodeScene::GetNodeFactory().RegisterCreator(pBaseType, [](const ezRTTI* pRtti)->ezQtNode* { return new ezQtVisualScriptNode(); });
+    ezQtNodeScene::GetPinFactory().RegisterCreator(ezGetStaticRTTI<ezVisualScriptPin_Legacy>(), [](const ezRTTI* pRtti)->ezQtPin* { return new ezQtVisualScriptPin_Legacy(); });
+    ezQtNodeScene::GetConnectionFactory().RegisterCreator(ezGetStaticRTTI<ezVisualScriptConnection_Legacy>(), [](const ezRTTI* pRtti)->ezQtConnection* { return new ezQtVisualScriptConnection_Legacy(); });
+    ezQtNodeScene::GetNodeFactory().RegisterCreator(pBaseType, [](const ezRTTI* pRtti)->ezQtNode* { return new ezQtVisualScriptNode_Legacy(); });
   }
 
   ON_CORESYSTEMS_SHUTDOWN
@@ -51,8 +51,8 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(EditorPluginAssets, VisualScript)
     const ezRTTI* pBaseType = ezVisualScriptTypeRegistry::GetSingleton()->GetNodeBaseType();
     ezQtNodeScene::GetNodeFactory().UnregisterCreator(pBaseType);
 
-    ezQtNodeScene::GetPinFactory().UnregisterCreator(ezGetStaticRTTI<ezVisualScriptPin>());
-    ezQtNodeScene::GetConnectionFactory().UnregisterCreator(ezGetStaticRTTI<ezVisualScriptConnection>());
+    ezQtNodeScene::GetPinFactory().UnregisterCreator(ezGetStaticRTTI<ezVisualScriptPin_Legacy>());
+    ezQtNodeScene::GetConnectionFactory().UnregisterCreator(ezGetStaticRTTI<ezVisualScriptConnection_Legacy>());
 
     ezVisualScriptTypeRegistry* pDummy = ezVisualScriptTypeRegistry::GetSingleton();
     EZ_DEFAULT_DELETE(pDummy);
