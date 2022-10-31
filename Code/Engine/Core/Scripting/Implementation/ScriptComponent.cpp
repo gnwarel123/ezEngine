@@ -1,5 +1,6 @@
 #include <Core/CorePCH.h>
 
+#include <Core/Scripting/ScriptClasses/ScriptBaseClass_Component.h>
 #include <Core/Scripting/ScriptComponent.h>
 #include <Core/Scripting/ScriptWorldModule.h>
 #include <Core/WorldSerializer/WorldReader.h>
@@ -11,8 +12,8 @@ EZ_BEGIN_COMPONENT_TYPE(ezScriptComponent, 1, ezComponentMode::Static)
   EZ_BEGIN_PROPERTIES
   {
     EZ_ACCESSOR_PROPERTY("UpdateInterval", GetUpdateInterval, SetUpdateInterval)->AddAttributes(new ezClampValueAttribute(ezTime::Zero(), ezVariant())),
-    EZ_ACCESSOR_PROPERTY("Script", GetScriptFile, SetScriptFile)->AddAttributes(new ezAssetBrowserAttribute("TypeScript")),
-    EZ_MAP_ACCESSOR_PROPERTY("Parameters", GetParameters, GetParameter, SetParameter, RemoveParameter)->AddAttributes(new ezExposedParametersAttribute("Script")),
+    EZ_ACCESSOR_PROPERTY("ScriptClass", GetScriptClassFile, SetScriptClassFile)->AddAttributes(new ezAssetBrowserAttribute("CompatibleAsset_ScriptClass")),
+    EZ_MAP_ACCESSOR_PROPERTY("Parameters", GetParameters, GetParameter, SetParameter, RemoveParameter)->AddAttributes(new ezExposedParametersAttribute("ScriptClass")),
   }
   EZ_END_PROPERTIES;
   EZ_BEGIN_ATTRIBUTES
@@ -33,7 +34,7 @@ void ezScriptComponent::SerializeComponent(ezWorldWriter& stream) const
   SUPER::SerializeComponent(stream);
   auto& s = stream.GetStream();
 
-  s << m_hScript;
+  s << m_hScriptClass;
   s << m_UpdateInterval;
 
   ezUInt16 uiNumParams = static_cast<ezUInt16>(m_Parameters.GetCount());
@@ -52,7 +53,7 @@ void ezScriptComponent::DeserializeComponent(ezWorldReader& stream)
   // const ezUInt32 uiVersion = stream.GetComponentTypeVersion(GetStaticRTTI());
   auto& s = stream.GetStream();
 
-  s >> m_hScript;
+  s >> m_hScriptClass;
   s >> m_UpdateInterval;
 
   ezUInt16 uiNumParams = 0;
@@ -74,7 +75,7 @@ void ezScriptComponent::Initialize()
 {
   SUPER::Initialize();
 
-  if (m_hScript.IsValid())
+  if (m_hScriptClass.IsValid())
   {
     InstantiateScript();
   }
@@ -127,34 +128,34 @@ void ezScriptComponent::BroadcastEventMsg(ezEventMessage& msg)
   sender.m_Sender.SendEventMessage(msg, this, GetOwner());
 }
 
-void ezScriptComponent::SetScript(const ezScriptResourceHandle& hScript)
+void ezScriptComponent::SetScriptClass(const ezScriptClassResourceHandle& hScript)
 {
-  if (m_hScript == hScript)
+  if (m_hScriptClass == hScript)
     return;
 
-  m_hScript = hScript;
+  m_hScriptClass = hScript;
 
-  if (IsActiveAndInitialized() && m_hScript.IsValid())
+  if (IsActiveAndInitialized() && m_hScriptClass.IsValid())
   {
     InstantiateScript();
   }
 }
 
-void ezScriptComponent::SetScriptFile(const char* szFile)
+void ezScriptComponent::SetScriptClassFile(const char* szFile)
 {
-  ezScriptResourceHandle hScript;
+  ezScriptClassResourceHandle hScript;
 
   if (!ezStringUtils::IsNullOrEmpty(szFile))
   {
-    hScript = ezResourceManager::LoadResource<ezScriptResource>(szFile);
+    hScript = ezResourceManager::LoadResource<ezScriptClassResource>(szFile);
   }
 
-  SetScript(hScript);
+  SetScriptClass(hScript);
 }
 
-const char* ezScriptComponent::GetScriptFile() const
+const char* ezScriptComponent::GetScriptClassFile() const
 {
-  return m_hScript.IsValid() ? m_hScript.GetResourceID().GetData() : "";
+  return m_hScriptClass.IsValid() ? m_hScriptClass.GetResourceID().GetData() : "";
 }
 
 void ezScriptComponent::SetUpdateInterval(ezTime interval)
@@ -218,10 +219,10 @@ void ezScriptComponent::InstantiateScript()
 {
   ClearInstance();
 
-  ezResourceLock<ezScriptResource> pScript(m_hScript, ezResourceAcquireMode::BlockTillLoaded_NeverFail);
+  ezResourceLock<ezScriptClassResource> pScript(m_hScriptClass, ezResourceAcquireMode::BlockTillLoaded_NeverFail);
   if (pScript.GetAcquireResult() != ezResourceAcquireResult::Final)
   {
-    ezLog::Error("Failed to load script '{}'", GetScriptFile());
+    ezLog::Error("Failed to load script '{}'", GetScriptClassFile());
     return;
   }
 
@@ -232,7 +233,7 @@ void ezScriptComponent::InstantiateScript()
     return;
   }
 
-  m_pFunctionTable = static_cast<const ezScriptFunctionTable_Component*>(pScript->GetFunctionTable());
+  m_pFunctionTable = pScript->GetFunctionTable<ezScriptFunctionTable_Component>();
   m_pMessageDispatchType = pScriptType;
 
   m_pInstance = pScript->Instantiate(*this, *GetWorld());

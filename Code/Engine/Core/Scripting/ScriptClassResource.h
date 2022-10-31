@@ -4,23 +4,8 @@
 #include <Foundation/Containers/ArrayMap.h>
 
 class ezWorld;
-
-using ezScriptResourceHandle = ezTypedResourceHandle<class ezScriptResource>;
-
-struct ezScriptFunctionTable_Base
-{
-  EZ_DECLARE_POD_TYPE();
-};
-
-struct ezScriptFunctionTable_Component : public ezScriptFunctionTable_Base
-{
-  ezAbstractFunctionProperty* m_pInitializeFunction = nullptr;
-  ezAbstractFunctionProperty* m_pDeinitializeFunction = nullptr;
-  ezAbstractFunctionProperty* m_pOnActivatedFunction = nullptr;
-  ezAbstractFunctionProperty* m_pOnDeactivatedFunction = nullptr;
-  ezAbstractFunctionProperty* m_pOnSimulationStartedFunction = nullptr;
-  ezAbstractFunctionProperty* m_pUpdateFunction = nullptr;
-};
+struct ezScriptFunctionTable_Base;
+using ezScriptClassResourceHandle = ezTypedResourceHandle<class ezScriptClassResource>;
 
 class EZ_CORE_DLL ezScriptInstance
 {
@@ -39,19 +24,20 @@ private:
   ezString m_sTypeNameStorage;
 };
 
-class EZ_CORE_DLL ezScriptResource : public ezResource
+class EZ_CORE_DLL ezScriptClassResource : public ezResource
 {
-  EZ_ADD_DYNAMIC_REFLECTION(ezScriptResource, ezResource);
-  EZ_RESOURCE_DECLARE_COMMON_CODE(ezScriptResource);
+  EZ_ADD_DYNAMIC_REFLECTION(ezScriptClassResource, ezResource);
+  EZ_RESOURCE_DECLARE_COMMON_CODE(ezScriptClassResource);
 
 public:
-  ezScriptResource();
+  ezScriptClassResource();
+  ~ezScriptClassResource();
 
   const ezRTTI* GetType() const { return m_pType.Borrow(); }
 
-  const ezScriptFunctionTable_Base* GetFunctionTable() const { return m_pFunctionTable.Borrow(); }
+  template<typename T>
+  const T* GetFunctionTable() const { return static_cast<const T*>(m_pFunctionTable.Borrow()); }
 
-  //virtual bool InstantiateWhenSimulationStarted() const { return false; }
   virtual ezUniquePtr<ezScriptInstance> Instantiate(ezReflectedClass& owner, ezWorld& world) const = 0;
 
 protected:

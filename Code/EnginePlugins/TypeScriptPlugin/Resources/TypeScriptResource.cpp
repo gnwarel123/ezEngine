@@ -1,7 +1,7 @@
 #include <TypeScriptPlugin/TypeScriptPluginPCH.h>
 
+#include <Core/Assets/AssetFileHeader.h>
 #include <Core/Scripting/DuktapeContext.h>
-#include <Core/World/Component.h>
 #include <Foundation/Configuration/Startup.h>
 #include <TypeScriptPlugin/Components/TypeScriptComponent.h>
 #include <TypeScriptPlugin/Resources/TypeScriptResource.h>
@@ -80,11 +80,11 @@ void ezTypeScriptInstance::ApplyParameters(const ezArrayMap<ezHashedString, ezVa
 //////////////////////////////////////////////////////////////////////////
 
 // clang-format off
-EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezTypeScriptResource, 1, ezRTTIDefaultAllocator<ezTypeScriptResource>)
+EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezTypeScriptClassResource, 1, ezRTTIDefaultAllocator<ezTypeScriptClassResource>)
 EZ_END_DYNAMIC_REFLECTED_TYPE;
-EZ_RESOURCE_IMPLEMENT_COMMON_CODE(ezTypeScriptResource);
+EZ_RESOURCE_IMPLEMENT_COMMON_CODE(ezTypeScriptClassResource);
 
-EZ_BEGIN_SUBSYSTEM_DECLARATION(TypeScript, Resource)
+EZ_BEGIN_SUBSYSTEM_DECLARATION(TypeScript, ClassResource)
 
   BEGIN_SUBSYSTEM_DEPENDENCIES
     "ResourceManager" 
@@ -92,23 +92,23 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(TypeScript, Resource)
 
   ON_CORESYSTEMS_STARTUP 
   {
-    ezResourceManager::RegisterResourceOverrideType(ezGetStaticRTTI<ezTypeScriptResource>(), [](const ezStringBuilder& sResourceID) -> bool  {
+    ezResourceManager::RegisterResourceOverrideType(ezGetStaticRTTI<ezTypeScriptClassResource>(), [](const ezStringBuilder& sResourceID) -> bool  {
         return sResourceID.HasExtension(".ezTypeScriptRes");
       });
   }
 
   ON_CORESYSTEMS_SHUTDOWN
   {
-    ezResourceManager::UnregisterResourceOverrideType(ezGetStaticRTTI<ezTypeScriptResource>());
+    ezResourceManager::UnregisterResourceOverrideType(ezGetStaticRTTI<ezTypeScriptClassResource>());
   }
 
 EZ_END_SUBSYSTEM_DECLARATION;
 // clang-format on
 
-ezTypeScriptResource::ezTypeScriptResource() = default;
-ezTypeScriptResource::~ezTypeScriptResource() = default;
+ezTypeScriptClassResource::ezTypeScriptClassResource() = default;
+ezTypeScriptClassResource::~ezTypeScriptClassResource() = default;
 
-ezResourceLoadDesc ezTypeScriptResource::UnloadData(Unload WhatToUnload)
+ezResourceLoadDesc ezTypeScriptClassResource::UnloadData(Unload WhatToUnload)
 {
   DeleteScriptType();
 
@@ -120,7 +120,7 @@ ezResourceLoadDesc ezTypeScriptResource::UnloadData(Unload WhatToUnload)
   return ld;
 }
 
-ezResourceLoadDesc ezTypeScriptResource::UpdateContent(ezStreamReader* pStream)
+ezResourceLoadDesc ezTypeScriptClassResource::UpdateContent(ezStreamReader* pStream)
 {
   ezResourceLoadDesc ld;
   ld.m_uiQualityLevelsDiscardable = 0;
@@ -162,13 +162,13 @@ ezResourceLoadDesc ezTypeScriptResource::UpdateContent(ezStreamReader* pStream)
   return ld;
 }
 
-void ezTypeScriptResource::UpdateMemoryUsage(MemoryUsage& out_NewMemoryUsage)
+void ezTypeScriptClassResource::UpdateMemoryUsage(MemoryUsage& out_NewMemoryUsage)
 {
-  out_NewMemoryUsage.m_uiMemoryCPU = (ezUInt32)sizeof(ezTypeScriptResource);
+  out_NewMemoryUsage.m_uiMemoryCPU = (ezUInt32)sizeof(ezTypeScriptClassResource);
   out_NewMemoryUsage.m_uiMemoryGPU = 0;
 }
 
-ezUniquePtr<ezScriptInstance> ezTypeScriptResource::Instantiate(ezReflectedClass& owner, ezWorld& world) const
+ezUniquePtr<ezScriptInstance> ezTypeScriptClassResource::Instantiate(ezReflectedClass& owner, ezWorld& world) const
 {
   auto pComponent = ezStaticCast<ezComponent*>(&owner);
 

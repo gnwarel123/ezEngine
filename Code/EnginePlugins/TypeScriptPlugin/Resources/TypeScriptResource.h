@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Scripting/ScriptResource.h>
+#include <Core/Scripting/ScriptClassResource.h>
 #include <TypeScriptPlugin/TypeScriptPluginDLL.h>
 
 class ezComponent;
@@ -22,14 +22,14 @@ private:
   ezComponent& m_Component;
 };
 
-class EZ_TYPESCRIPTPLUGIN_DLL ezTypeScriptResource : public ezScriptResource
+class EZ_TYPESCRIPTPLUGIN_DLL ezTypeScriptClassResource : public ezScriptClassResource
 {
-  EZ_ADD_DYNAMIC_REFLECTION(ezTypeScriptResource, ezScriptResource);
-  EZ_RESOURCE_DECLARE_COMMON_CODE(ezTypeScriptResource);
+  EZ_ADD_DYNAMIC_REFLECTION(ezTypeScriptClassResource, ezScriptClassResource);
+  EZ_RESOURCE_DECLARE_COMMON_CODE(ezTypeScriptClassResource);
 
 public:
-  ezTypeScriptResource();
-  ~ezTypeScriptResource();
+  ezTypeScriptClassResource();
+  ~ezTypeScriptClassResource();
 
 private:
   virtual ezResourceLoadDesc UnloadData(Unload WhatToUnload) override;

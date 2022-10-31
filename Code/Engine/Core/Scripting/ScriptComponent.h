@@ -1,8 +1,10 @@
 #pragma once
 
-#include <Core/Scripting/ScriptResource.h>
+#include <Core/Scripting/ScriptClassResource.h>
 #include <Core/World/EventMessageHandlerComponent.h>
 #include <Foundation/Types/RangeView.h>
+
+struct ezScriptFunctionTable_Component;
 
 using ezScriptComponentManager = ezComponentManager<class ezScriptComponent, ezBlockStorageType::FreeList>;
 
@@ -31,7 +33,7 @@ protected:
   // ezEventMessageHandlerComponent
 
 protected:
-  //virtual bool HandlesEventMessage(const ezEventMessage& msg) const override;
+  // virtual bool HandlesEventMessage(const ezEventMessage& msg) const override;
 
   //////////////////////////////////////////////////////////////////////////
   // ezScriptComponent
@@ -41,14 +43,14 @@ public:
 
   void BroadcastEventMsg(ezEventMessage& msg);
 
-  void SetScript(const ezScriptResourceHandle& hScript);
-  const ezScriptResourceHandle& GetScript() const { return m_hScript; }
+  void SetScriptClass(const ezScriptClassResourceHandle& hScript);
+  const ezScriptClassResourceHandle& GetScriptClass() const { return m_hScriptClass; }
 
-  void SetScriptFile(const char* szFile); // [ property ]
-  const char* GetScriptFile() const;      // [ property ]
+  void SetScriptClassFile(const char* szFile); // [ property ]
+  const char* GetScriptClassFile() const;      // [ property ]
 
   void SetUpdateInterval(ezTime interval); // [ property ]
-  ezTime GetUpdateInterval() const; // [ property ]
+  ezTime GetUpdateInterval() const;        // [ property ]
 
   //////////////////////////////////////////////////////////////////////////
   // Exposed Parameters
@@ -62,7 +64,7 @@ private:
   void ClearInstance();
   void CallScriptFunction(ezAbstractFunctionProperty* pFunction);
   void UpdateScheduling();
-  
+
   struct EventSender
   {
     const ezRTTI* m_pMsgType = nullptr;
@@ -73,7 +75,7 @@ private:
 
   ezArrayMap<ezHashedString, ezVariant> m_Parameters;
 
-  ezScriptResourceHandle m_hScript;
+  ezScriptClassResourceHandle m_hScriptClass;
   ezTime m_UpdateInterval = ezTime::Zero();
 
   ezUniquePtr<ezScriptInstance> m_pInstance;

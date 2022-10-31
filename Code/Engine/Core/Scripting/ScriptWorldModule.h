@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Utils/IntervalScheduler.h>
-#include <Core/World/WorldModule.h>
+#include <Core/World/World.h>
 
 class ezScriptWorldModule : public ezWorldModule
 {
