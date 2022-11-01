@@ -71,6 +71,7 @@ public:
     Circle,
     Rect,
     RoundRect,
+    Arrow,
     Default = Circle
   };
 
