@@ -1,6 +1,8 @@
 #include <Core/CorePCH.h>
 
+#include <Core/Scripting/ScriptClasses/ScriptClassRegistry.h>
 #include <Core/Scripting/ScriptClasses/ScriptExtensionClass_Log.h>
+
 
 // clang-format off
 EZ_BEGIN_STATIC_REFLECTED_TYPE(ezScriptExtensionClass_Log, ezNoBase, 1, ezRTTINoAllocator)

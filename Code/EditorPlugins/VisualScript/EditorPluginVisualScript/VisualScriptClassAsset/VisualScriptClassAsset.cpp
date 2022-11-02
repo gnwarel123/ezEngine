@@ -15,7 +15,7 @@ ezVisualScriptClassAssetDocument::ezVisualScriptClassAssetDocument(const char* s
 {
 }
 
-ezStatus ezVisualScriptClassAssetDocument::InternalTransformAsset(ezStreamWriter& stream, const char* szOutputTag, const ezPlatformProfile* pAssetProfile, const ezAssetFileHeader& AssetHeader, ezBitflags<ezTransformFlags> transformFlags)
+ezTransformStatus ezVisualScriptClassAssetDocument::InternalTransformAsset(ezStreamWriter& stream, const char* szOutputTag, const ezPlatformProfile* pAssetProfile, const ezAssetFileHeader& AssetHeader, ezBitflags<ezTransformFlags> transformFlags)
 {
   return ezStatus(EZ_SUCCESS);
 }

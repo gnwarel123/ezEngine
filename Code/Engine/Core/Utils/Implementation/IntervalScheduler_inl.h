@@ -4,7 +4,7 @@
 EZ_ALWAYS_INLINE ezUInt32 ezIntervalSchedulerBase::GetHistogramIndex(ezTime value)
 {
   constexpr ezUInt32 maxSlotIndex = HistogramSize - 1;
-  const double x = ezMath::Max((value - m_minInterval).GetSeconds() * m_InvIntervalRange, 0.0);
+  const double x = ezMath::Max((value - m_MinInterval).GetSeconds() * m_fInvIntervalRange, 0.0);
   const double i = ezMath::Sqrt(x) * maxSlotIndex;
   return ezMath::Min(static_cast<ezUInt32>(i), maxSlotIndex);
 }
@@ -13,7 +13,7 @@ EZ_ALWAYS_INLINE ezTime ezIntervalSchedulerBase::GetHistogramSlotValue(ezUInt32 
 {
   constexpr double norm = 1.0 / (HistogramSize - 1.0);
   const double x = uiIndex * norm;
-  return (x * x) * (m_maxInterval - m_minInterval) + m_minInterval;
+  return (x * x) * (m_MaxInterval - m_MinInterval) + m_MinInterval;
 }
 
 // static
