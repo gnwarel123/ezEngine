@@ -184,6 +184,8 @@ public:
   };
   ezEvent<OnBeforeImageDestroyedData> OnBeforeImageDestroyed;
 
+  virtual ezGALSharedTexture* GetSharedTexture(ezGALTextureHandle hTexture) const override;
+
 
   // These functions need to be implemented by a render API abstraction
 protected:

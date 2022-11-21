@@ -1726,5 +1726,11 @@ void ezGALDeviceVulkan::FillFormatLookupTable()
 }
 
 
+ezGALSharedTexture* ezGALDeviceVulkan::GetSharedTexture(ezGALTextureHandle hTexture) const
+{
+  EZ_ASSERT_NOT_IMPLEMENTED
+  return nullptr; 
+}
+
 
 EZ_STATICLINK_FILE(RendererVulkan, RendererVulkan_Device_Implementation_DeviceVulkan);

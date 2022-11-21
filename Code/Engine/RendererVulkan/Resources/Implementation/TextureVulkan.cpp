@@ -36,10 +36,11 @@ vk::ImageAspectFlags ezGALTextureVulkan::GetAspectMask() const
   return mask;
 }
 
-ezGALTextureVulkan::ezGALTextureVulkan(const ezGALTextureCreationDescription& Description)
+ezGALTextureVulkan::ezGALTextureVulkan(const ezGALTextureCreationDescription& Description, bool exportShared)
   : ezGALTexture(Description)
   , m_image(nullptr)
   , m_pExisitingNativeObject(Description.m_pExisitingNativeObject)
+  , m_sharedType(exportShared ? SharedType::Exported : SharedType::None)
 {
 }
 
@@ -184,6 +185,25 @@ ezResult ezGALTextureVulkan::InitPlatform(ezGALDevice* pDevice, ezArrayPtr<ezGAL
     VK_ASSERT_DEBUG(m_pDevice->GetVulkanPhysicalDevice().getImageFormatProperties(createInfo.format, createInfo.imageType, createInfo.tiling, createInfo.usage, createInfo.flags, &props2));
 
     VK_SUCCEED_OR_RETURN_EZ_FAILURE(ezMemoryAllocatorVulkan::CreateImage(createInfo, allocInfo, m_image, m_alloc, &m_allocInfo));
+
+    if (m_sharedType == SharedType::Exported)
+    {
+#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+      // TODO check if we have the VK_KHR_external_memory_fd extension
+      vk::MemoryGetFdInfoKHR getFdInfo{m_allocInfo.m_deviceMemory, vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd};
+      int fd = -1;
+      vk::Device device = m_pDevice->GetVulkanDevice();
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdKHR(&getFdInfo, &fd));
+
+      // TODO export a timeline semaphore for synchronisation
+      vk::ExportSemaphoreCreateInfoKHR exportInfo{vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd}; 
+      vk::SemaphoreTypeCreateInfoKHR semTypeCreateInfo{vk::SemaphoreType::eTimeline, 0, &exportInfo};
+      vk::SemaphoreCreateInfo semCreateInfo{{}, &semTypeCreateInfo};
+      vk::Semaphore semaphore = device.createSemaphore(semCreateInfo);
+#else
+      EZ_ASSERT_NOT_IMPLEMENTED
+#endif
+    }
   }
   else
   {
@@ -345,6 +365,11 @@ void ezGALTextureVulkan::SetDebugNamePlatform(const char* szName) const
   }
 }
 
+ezGALPlatformSharedHandle ezGALTextureVulkan::GetSharedHandle() const
+{
+  // TODO
+  return {};
+}
 
 
 EZ_STATICLINK_FILE(RendererVulkan, RendererVulkan_Resources_Implementation_TextureVulkan);
