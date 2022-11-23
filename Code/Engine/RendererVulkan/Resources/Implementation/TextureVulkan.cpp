@@ -369,6 +369,19 @@ ezResult ezGALTextureVulkan::DeInitPlatform(ezGALDevice* pDevice)
     pDevice->DestroyBuffer(m_hStagingBuffer);
     m_hStagingBuffer.Invalidate();
   }
+
+#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+  if(m_sharedHandle.a != 0)
+  {
+    close(m_sharedHandle.a);
+    m_sharedHandle.a = 0;
+  }
+  if(m_sharedHandle.b != 0)
+  {
+    close(m_sharedHandle.b);
+    m_sharedHandle.b = 0;
+  }
+#endif
   return EZ_SUCCESS;
 }
 
