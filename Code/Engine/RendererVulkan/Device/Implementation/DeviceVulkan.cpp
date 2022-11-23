@@ -278,6 +278,14 @@ vk::Result ezGALDeviceVulkan::SelectDeviceExtensions(vk::DeviceCreateInfo& devic
       deviceCreateInfo.pNext = &m_extensions.m_borderColorEXT;
     }
   }
+
+  AddExtIfSupported(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, m_extensions.m_bTimelineSemaphore);
+
+#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+  AddExtIfSupported(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, m_extensions.m_bExternalMemoryFd);
+  AddExtIfSupported(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, m_extensions.m_bExternalSemaphoreFd);
+#endif
+
   return vk::Result::eSuccess;
 }
 
@@ -1729,7 +1737,7 @@ void ezGALDeviceVulkan::FillFormatLookupTable()
 ezGALSharedTexture* ezGALDeviceVulkan::GetSharedTexture(ezGALTextureHandle hTexture) const
 {
   EZ_ASSERT_NOT_IMPLEMENTED
-  return nullptr; 
+  return nullptr;
 }
 
 

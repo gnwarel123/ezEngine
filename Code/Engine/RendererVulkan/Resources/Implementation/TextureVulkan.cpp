@@ -189,17 +189,39 @@ ezResult ezGALTextureVulkan::InitPlatform(ezGALDevice* pDevice, ezArrayPtr<ezGAL
     if (m_sharedType == SharedType::Exported)
     {
 #if EZ_ENABLED(EZ_PLATFORM_LINUX)
-      // TODO check if we have the VK_KHR_external_memory_fd extension
+      if(!m_pDevice->GetExtensions().m_bTimelineSemaphore)
+      {
+        ezLog::Error("Can not create shared textures because timeline semaphores are not supported");
+        return EZ_FAILURE;
+      }
+
+      if(!m_pDevice->GetExtensions().m_bExternalMemoryFd)
+      {
+        ezLog::Error("Can not create shared textures because external memory fd is not supported");
+        return EZ_FAILURE;
+      }
+
+      if(!m_pDevice->GetExtensions().m_bExternalSemaphoreFd)
+      {
+        ezLog::Error("Can not create shared textures because external semaphore fd is not supported");
+        return EZ_FAILURE;
+      }
+
       vk::MemoryGetFdInfoKHR getFdInfo{m_allocInfo.m_deviceMemory, vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd};
       int fd = -1;
       vk::Device device = m_pDevice->GetVulkanDevice();
-      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdKHR(&getFdInfo, &fd));
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdKHR(&getFdInfo, &fd, m_pDevice->GetDispatchContext()));
+      m_sharedHandle.a = (size_t)fd;
 
-      // TODO export a timeline semaphore for synchronisation
       vk::ExportSemaphoreCreateInfoKHR exportInfo{vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd}; 
       vk::SemaphoreTypeCreateInfoKHR semTypeCreateInfo{vk::SemaphoreType::eTimeline, 0, &exportInfo};
       vk::SemaphoreCreateInfo semCreateInfo{{}, &semTypeCreateInfo};
       vk::Semaphore semaphore = device.createSemaphore(semCreateInfo);
+
+      int semaphoreFd = -1;
+      vk::SemaphoreGetFdInfoKHR getSemaphoreFdInfo{semaphore, vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd};
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getSemaphoreFdKHR(&getSemaphoreFdInfo, &semaphoreFd, m_pDevice->GetDispatchContext()));
+      m_sharedHandle.b = (size_t)semaphoreFd;
 #else
       EZ_ASSERT_NOT_IMPLEMENTED
 #endif

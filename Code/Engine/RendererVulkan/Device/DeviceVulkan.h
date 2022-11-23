@@ -6,6 +6,7 @@
 #include <Foundation/Types/UniquePtr.h>
 #include <RendererFoundation/Device/Device.h>
 #include <RendererVulkan/RendererVulkanDLL.h>
+#include <RendererVulkan/Device/DispatchContext.h>
 
 #include <vulkan/vulkan.hpp>
 
@@ -72,6 +73,10 @@ public:
 
     vk::PhysicalDeviceCustomBorderColorFeaturesEXT m_borderColorEXT;
     bool m_bBorderColorFloat = false;
+
+    bool m_bTimelineSemaphore = false;
+    bool m_bExternalMemoryFd = false;
+    bool m_bExternalSemaphoreFd = false;
   };
 
   struct Queue
@@ -92,6 +97,7 @@ public:
   vk::PhysicalDevice GetVulkanPhysicalDevice() const;
   const vk::PhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return m_properties; }
   const Extensions& GetExtensions() const { return m_extensions; }
+  const ezVulkanDispatchContext& GetDispatchContext() const { return m_dispatchContext; }
   vk::PipelineStageFlags GetSupportedStages() const;
 
   vk::CommandBuffer& GetCurrentCommandBuffer();
@@ -325,6 +331,7 @@ private:
 #endif
 
   Extensions m_extensions;
+  ezVulkanDispatchContext m_dispatchContext;
 #if EZ_ENABLED(EZ_COMPILE_FOR_DEVELOPMENT)
   VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
 #endif

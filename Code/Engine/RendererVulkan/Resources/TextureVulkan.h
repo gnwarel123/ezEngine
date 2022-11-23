@@ -96,6 +96,7 @@ protected:
   StagingMode m_stagingMode = StagingMode::None;
   ezGALTextureHandle m_hStagingTexture;
   ezGALBufferHandle m_hStagingBuffer;
+  ezGALPlatformSharedHandle m_sharedHandle;
 };
 
 #include <RendererVulkan/Resources/Implementation/TextureVulkan_inl.h>
