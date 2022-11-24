@@ -169,59 +169,112 @@ ezResult ezGALTextureVulkan::InitPlatform(ezGALDevice* pDevice, ezArrayPtr<ezGAL
 
   if (m_pExisitingNativeObject == nullptr)
   {
-    ezVulkanAllocationCreateInfo allocInfo;
-    allocInfo.m_usage = ezVulkanMemoryUsage::Auto;
-    if (m_bLinearCPU)
+    if (m_sharedType != SharedType::Imported)
     {
-      createInfo.tiling = vk::ImageTiling::eLinear;
-      createInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
-      m_stages |= vk::PipelineStageFlagBits::eHost;
-      m_access |= vk::AccessFlagBits::eHostRead;
-      createInfo.flags = {}; // Clear all flags as we don't need them and they usually are not supported on NVidia in linear mode.
 
-      allocInfo.m_flags = ezVulkanAllocationCreateFlags::HostAccessRandom;
+      ezVulkanAllocationCreateInfo allocInfo;
+      allocInfo.m_usage = ezVulkanMemoryUsage::Auto;
+      if (m_bLinearCPU)
+      {
+        createInfo.tiling = vk::ImageTiling::eLinear;
+        createInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
+        m_stages |= vk::PipelineStageFlagBits::eHost;
+        m_access |= vk::AccessFlagBits::eHostRead;
+        createInfo.flags = {}; // Clear all flags as we don't need them and they usually are not supported on NVidia in linear mode.
+
+        allocInfo.m_flags = ezVulkanAllocationCreateFlags::HostAccessRandom;
+      }
+      vk::ImageFormatProperties props2;
+      VK_ASSERT_DEBUG(m_pDevice->GetVulkanPhysicalDevice().getImageFormatProperties(createInfo.format, createInfo.imageType, createInfo.tiling, createInfo.usage, createInfo.flags, &props2));
+
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(ezMemoryAllocatorVulkan::CreateImage(createInfo, allocInfo, m_image, m_alloc, &m_allocInfo));
+
+      if (m_sharedType == SharedType::Exported)
+      {
+#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+        if (!m_pDevice->GetExtensions().m_bTimelineSemaphore)
+        {
+          ezLog::Error("Can not create shared textures because timeline semaphores are not supported");
+          return EZ_FAILURE;
+        }
+
+        if (!m_pDevice->GetExtensions().m_bExternalMemoryFd)
+        {
+          ezLog::Error("Can not create shared textures because external memory fd is not supported");
+          return EZ_FAILURE;
+        }
+
+        if (!m_pDevice->GetExtensions().m_bExternalSemaphoreFd)
+        {
+          ezLog::Error("Can not create shared textures because external semaphore fd is not supported");
+          return EZ_FAILURE;
+        }
+
+        vk::MemoryGetFdInfoKHR getFdInfo{m_allocInfo.m_deviceMemory, vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd};
+        int fd = -1;
+        vk::Device device = m_pDevice->GetVulkanDevice();
+        VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdKHR(&getFdInfo, &fd, m_pDevice->GetDispatchContext()));
+        m_sharedHandle.a = (size_t)fd;
+
+        vk::ExportSemaphoreCreateInfoKHR exportInfo{vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd};
+        vk::SemaphoreTypeCreateInfoKHR semTypeCreateInfo{vk::SemaphoreType::eTimeline, 0, &exportInfo};
+        vk::SemaphoreCreateInfo semCreateInfo{{}, &semTypeCreateInfo};
+        m_sharedSemaphore = device.createSemaphore(semCreateInfo);
+
+        int semaphoreFd = -1;
+        vk::SemaphoreGetFdInfoKHR getSemaphoreFdInfo{m_sharedSemaphore, vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd};
+        VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getSemaphoreFdKHR(&getSemaphoreFdInfo, &semaphoreFd, m_pDevice->GetDispatchContext()));
+        m_sharedHandle.b = (size_t)semaphoreFd;
+#else
+        EZ_ASSERT_NOT_IMPLEMENTED
+#endif
+      }
     }
-    vk::ImageFormatProperties props2;
-    VK_ASSERT_DEBUG(m_pDevice->GetVulkanPhysicalDevice().getImageFormatProperties(createInfo.format, createInfo.imageType, createInfo.tiling, createInfo.usage, createInfo.flags, &props2));
-
-    VK_SUCCEED_OR_RETURN_EZ_FAILURE(ezMemoryAllocatorVulkan::CreateImage(createInfo, allocInfo, m_image, m_alloc, &m_allocInfo));
-
-    if (m_sharedType == SharedType::Exported)
+    else
     {
 #if EZ_ENABLED(EZ_PLATFORM_LINUX)
-      if(!m_pDevice->GetExtensions().m_bTimelineSemaphore)
+      if (m_sharedHandle.a == 0 || m_sharedHandle.b == 0)
       {
-        ezLog::Error("Can not create shared textures because timeline semaphores are not supported");
+        ezLog::Error("Can not open shared texture: invalid handle given");
         return EZ_FAILURE;
       }
 
-      if(!m_pDevice->GetExtensions().m_bExternalMemoryFd)
+      if (!m_pDevice->GetExtensions().m_bTimelineSemaphore)
       {
-        ezLog::Error("Can not create shared textures because external memory fd is not supported");
+        ezLog::Error("Can not open shared texture: timeline semaphores not supported");
         return EZ_FAILURE;
       }
 
-      if(!m_pDevice->GetExtensions().m_bExternalSemaphoreFd)
+      if (!m_pDevice->GetExtensions().m_bExternalMemoryFd)
       {
-        ezLog::Error("Can not create shared textures because external semaphore fd is not supported");
+        ezLog::Error("Can not open shared texture: external memory fd not supported");
         return EZ_FAILURE;
       }
 
-      vk::MemoryGetFdInfoKHR getFdInfo{m_allocInfo.m_deviceMemory, vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd};
-      int fd = -1;
+      if (!m_pDevice->GetExtensions().m_bExternalSemaphoreFd)
+      {
+        ezLog::Error("Can not open shared texture: external semaphore fd not supported");
+        return EZ_FAILURE;
+      }
+
       vk::Device device = m_pDevice->GetVulkanDevice();
-      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdKHR(&getFdInfo, &fd, m_pDevice->GetDispatchContext()));
-      m_sharedHandle.a = (size_t)fd;
 
-      vk::ExportSemaphoreCreateInfoKHR exportInfo{vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd}; 
-      vk::SemaphoreTypeCreateInfoKHR semTypeCreateInfo{vk::SemaphoreType::eTimeline, 0, &exportInfo};
+      // Import semaphore
+      vk::SemaphoreTypeCreateInfoKHR semTypeCreateInfo{vk::SemaphoreType::eTimeline, 0};
       vk::SemaphoreCreateInfo semCreateInfo{{}, &semTypeCreateInfo};
-      vk::Semaphore semaphore = device.createSemaphore(semCreateInfo);
+      m_sharedSemaphore = device.createSemaphore(semCreateInfo);
 
-      int semaphoreFd = -1;
-      vk::SemaphoreGetFdInfoKHR getSemaphoreFdInfo{semaphore, vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd};
-      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getSemaphoreFdKHR(&getSemaphoreFdInfo, &semaphoreFd, m_pDevice->GetDispatchContext()));
-      m_sharedHandle.b = (size_t)semaphoreFd;
+      vk::ImportSemaphoreFdInfoKHR importSemaphoreInfo{m_sharedSemaphore, {}, vk::ExternalSemaphoreHandleTypeFlagBits::eOpaqueFd, static_cast<int>(m_sharedHandle.b)};
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.importSemaphoreFdKHR(&importSemaphoreInfo, m_pDevice->GetDispatchContext()));
+
+      // Import memory
+      vk::MemoryFdPropertiesKHR importInfo;
+      VK_SUCCEED_OR_RETURN_EZ_FAILURE(device.getMemoryFdPropertiesKHR(vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd, m_sharedHandle.a, &importInfo, m_pDevice->GetDispatchContext()));
+
+      EZ_ASSERT_DEBUG(ezMath::CountBits(importInfo.memoryTypeBits) == 1, "There should only be one valid memory type");
+      ezUInt32 memoryTypeIndex = ezMath::FirstBitHigh(importInfo.memoryTypeBits);
+
+      //TODO: import memory and bind texture to it.
 #else
       EZ_ASSERT_NOT_IMPLEMENTED
 #endif
@@ -371,12 +424,12 @@ ezResult ezGALTextureVulkan::DeInitPlatform(ezGALDevice* pDevice)
   }
 
 #if EZ_ENABLED(EZ_PLATFORM_LINUX)
-  if(m_sharedHandle.a != 0)
+  if (m_sharedHandle.a != 0)
   {
     close(m_sharedHandle.a);
     m_sharedHandle.a = 0;
   }
-  if(m_sharedHandle.b != 0)
+  if (m_sharedHandle.b != 0)
   {
     close(m_sharedHandle.b);
     m_sharedHandle.b = 0;

@@ -120,6 +120,8 @@ vk::Result ezMemoryAllocatorVulkan::CreateImage(const vk::ImageCreateInfo& image
 
   if (allocationCreateInfo.m_bExportSharedAllocation)
   {
+    allocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+
     EZ_LOCK(m_pImpl->m_exportedSharedPoolsMutex);
 
     uint32_t memoryTypeIndex = 0;
