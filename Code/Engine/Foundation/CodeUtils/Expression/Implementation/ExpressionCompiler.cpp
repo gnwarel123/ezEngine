@@ -65,11 +65,9 @@ ezResult ezExpressionCompiler::Compile(ezExpressionAST& ast, ezExpressionByteCod
 
 ezResult ezExpressionCompiler::TransformAndOptimizeAST(ezExpressionAST& ast)
 {
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeDeduction, &ast)));
-  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeConversion, &ast)));
-
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeDeductionAndConversion, &ast)));
   EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ReplaceUnsupportedInstructions, &ast)));
-  //EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
 
   return EZ_SUCCESS;
 }
@@ -390,10 +388,12 @@ ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, Transf
   m_NodeStack.Clear();
   m_TransformCache.Clear();
 
-  for (ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
+  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       continue;
+
+    EZ_SUCCEED_OR_RETURN(TransformOutputNode(pOutputNode, func));
 
     m_NodeStack.PushBack(pOutputNode);
 
@@ -405,22 +405,8 @@ ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, Transf
       auto children = ezExpressionAST::GetChildren(pParent);
       for (auto& pChild : children)
       {
-        if (pChild == nullptr)
-          continue;
+        EZ_SUCCEED_OR_RETURN(TransformNode(pChild, func));
 
-        ezExpressionAST::Node* pNewChild = nullptr;
-        if (m_TransformCache.TryGetValue(pChild, pNewChild) == false)
-        {
-          pNewChild = func(pChild);
-          if (pNewChild == nullptr)
-          {
-            return EZ_FAILURE;
-          }
-
-          m_TransformCache.Insert(pChild, pNewChild);
-        }
-
-        pChild = pNewChild;
         m_NodeStack.PushBack(pChild);
       }
     }
@@ -470,22 +456,56 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
     auto children = ezExpressionAST::GetChildren(pParent);
     for (auto& pChild : children)
     {
-      if (pChild == nullptr)
-        continue;
+      EZ_SUCCEED_OR_RETURN(TransformNode(pChild, func));
+    }
+  }
 
-      ezExpressionAST::Node* pNewChild = nullptr;
-      if (m_TransformCache.TryGetValue(pChild, pNewChild) == false)
-      {
-        pNewChild = func(pChild);
-        if (pNewChild == nullptr)
-        {
-          return EZ_FAILURE;
-        }
+  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
+  {
+    EZ_SUCCEED_OR_RETURN(TransformOutputNode(pOutputNode, func));
+  }
 
-        m_TransformCache.Insert(pChild, pNewChild);
-      }
+  return EZ_SUCCESS;
+}
 
-      pChild = pNewChild;
+ezResult ezExpressionCompiler::TransformNode(ezExpressionAST::Node*& pNode, TransformFunc func)
+{
+  if (pNode == nullptr)
+    return EZ_SUCCESS;
+
+  ezExpressionAST::Node* pNewNode = nullptr;
+  if (m_TransformCache.TryGetValue(pNode, pNewNode) == false)
+  {
+    pNewNode = func(pNode);
+    if (pNewNode == nullptr)
+    {
+      return EZ_FAILURE;
+    }
+
+    m_TransformCache.Insert(pNode, pNewNode);
+  }
+
+  pNode = pNewNode;
+
+  return EZ_SUCCESS;
+}
+
+ezResult ezExpressionCompiler::TransformOutputNode(ezExpressionAST::Output*& pOutputNode, TransformFunc func)
+{
+  if (pOutputNode == nullptr)
+    return EZ_SUCCESS;
+
+  auto pNewOutput = func(pOutputNode);
+  if (pNewOutput != pOutputNode)
+  {
+    if (pNewOutput != nullptr && ezExpressionAST::NodeType::IsOutput(pNewOutput->m_Type))
+    {
+      pOutputNode = static_cast<ezExpressionAST::Output*>(pNewOutput);
+    }
+    else
+    {
+      ezLog::Error("Transformed output node for '{}' is invalid", pOutputNode->m_sName);
+      return EZ_FAILURE;
     }
   }
 

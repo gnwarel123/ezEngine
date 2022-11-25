@@ -204,7 +204,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(Execute(testByteCode, a, b), 10.0f, ezMath::DefaultEpsilon<float>());
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Constant folding")
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant folding")
   {
     ezStringView testCode = "var x = abs(-7) + saturate(2) + 2\n"
                             "var v = (sqrt(25) - 4) * 5\n"
@@ -214,13 +214,22 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
     ezStringView referenceCode = "output = 42";
 
-    ezExpressionByteCode testByteCode;
-    EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
+    {
+      ezExpressionByteCode testByteCode;
+      EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
 
-    EZ_TEST_FLOAT(Execute<float>(testByteCode), 42.0f, ezMath::DefaultEpsilon<float>());
+      EZ_TEST_FLOAT(Execute<float>(testByteCode), 42.0f, ezMath::DefaultEpsilon<float>());
+    }
+
+    {
+      ezExpressionByteCode testByteCode;
+      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
+
+      EZ_TEST_INT(Execute<int>(testByteCode), 42);
+    }
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Constant instructions")
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant instructions")
   {
     // There are special instructions in the vm which take the constant as the first operand in place and
     // don't require an extra mov for the constant.
@@ -230,14 +239,27 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
     ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (0.1 * d) + min(1, c) + max(2, d)";
 
-    ezExpressionByteCode testByteCode;
-    EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
+    {
+      ezExpressionByteCode testByteCode;
+      EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
 
-    const float a = 1;
-    const float b = 2;
-    const float c = 3;
-    const float d = 40;
-    EZ_TEST_FLOAT(Execute(testByteCode, a, b, c, d), 55.0f, ezMath::DefaultEpsilon<float>());
+      const float a = 1;
+      const float b = 2;
+      const float c = 3;
+      const float d = 40;
+      EZ_TEST_FLOAT(Execute(testByteCode, a, b, c, d), 55.0f, ezMath::DefaultEpsilon<float>());
+    }
+
+    {
+      ezExpressionByteCode testByteCode;
+      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
+
+      const int a = 1;
+      const int b = 2;
+      const int c = 3;
+      const int d = 40;
+      EZ_TEST_INT(Execute(testByteCode, a, b, c, d), 55);
+    }
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Integer and float conversions")

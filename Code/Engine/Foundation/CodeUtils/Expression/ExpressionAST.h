@@ -173,8 +173,7 @@ public:
   ezHybridArray<Output*, 8> m_OutputNodes;
 
   // Transforms
-  Node* TypeDeduction(Node* pNode);
-  Node* TypeConversion(Node* pNode);
+  Node* TypeDeductionAndConversion(Node* pNode);
   Node* ReplaceUnsupportedInstructions(Node* pNode);
   Node* FoldConstants(Node* pNode);
 
