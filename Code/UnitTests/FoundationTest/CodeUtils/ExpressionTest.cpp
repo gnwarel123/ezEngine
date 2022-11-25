@@ -6,6 +6,7 @@
 #include <Foundation/CodeUtils/Expression/ExpressionVM.h>
 #include <Foundation/IO/FileSystem/FileSystem.h>
 #include <Foundation/IO/FileSystem/FileWriter.h>
+#include <Foundation/Types/UniquePtr.h>
 #include <Foundation/Utilities/DGMLWriter.h>
 
 namespace
@@ -72,6 +73,89 @@ namespace
   static ezHashedString s_sC = ezMakeHashedString("c");
   static ezHashedString s_sD = ezMakeHashedString("d");
   static ezHashedString s_sOutput = ezMakeHashedString("output");
+
+  static ezUniquePtr<ezExpressionParser> s_pParser;
+  static ezUniquePtr<ezExpressionCompiler> s_pCompiler;
+  static ezUniquePtr<ezExpressionVM> s_pVM;
+
+  template <typename T>
+  struct StreamDataTypeDeduction
+  {
+  };
+
+  template <>
+  struct StreamDataTypeDeduction<float>
+  {
+    static constexpr ezProcessingStream::DataType Type = ezProcessingStream::DataType::Float;
+  };
+
+  template <>
+  struct StreamDataTypeDeduction<int>
+  {
+    static constexpr ezProcessingStream::DataType Type = ezProcessingStream::DataType::Int;
+  };
+
+  template <typename T>
+  void Compile(ezStringView code, ezExpressionByteCode& out_ByteCode, bool dumpASTs = false)
+  {
+    ezExpressionParser::Stream inputs[] = {
+      ezExpressionParser::Stream(s_sA, StreamDataTypeDeduction<T>::Type),
+      ezExpressionParser::Stream(s_sB, StreamDataTypeDeduction<T>::Type),
+      ezExpressionParser::Stream(s_sC, StreamDataTypeDeduction<T>::Type),
+      ezExpressionParser::Stream(s_sD, StreamDataTypeDeduction<T>::Type),
+    };
+
+    ezExpressionParser::Stream outputs[] = {
+      ezExpressionParser::Stream(s_sOutput, StreamDataTypeDeduction<T>::Type),
+    };
+
+    ezExpressionAST ast;
+    EZ_TEST_BOOL(s_pParser->Parse(code, inputs, outputs, {}, ast).Succeeded());
+
+    if (dumpASTs)
+    {
+      DumpAST(ast, "ParserTest");
+    }
+
+    EZ_TEST_BOOL(s_pCompiler->Compile(ast, out_ByteCode).Succeeded());
+
+    if (dumpASTs)
+    {
+      DumpAST(ast, "ParserTest_Opt");
+    }
+  }
+
+  template <typename T>
+  T Execute(const ezExpressionByteCode& byteCode, T a = 0, T b = 0, T c = 0, T d = 0)
+  {
+    ezProcessingStream inputs[] = {
+      ezProcessingStream(s_sA, ezMakeArrayPtr(&a, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
+      ezProcessingStream(s_sB, ezMakeArrayPtr(&b, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
+      ezProcessingStream(s_sC, ezMakeArrayPtr(&c, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
+      ezProcessingStream(s_sD, ezMakeArrayPtr(&d, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
+    };
+
+    T output = ezMath::NaN<float>();
+    ezProcessingStream outputs[] = {
+      ezProcessingStream(s_sOutput, ezMakeArrayPtr(&output, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
+    };
+
+    EZ_TEST_BOOL(s_pVM->Execute(byteCode, inputs, outputs, 1).Succeeded());
+
+    return output;
+  };
+
+  template <typename T>
+  bool CompareCode(ezStringView testCode, ezString referenceCode, ezExpressionByteCode& out_testByteCode)
+  {
+    Compile<T>(testCode, out_testByteCode);
+
+    ezExpressionByteCode referenceByteCode;
+    Compile<T>(referenceCode, referenceByteCode);
+
+    return CompareByteCode(out_testByteCode, referenceByteCode);
+  }
+
 } // namespace
 
 EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
@@ -81,80 +165,35 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
   ezStringBuilder outputPath = ezTestFramework::GetInstance()->GetAbsOutputPath();
   EZ_TEST_BOOL(ezFileSystem::AddDataDirectory(outputPath.GetData(), "test", "output", ezFileSystem::AllowWrites) == EZ_SUCCESS);
 
-  ezExpressionParser parser;
-  ezExpressionCompiler compiler;
-  ezExpressionVM vm;
-
-  auto Compile = [&](ezStringView code, ezExpressionByteCode& out_ByteCode, bool dumpASTs = false) {
-    ezExpressionParser::Stream inputs[] = {
-      ezExpressionParser::Stream(s_sA, ezProcessingStream::DataType::Float),
-      ezExpressionParser::Stream(s_sB, ezProcessingStream::DataType::Float),
-      ezExpressionParser::Stream(s_sC, ezProcessingStream::DataType::Float),
-      ezExpressionParser::Stream(s_sD, ezProcessingStream::DataType::Float),
-    };
-
-    ezExpressionParser::Stream outputs[] = {
-      ezExpressionParser::Stream(s_sOutput, ezProcessingStream::DataType::Float),
-    };
-
-    ezExpressionAST ast;
-    EZ_TEST_BOOL(parser.Parse(code, inputs, outputs, {}, ast).Succeeded());
-
-    if (dumpASTs)
-    {
-      DumpAST(ast, "ParserTest");
-    }
-
-    EZ_TEST_BOOL(compiler.Compile(ast, out_ByteCode).Succeeded());
-
-    if (dumpASTs)
-    {
-      DumpAST(ast, "ParserTest_Opt");
-    }
-  };
-
-  auto Execute = [&](const ezExpressionByteCode& byteCode, float a = 0.0f, float b = 0.0f, float c = 0.0f, float d = 0.0f) {
-    ezProcessingStream inputs[] = {
-      ezProcessingStream(s_sA, ezMakeArrayPtr(&a, 1).ToByteArray(), ezProcessingStream::DataType::Float),
-      ezProcessingStream(s_sB, ezMakeArrayPtr(&b, 1).ToByteArray(), ezProcessingStream::DataType::Float),
-      ezProcessingStream(s_sC, ezMakeArrayPtr(&c, 1).ToByteArray(), ezProcessingStream::DataType::Float),
-      ezProcessingStream(s_sD, ezMakeArrayPtr(&d, 1).ToByteArray(), ezProcessingStream::DataType::Float),
-    };
-
-    float fOutput = ezMath::NaN<float>();
-    ezProcessingStream outputs[] = {
-      ezProcessingStream(s_sOutput, ezMakeArrayPtr(&fOutput, 1).ToByteArray(), ezProcessingStream::DataType::Float),
-    };
-
-    EZ_TEST_BOOL(vm.Execute(byteCode, inputs, outputs, 1).Succeeded());
-
-    return fOutput;
-  };
+  s_pParser = EZ_DEFAULT_NEW(ezExpressionParser);
+  s_pCompiler = EZ_DEFAULT_NEW(ezExpressionCompiler);
+  s_pVM = EZ_DEFAULT_NEW(ezExpressionVM);
+  EZ_SCOPE_EXIT(s_pParser = nullptr; s_pCompiler = nullptr; s_pVM = nullptr;);
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")
   {
     ezExpressionByteCode referenceByteCode;
     {
       ezStringView code = "output = (a + b) * 2";
-      Compile(code, referenceByteCode);
+      Compile<float>(code, referenceByteCode);
     }
 
     ezExpressionByteCode testByteCode;
 
     ezStringView code = "var e = a + b; output = e * 2";
-    Compile(code, testByteCode);
+    Compile<float>(code, testByteCode);
     EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
 
     code = "var e = a + b; e = e * 2; output = e";
-    Compile(code, testByteCode);
+    Compile<float>(code, testByteCode);
     EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
 
     code = "var e = a + b; e *= 2; output = e";
-    Compile(code, testByteCode);
+    Compile<float>(code, testByteCode);
     EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
 
     code = "var e = a + b; var f = e; e = 2; output = f * e";
-    Compile(code, testByteCode);
+    Compile<float>(code, testByteCode);
     EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
 
     const float a = 2;
@@ -164,24 +203,18 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant folding")
   {
-    ezExpressionByteCode referenceByteCode;
-    {
-      ezStringView code = "output = 42";
-      Compile(code, referenceByteCode);
-    }
+    ezStringView testCode = "var x = abs(-7) + saturate(2) + 2\n"
+                            "var v = (sqrt(25) - 4) * 5\n"
+                            "var m = min(300, 1000) / max(1, 3);"
+                            "var r = m - x * 5 - v - clamp(13, 1, 3);\n"
+                            "output = r";
+
+    ezStringView referenceCode = "output = 42";
 
     ezExpressionByteCode testByteCode;
+    EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
 
-    ezStringView code = "var x = abs(-7) + saturate(2) + 2\n"
-                        "var v = (sqrt(25) - 4) * 5\n"
-                        "var m = min(300, 1000) / max(1, 3);"
-                        "var r = m - x * 5 - v - clamp(13, 1, 3);\n"
-                        "output = r";
-
-    Compile(code, testByteCode);
-    EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
-
-    EZ_TEST_FLOAT(Execute(testByteCode), 42.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(Execute<float>(testByteCode), 42.0f, ezMath::DefaultEpsilon<float>());
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant instructions")
@@ -190,17 +223,12 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     // don't require an extra mov for the constant.
     // This test checks whether the compiler transforms operations with constants as second operands to the preferred form.
 
-    ezExpressionByteCode referenceByteCode;
-    {
-      ezStringView code = "output = (2 + a) + (-1 + b) + (2 * c) + (0.1 * d) + min(1, c) + max(2, d)";
-      Compile(code, referenceByteCode);
-    }
+    ezStringView testCode = "output = (a + 2) + (b - 1) + (c * 2) + (d / 10) + min(c, 1) + max(d, 2)";
+
+    ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (0.1 * d) + min(1, c) + max(2, d)";
 
     ezExpressionByteCode testByteCode;
-
-    ezStringView code = "output = (a + 2) + (b - 1) + (c * 2) + (d / 10) + min(c, 1) + max(d, 2)";
-    Compile(code, testByteCode);
-    EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
+    EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
 
     const float a = 1;
     const float b = 2;
@@ -208,4 +236,38 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     const float d = 40;
     EZ_TEST_FLOAT(Execute(testByteCode, a, b, c, d), 55.0f, ezMath::DefaultEpsilon<float>());
   }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Integer and float conversions")
+  {
+    ezStringView testCode = "var x = 7; var y = 0.1\n"
+                            "var e = a * x + b * y\n"
+                            "output = e";
+
+    ezStringView referenceCode = "output = (a * 7) + (b * 0.1)";
+
+    ezExpressionByteCode testByteCode;
+    EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode));
+
+    EZ_TEST_INT(Execute<int>(testByteCode), 42.0f);
+  }
+
+#if 0
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Scalarization")
+  {
+    // The VM does only support scalar data types.
+    // This test checks whether the compiler transforms everything correctly to scalar operation.
+
+    ezExpressionByteCode referenceByteCode;
+    {
+      ezStringView code = "output = a * vec3(1, 2, 3) + b";
+      Compile<ezVec3>(code, referenceByteCode);
+    }
+
+    ezExpressionByteCode testByteCode;
+
+    ezStringView code = "output = a * vec3(1, 2, 3) + b";
+    Compile<ezVec3>(code, testByteCode);
+    EZ_TEST_BOOL(CompareByteCode(testByteCode, referenceByteCode));
+  }
+#endif
 }
