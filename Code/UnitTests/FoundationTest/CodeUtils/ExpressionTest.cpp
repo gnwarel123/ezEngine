@@ -11,13 +11,13 @@
 
 namespace
 {
-  void DumpAST(const ezExpressionAST& ast, ezStringView sOutputName)
+  void DumpAST(const ezExpressionAST& ast, ezStringView sOutputName, ezUInt32 uiCounter)
   {
     ezDGMLGraph dgmlGraph;
     ast.PrintGraph(dgmlGraph);
 
     ezStringBuilder sFileName;
-    sFileName.Format(":output/Expression/{}_AST.dgml", sOutputName);
+    sFileName.Format(":output/Expression/{}_{}_AST.dgml", ezArgU(uiCounter, 2, true), sOutputName);
 
     ezDGMLGraphWriter dgmlGraphWriter;
     if (dgmlGraphWriter.WriteGraphToFile(sFileName, dgmlGraph).Succeeded())
@@ -96,7 +96,7 @@ namespace
   };
 
   template <typename T>
-  void Compile(ezStringView code, ezExpressionByteCode& out_ByteCode, bool dumpASTs = false)
+  void Compile(ezStringView code, ezExpressionByteCode& out_ByteCode, ezStringView sDumpAstOutputName = ezStringView())
   {
     ezExpressionParser::Stream inputs[] = {
       ezExpressionParser::Stream(s_sA, StreamDataTypeDeduction<T>::Type),
@@ -112,16 +112,19 @@ namespace
     ezExpressionAST ast;
     EZ_TEST_BOOL(s_pParser->Parse(code, inputs, outputs, {}, ast).Succeeded());
 
-    if (dumpASTs)
+    if (sDumpAstOutputName.IsEmpty() == false)
     {
-      DumpAST(ast, "ParserTest");
+      DumpAST(ast, sDumpAstOutputName, s_uiNumByteCodeComparisons);
     }
 
     EZ_TEST_BOOL(s_pCompiler->Compile(ast, out_ByteCode).Succeeded());
 
-    if (dumpASTs)
+    if (sDumpAstOutputName.IsEmpty() == false)
     {
-      DumpAST(ast, "ParserTest_Opt");
+      ezStringBuilder sOutputName = sDumpAstOutputName;
+      sOutputName.Append("_Opt");
+
+      DumpAST(ast, sOutputName, s_uiNumByteCodeComparisons);
     }
   }
 
@@ -146,12 +149,12 @@ namespace
   };
 
   template <typename T>
-  bool CompareCode(ezStringView testCode, ezString referenceCode, ezExpressionByteCode& out_testByteCode)
+  bool CompareCode(ezStringView testCode, ezString referenceCode, ezExpressionByteCode& out_testByteCode, bool dumpASTs = false)
   {
-    Compile<T>(testCode, out_testByteCode);
+    Compile<T>(testCode, out_testByteCode, dumpASTs ? "Test" : "");
 
     ezExpressionByteCode referenceByteCode;
-    Compile<T>(referenceCode, referenceByteCode);
+    Compile<T>(referenceCode, referenceByteCode, dumpASTs ? "Reference" : "");
 
     return CompareByteCode(out_testByteCode, referenceByteCode);
   }
@@ -170,7 +173,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
   s_pVM = EZ_DEFAULT_NEW(ezExpressionVM);
   EZ_SCOPE_EXIT(s_pParser = nullptr; s_pCompiler = nullptr; s_pVM = nullptr;);
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")
+  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Local variables")
   {
     ezExpressionByteCode referenceByteCode;
     {
@@ -201,7 +204,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(Execute(testByteCode, a, b), 10.0f, ezMath::DefaultEpsilon<float>());
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant folding")
+  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Constant folding")
   {
     ezStringView testCode = "var x = abs(-7) + saturate(2) + 2\n"
                             "var v = (sqrt(25) - 4) * 5\n"
@@ -217,7 +220,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(Execute<float>(testByteCode), 42.0f, ezMath::DefaultEpsilon<float>());
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant instructions")
+  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Constant instructions")
   {
     // There are special instructions in the vm which take the constant as the first operand in place and
     // don't require an extra mov for the constant.
@@ -241,12 +244,13 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
   {
     ezStringView testCode = "var x = 7; var y = 0.1\n"
                             "var e = a * x + b * y\n"
+                            "int i = 20; e += i\n"
                             "output = e";
 
-    ezStringView referenceCode = "output = (a * 7) + (b * 0.1)";
+    ezStringView referenceCode = "output = (a * 7) + (b * 0.1) + 20";
 
     ezExpressionByteCode testByteCode;
-    EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode));
+    EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
 
     EZ_TEST_INT(Execute<int>(testByteCode), 42.0f);
   }

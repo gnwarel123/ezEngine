@@ -58,15 +58,18 @@ ezResult ezExpressionCompiler::Compile(ezExpressionAST& ast, ezExpressionByteCod
   EZ_SUCCEED_OR_RETURN(BuildNodeInstructions(ast));
   EZ_SUCCEED_OR_RETURN(UpdateRegisterLifetime(ast));
   EZ_SUCCEED_OR_RETURN(AssignRegisters());
-  EZ_SUCCEED_OR_RETURN(GenerateByteCode(ast, out_byteCode));
+ // EZ_SUCCEED_OR_RETURN(GenerateByteCode(ast, out_byteCode));
 
   return EZ_SUCCESS;
 }
 
 ezResult ezExpressionCompiler::TransformAndOptimizeAST(ezExpressionAST& ast)
 {
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeDeduction, &ast)));
+  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeConversion, &ast)));
+
   EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ReplaceUnsupportedInstructions, &ast)));
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
+  //EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
 
   return EZ_SUCCESS;
 }
@@ -409,6 +412,11 @@ ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, Transf
         if (m_TransformCache.TryGetValue(pChild, pNewChild) == false)
         {
           pNewChild = func(pChild);
+          if (pNewChild == nullptr)
+          {
+            return EZ_FAILURE;
+          }
+
           m_TransformCache.Insert(pChild, pNewChild);
         }
 
@@ -469,6 +477,11 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
       if (m_TransformCache.TryGetValue(pChild, pNewChild) == false)
       {
         pNewChild = func(pChild);
+        if (pNewChild == nullptr)
+        {
+          return EZ_FAILURE;
+        }
+
         m_TransformCache.Insert(pChild, pNewChild);
       }
 

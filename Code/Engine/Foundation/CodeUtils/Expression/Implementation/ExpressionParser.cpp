@@ -7,6 +7,7 @@ using namespace ezTokenParseUtils;
 
 ezExpressionParser::ezExpressionParser()
 {
+  RegisterKnownTypes();
   RegisterBuiltinFunctions();
 }
 
@@ -48,6 +49,31 @@ ezResult ezExpressionParser::Parse(ezStringView code, ezArrayPtr<Stream> inputs,
   return EZ_SUCCESS;
 }
 
+void ezExpressionParser::RegisterKnownTypes()
+{
+  m_KnownTypes.Insert(ezMakeHashedString("var"), ezExpressionAST::DataType::Unknown);
+
+  m_KnownTypes.Insert(ezMakeHashedString("vec2"), ezExpressionAST::DataType::Float2);
+  m_KnownTypes.Insert(ezMakeHashedString("vec3"), ezExpressionAST::DataType::Float3);
+  m_KnownTypes.Insert(ezMakeHashedString("vec4"), ezExpressionAST::DataType::Float4);
+
+  m_KnownTypes.Insert(ezMakeHashedString("vec2i"), ezExpressionAST::DataType::Int2);
+  m_KnownTypes.Insert(ezMakeHashedString("vec3i"), ezExpressionAST::DataType::Int3);
+  m_KnownTypes.Insert(ezMakeHashedString("vec4i"), ezExpressionAST::DataType::Int4);
+
+  ezStringBuilder sTypeName;
+  for (ezUInt32 type = ezExpressionAST::DataType::Float; type < ezExpressionAST::DataType::Count; ++type)
+  {
+    sTypeName = ezExpressionAST::DataType::GetName(static_cast<ezExpressionAST::DataType::Enum>(type));
+    sTypeName.ToLower();
+
+    ezHashedString sTypeNameHashed;
+    sTypeNameHashed.Assign(sTypeName);
+
+    m_KnownTypes.Insert(sTypeNameHashed, static_cast<ezExpressionAST::DataType::Enum>(type));
+  }
+}
+
 void ezExpressionParser::RegisterBuiltinFunctions()
 {
   // Unary
@@ -75,16 +101,23 @@ void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<Stream> inputs, ezArrayPtr
 
   for (auto& input : inputs)
   {
-    auto pInputNode = m_pAST->CreateInput(input.m_sName, input.m_DataType);
-    m_KnownVariables.Insert(input.m_sName, pInputNode);
+    KnownVariable knownVariable;
+    knownVariable.m_pNode = m_pAST->CreateInput(input.m_sName, input.m_DataType);
+    knownVariable.m_Type = ezExpressionAST::DataType::FromStreamType(input.m_DataType);
+
+    m_KnownVariables.Insert(input.m_sName, knownVariable);
   }
 
   for (auto& output : outputs)
   {
     auto pOutputNode = m_pAST->CreateOutput(output.m_sName, output.m_DataType, nullptr);
-    m_KnownVariables.Insert(output.m_sName, pOutputNode);
-
     m_pAST->m_OutputNodes.PushBack(pOutputNode);
+
+    KnownVariable knownVariable;
+    knownVariable.m_pNode = pOutputNode;
+    knownVariable.m_Type = ezExpressionAST::DataType::FromStreamType(output.m_DataType);
+
+    m_KnownVariables.Insert(output.m_sName, knownVariable);
   }
 }
 
@@ -107,17 +140,19 @@ ezResult ezExpressionParser::ParseStatement()
     ReportError(pIdentifierToken, "Syntax error, expected type or variable");
   }
 
-  if (ParseType(pIdentifierToken->m_DataView).Succeeded())
+  ezEnum<ezExpressionAST::DataType> type;
+  if (ParseType(pIdentifierToken->m_DataView, type).Succeeded())
   {
-    return ParseVariableDefinition();
+    return ParseVariableDefinition(type);
   }
 
   return ParseAssignment();
 }
 
-ezResult ezExpressionParser::ParseType(ezStringView sTypeName)
+ezResult ezExpressionParser::ParseType(ezStringView sTypeName, ezEnum<ezExpressionAST::DataType>& out_type)
 {
-  if (sTypeName == "var" || sTypeName == "float")
+  ezTempHashedString sTypeNameHashed(sTypeName);
+  if (m_KnownTypes.TryGetValue(sTypeNameHashed, out_type))
   {
     return EZ_SUCCESS;
   }
@@ -125,7 +160,7 @@ ezResult ezExpressionParser::ParseType(ezStringView sTypeName)
   return EZ_FAILURE;
 }
 
-ezResult ezExpressionParser::ParseVariableDefinition()
+ezResult ezExpressionParser::ParseVariableDefinition(ezEnum<ezExpressionAST::DataType> type)
 {
   // skip type
   EZ_SUCCEED_OR_RETURN(Expect(ezTokenType::Identifier));
@@ -136,15 +171,15 @@ ezResult ezExpressionParser::ParseVariableDefinition()
   ezHashedString sHashedVarName;
   sHashedVarName.Assign(pIdentifierToken->m_DataView);
 
-  ezExpressionAST::Node* pNode = nullptr;
-  if (m_KnownVariables.TryGetValue(sHashedVarName, pNode))
+  KnownVariable knownVariable;
+  if (m_KnownVariables.TryGetValue(sHashedVarName, knownVariable))
   {
     const char* szExisting = "a variable";
-    if (ezExpressionAST::NodeType::IsInput(pNode->m_Type))
+    if (ezExpressionAST::NodeType::IsInput(knownVariable.m_pNode->m_Type))
     {
       szExisting = "an input";
     }
-    else if (ezExpressionAST::NodeType::IsOutput(pNode->m_Type))
+    else if (ezExpressionAST::NodeType::IsOutput(knownVariable.m_pNode->m_Type))
     {
       szExisting = "an output";
     }
@@ -158,7 +193,10 @@ ezResult ezExpressionParser::ParseVariableDefinition()
   if (pExpression == nullptr)
     return EZ_FAILURE;
 
-  m_KnownVariables.Insert(sHashedVarName, pExpression);
+  knownVariable.m_pNode = pExpression;
+  knownVariable.m_Type = type;
+
+  m_KnownVariables.Insert(sHashedVarName, knownVariable);
   return EZ_SUCCESS;
 }
 
@@ -220,7 +258,7 @@ ezResult ezExpressionParser::ParseAssignment()
 
   ezHashedString sHashedVarName;
   sHashedVarName.Assign(sIdentifier);
-  m_KnownVariables.Insert(sHashedVarName, pExpression);
+  m_KnownVariables[sHashedVarName].m_pNode = pExpression;
   return EZ_SUCCESS;
 }
 
@@ -243,15 +281,23 @@ ezExpressionAST::Node* ezExpressionParser::ParseFactor()
   }
 
   ezUInt32 uiValueToken = 0;
-  if (Accept(m_TokenStream, m_uiCurrentToken, ezTokenType::Integer, &uiValueToken) ||
-      Accept(m_TokenStream, m_uiCurrentToken, ezTokenType::Float, &uiValueToken))
+  if (Accept(m_TokenStream, m_uiCurrentToken, ezTokenType::Integer, &uiValueToken))
+  {
+    const ezString sVal = m_TokenStream[uiValueToken]->m_DataView;
+
+    ezInt64 iConstant = 0;
+    ezConversionUtils::StringToInt64(sVal, iConstant).IgnoreResult();
+
+    return m_pAST->CreateConstant((int)iConstant, ezExpressionAST::DataType::Int);
+  }
+  else if (Accept(m_TokenStream, m_uiCurrentToken, ezTokenType::Float, &uiValueToken))
   {
     const ezString sVal = m_TokenStream[uiValueToken]->m_DataView;
 
     double fConstant = 0;
     ezConversionUtils::StringToFloat(sVal, fConstant).IgnoreResult();
 
-    return m_pAST->CreateConstant((float)fConstant);
+    return m_pAST->CreateConstant((float)fConstant, ezExpressionAST::DataType::Float);
   }
 
   if (Accept(m_TokenStream, m_uiCurrentToken, "("))
@@ -328,7 +374,8 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   ezEnum<ezExpressionAST::NodeType> builtinType;
   if (m_BuiltinFunctions.TryGetValue(sHashedFuncName, builtinType))
   {
-    auto CheckArgumentCount = [&](ezUInt32 uiExpectedArgumentCount) -> ezResult {
+    auto CheckArgumentCount = [&](ezUInt32 uiExpectedArgumentCount) -> ezResult
+    {
       if (arguments.GetCount() != uiExpectedArgumentCount)
       {
         ReportError(pFunctionToken, ezFmt("Invalid argument count for '{}'. Expected {} but got {}", sFunctionName, uiExpectedArgumentCount, arguments.GetCount()));
@@ -421,14 +468,15 @@ ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
   ezHashedString sHashedVarName;
   sHashedVarName.Assign(sVarName);
 
-  ezExpressionAST::Node* pNode = nullptr;
-  if (m_KnownVariables.TryGetValue(sHashedVarName, pNode) == false && m_Options.m_bTreatUnknownVariablesAsInputs)
+  KnownVariable knownVariable;
+  if (m_KnownVariables.TryGetValue(sHashedVarName, knownVariable) == false && m_Options.m_bTreatUnknownVariablesAsInputs)
   {
-    pNode = m_pAST->CreateInput(sHashedVarName, ezProcessingStream::DataType::Float);
-    m_KnownVariables.Insert(sHashedVarName, pNode);
+    knownVariable.m_pNode = m_pAST->CreateInput(sHashedVarName, ezProcessingStream::DataType::Float);
+    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
+    m_KnownVariables.Insert(sHashedVarName, knownVariable);
   }
 
-  return pNode;
+  return knownVariable.m_pNode;
 }
 
 ezResult ezExpressionParser::CheckOutputs()

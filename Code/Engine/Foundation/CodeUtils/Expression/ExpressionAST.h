@@ -12,7 +12,7 @@ class EZ_FOUNDATION_DLL ezExpressionAST
 public:
   struct NodeType
   {
-    typedef ezUInt32 StorageType;
+    using StorageType = ezUInt32;
 
     enum Enum
     {
@@ -31,6 +31,7 @@ public:
       ASin,
       ACos,
       ATan,
+      TypeConversion,
       LastUnary,
 
       // Binary
@@ -73,9 +74,43 @@ public:
     static const char* GetName(Enum nodeType);
   };
 
+  struct DataType
+  {
+    using StorageType = ezUInt32;
+
+    enum Enum
+    {
+      Unknown,
+      Default = Unknown,
+
+      Float,
+      Float2,
+      Float3,
+      Float4,
+
+      Int,
+      Int2,
+      Int3,
+      Int4,
+
+      Bool,
+      Bool2,
+      Bool3,
+      Bool4,
+
+      Count
+    };
+
+    static ezVariantType::Enum GetVariantType(Enum dataType);
+    static Enum FromStreamType(ezProcessingStream::DataType dataType);
+
+    static const char* GetName(Enum dataType);
+  };
+
   struct Node
   {
     ezEnum<NodeType> m_Type;
+    ezEnum<DataType> m_DataType;
   };
 
   struct UnaryOperator : public Node
@@ -99,19 +134,16 @@ public:
   struct Constant : public Node
   {
     ezVariant m_Value;
-    ezProcessingStream::DataType m_DataType;
   };
 
   struct Input : public Node
   {
     ezHashedString m_sName;
-    ezProcessingStream::DataType m_DataType;
   };
 
   struct Output : public Node
   {
     ezHashedString m_sName;
-    ezProcessingStream::DataType m_DataType;
     Node* m_pExpression = nullptr;
   };
 
@@ -125,12 +157,12 @@ public:
   ezExpressionAST();
   ~ezExpressionAST();
 
-  UnaryOperator* CreateUnaryOperator(NodeType::Enum type, Node* pOperand);
-  BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand);
-  TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand);
-  Constant* CreateConstant(const ezVariant& value);
-  Input* CreateInput(const ezHashedString& sName, ezProcessingStream::DataType dataType);
-  Output* CreateOutput(const ezHashedString& sName, ezProcessingStream::DataType dataType, Node* pExpression);
+  UnaryOperator* CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum dataType = DataType::Unknown);
+  BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand, DataType::Enum dataType = DataType::Unknown);
+  TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand, DataType::Enum dataType = DataType::Unknown);
+  Constant* CreateConstant(const ezVariant& value, DataType::Enum dataType = DataType::Float);
+  Input* CreateInput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType);
+  Output* CreateOutput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType, Node* pExpression);
   FunctionCall* CreateFunctionCall(const ezHashedString& sName);
 
   static ezArrayPtr<Node*> GetChildren(Node* pNode);
@@ -141,6 +173,8 @@ public:
   ezHybridArray<Output*, 8> m_OutputNodes;
 
   // Transforms
+  Node* TypeDeduction(Node* pNode);
+  Node* TypeConversion(Node* pNode);
   Node* ReplaceUnsupportedInstructions(Node* pNode);
   Node* FoldConstants(Node* pNode);
 

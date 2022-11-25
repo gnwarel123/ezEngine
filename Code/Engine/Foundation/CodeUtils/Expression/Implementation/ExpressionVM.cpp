@@ -452,7 +452,7 @@ ezResult ezExpressionVM::Execute(const ezExpressionByteCode& byteCode, ezArrayPt
 
 void ezExpressionVM::ValidateDataSize(const ezProcessingStream& stream, ezUInt32 uiNumInstances, const char* szDataName) const
 {
-  EZ_ASSERT_DEV(stream.GetDataType() == ezProcessingStream::DataType::Float, "Only float stream are supported");
+  EZ_ASSERT_DEV(stream.GetDataType() == ezProcessingStream::DataType::Float || stream.GetDataType() == ezProcessingStream::DataType::Int, "Only float or int stream are supported");
 
   ezUInt32 uiElementSize = stream.GetElementSize();
   ezUInt32 uiExpectedSize = stream.GetElementStride() * (uiNumInstances - 1) + uiElementSize;

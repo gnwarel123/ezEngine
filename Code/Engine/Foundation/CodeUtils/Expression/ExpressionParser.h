@@ -32,12 +32,13 @@ public:
 private:
   static constexpr int s_iLowestPrecedence = 20;
 
+  void RegisterKnownTypes();
   void RegisterBuiltinFunctions();
   void SetupInAndOutputs(ezArrayPtr<Stream> inputs, ezArrayPtr<Stream> outputs);
 
   ezResult ParseStatement();
-  ezResult ParseType(ezStringView sTypeName);
-  ezResult ParseVariableDefinition();
+  ezResult ParseType(ezStringView sTypeName, ezEnum<ezExpressionAST::DataType>& out_type);
+  ezResult ParseVariableDefinition(ezEnum<ezExpressionAST::DataType> type);
   ezResult ParseAssignment();
 
   ezExpressionAST::Node* ParseFactor();
@@ -63,7 +64,17 @@ private:
   ezUInt32 m_uiCurrentToken = 0;
   ezExpressionAST* m_pAST = nullptr;
 
-  ezHashTable<ezHashedString, ezExpressionAST::Node*> m_KnownVariables;
+  ezHashTable<ezHashedString, ezEnum<ezExpressionAST::DataType>> m_KnownTypes;
+
+  struct KnownVariable
+  {
+    EZ_DECLARE_POD_TYPE();
+
+    ezExpressionAST::Node* m_pNode = nullptr;
+    ezEnum<ezExpressionAST::DataType> m_Type;
+  };
+
+  ezHashTable<ezHashedString, KnownVariable> m_KnownVariables;
   ezHashTable<ezHashedString, ezEnum<ezExpressionAST::NodeType>> m_BuiltinFunctions;
 };
 

@@ -1,6 +1,54 @@
 #include <Foundation/FoundationPCH.h>
 
 #include <Foundation/CodeUtils/Expression/ExpressionAST.h>
+#include <Foundation/Logging/Log.h>
+
+namespace
+{
+  ezExpressionAST::DataType::Enum BiggerDataType(ezExpressionAST::DataType::Enum a, ezExpressionAST::DataType::Enum b)
+  {
+    return static_cast<ezUInt32>(a) < static_cast<ezUInt32>(b) ? a : b;
+  }
+} // namespace
+
+ezExpressionAST::Node* ezExpressionAST::TypeDeduction(Node* pNode)
+{
+  if (pNode->m_DataType != DataType::Unknown)
+  {
+    return pNode;
+  }
+
+  DataType::Enum targetType = DataType::Count;
+
+  auto children = GetChildren(pNode);
+  for (auto pChildNode : children)
+  {
+    targetType = BiggerDataType(targetType, pChildNode->m_DataType);
+  }
+
+  if (targetType == DataType::Count)
+  {
+    ezLog::Error("Failed to deduce type for '{}' node", NodeType::GetName(pNode->m_Type));
+    return nullptr;
+  }
+
+  pNode->m_DataType = targetType;
+  return pNode;
+}
+
+ezExpressionAST::Node* ezExpressionAST::TypeConversion(Node* pNode)
+{
+  auto children = GetChildren(pNode);
+  for (auto& pChildNode : children)
+  {
+    if (pChildNode->m_DataType != pNode->m_DataType)
+    {
+      pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, pNode->m_DataType);
+    }
+  }
+
+  return pNode;
+}
 
 ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNode)
 {
