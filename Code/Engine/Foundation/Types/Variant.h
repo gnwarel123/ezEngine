@@ -52,8 +52,8 @@ public:
   /// \brief helper struct to wrap a string pointer
   struct StringWrapper
   {
-    EZ_ALWAYS_INLINE StringWrapper(const char* str)
-      : m_str(str)
+    EZ_ALWAYS_INLINE StringWrapper(const char* szStr)
+      : m_str(szStr)
     {
     }
     const char* m_str;
@@ -72,35 +72,35 @@ public:
   /// \brief Moves the data from the other variant.
   ezVariant(ezVariant&& other) noexcept; // [tested]
 
-  ezVariant(const bool& value);
-  ezVariant(const ezInt8& value);
-  ezVariant(const ezUInt8& value);
-  ezVariant(const ezInt16& value);
-  ezVariant(const ezUInt16& value);
-  ezVariant(const ezInt32& value);
-  ezVariant(const ezUInt32& value);
-  ezVariant(const ezInt64& value);
-  ezVariant(const ezUInt64& value);
-  ezVariant(const float& value);
-  ezVariant(const double& value);
+  ezVariant(const bool& bValue);
+  ezVariant(const ezInt8& iValue);
+  ezVariant(const ezUInt8& uiValue);
+  ezVariant(const ezInt16& iValue);
+  ezVariant(const ezUInt16& uiValue);
+  ezVariant(const ezInt32& iValue);
+  ezVariant(const ezUInt32& uiValue);
+  ezVariant(const ezInt64& iValue);
+  ezVariant(const ezUInt64& uiValue);
+  ezVariant(const float& fValue);
+  ezVariant(const double& fValue);
   ezVariant(const ezColor& value);
-  ezVariant(const ezVec2& value);
-  ezVariant(const ezVec3& value);
-  ezVariant(const ezVec4& value);
-  ezVariant(const ezVec2I32& value);
-  ezVariant(const ezVec3I32& value);
-  ezVariant(const ezVec4I32& value);
-  ezVariant(const ezVec2U32& value);
-  ezVariant(const ezVec3U32& value);
-  ezVariant(const ezVec4U32& value);
-  ezVariant(const ezQuat& value);
-  ezVariant(const ezMat3& value);
-  ezVariant(const ezMat4& value);
+  ezVariant(const ezVec2& vValue);
+  ezVariant(const ezVec3& vValue);
+  ezVariant(const ezVec4& vValue);
+  ezVariant(const ezVec2I32& vValue);
+  ezVariant(const ezVec3I32& vValue);
+  ezVariant(const ezVec4I32& vValue);
+  ezVariant(const ezVec2U32& vValue);
+  ezVariant(const ezVec3U32& vValue);
+  ezVariant(const ezVec4U32& vValue);
+  ezVariant(const ezQuat& qValue);
+  ezVariant(const ezMat3& mValue);
+  ezVariant(const ezMat4& mValue);
   ezVariant(const ezTransform& value);
-  ezVariant(const char* value);
-  ezVariant(const ezString& value);
-  ezVariant(const ezUntrackedString& value);
-  ezVariant(const ezStringView& value);
+  ezVariant(const char* szValue);
+  ezVariant(const ezString& sValue);
+  ezVariant(const ezUntrackedString& sValue);
+  ezVariant(const ezStringView& sValue);
   ezVariant(const ezDataBuffer& value);
   ezVariant(const ezTime& value);
   ezVariant(const ezUuid& value);
@@ -120,13 +120,13 @@ public:
   ezVariant(const T* value);
 
   /// \brief Initializes to a TypedPointer of the given object and type.
-  ezVariant(void* value, const ezRTTI* pType);
+  ezVariant(void* pValue, const ezRTTI* pType);
 
   /// \brief Initializes to a TypedObject by cloning the given object and type.
-  void CopyTypedObject(const void* value, const ezRTTI* pType); // [tested]
+  void CopyTypedObject(const void* pValue, const ezRTTI* pType); // [tested]
 
   /// \brief Initializes to a TypedObject by taking ownership of the given object and type.
-  void MoveTypedObject(void* value, const ezRTTI* pType); // [tested]
+  void MoveTypedObject(void* pValue, const ezRTTI* pType); // [tested]
 
   /// \brief If necessary, this will deallocate any heap memory that is not in use any more.
   ~ezVariant();
@@ -244,7 +244,7 @@ public:
   /// \brief Returns the sub value with szKey. This could be a value in a dictionary or a member property inside a reflected type.
   ///
   /// This function will return an invalid variant if no corresponding sub value is found.
-  const ezVariant operator[](StringWrapper szKey) const; // [tested]
+  const ezVariant operator[](StringWrapper key) const; // [tested]
 
   /// \brief Returns whether the stored type can generally be converted to the desired type.
   ///
@@ -274,7 +274,7 @@ public:
   T ConvertTo(ezResult* out_pConversionStatus = nullptr) const; // [tested]
 
   /// \brief Same as the templated function.
-  ezVariant ConvertTo(Type::Enum type, ezResult* out_pConversionStatus = nullptr) const; // [tested]
+  ezVariant ConvertTo(Type::Enum type, ezResult* pConversionStatus = nullptr) const; // [tested]
 
   /// \brief This will call the overloaded operator() (function call operator) of the provided functor.
   ///
@@ -299,8 +299,8 @@ private:
     void* m_Ptr;
     const ezRTTI* m_pType;
     ezAtomicInteger32 m_uiRef = 1;
-    EZ_ALWAYS_INLINE SharedData(void* ptr, const ezRTTI* pType)
-      : m_Ptr(ptr)
+    EZ_ALWAYS_INLINE SharedData(void* pPtr, const ezRTTI* pType)
+      : m_Ptr(pPtr)
       , m_pType(pType)
     {
     }

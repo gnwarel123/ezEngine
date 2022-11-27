@@ -24,13 +24,13 @@ public:
   static bool IsASCII(ezUInt32 uiChar); // [tested]
 
   /// \brief Checks whether the given byte is a start byte in a UTF-8 multi-byte sequence
-  static bool IsUtf8StartByte(char uiByte); // [tested]
+  static bool IsUtf8StartByte(char iByte); // [tested]
 
   /// \brief Checks whether the given byte is a byte in a UTF-8 multi-byte sequence.
-  static bool IsUtf8ContinuationByte(char uiByte); // [tested]
+  static bool IsUtf8ContinuationByte(char iByte); // [tested]
 
   /// \brief Returns the number of bytes that a UTF-8 sequence is in length, which is encoded in the first byte of the sequence.
-  static ezUInt32 GetUtf8SequenceLength(char uiFirstByte); // [tested]
+  static ezUInt32 GetUtf8SequenceLength(char iFirstByte); // [tested]
 
   /// \brief Converts the UTF-8 character that starts at pFirstChar into a UTF-32 character.
   static ezUInt32 ConvertUtf8ToUtf32(const char* pFirstChar); // [tested]
@@ -42,19 +42,19 @@ public:
   ///
   /// The string may point to an invalid position (in between a character sequence).
   /// It may not point to a zero terminator already.
-  static void MoveToNextUtf8(const char*& szUtf8, ezUInt32 uiNumCharacters = 1); // [tested]
+  static void MoveToNextUtf8(const char*& out_szUtf8, ezUInt32 uiNumCharacters = 1); // [tested]
 
   /// \brief Moves the given string pointer ahead to the next Utf8 character sequence.
   ///
   /// The string may point to an invalid position (in between a character sequence).
   /// It may not point to a zero terminator already.
-  static void MoveToNextUtf8(const char*& szUtf8, const char* szUtf8End, ezUInt32 uiNumCharacters = 1); // [tested]
+  static void MoveToNextUtf8(const char*& out_szUtf8, const char* szUtf8End, ezUInt32 uiNumCharacters = 1); // [tested]
 
   /// \brief Moves the given string pointer backwards to the previous Utf8 character sequence.
   ///
   /// The string may point to an invalid position (in between a character sequence), or even the \0 terminator,
   /// as long as there is a valid string before it (and the user knows when to stop).
-  static void MoveToPriorUtf8(const char*& szUtf8, ezUInt32 uiNumCharacters = 1); // [tested]
+  static void MoveToPriorUtf8(const char*& out_szUtf8, ezUInt32 uiNumCharacters = 1); // [tested]
 
   /// \brief Returns false if the given string does not contain a completely valid Utf8 string.
   static bool IsValidUtf8(const char* szString, const char* szStringEnd = GetMaxStringEnd<char>());
@@ -62,19 +62,19 @@ public:
   /// \brief If the given string starts with a Utf8 Bom, the pointer is incremented behind the Bom, and the function returns true.
   ///
   /// Otherwise the pointer is unchanged and false is returned.
-  static bool SkipUtf8Bom(const char*& szUtf8); // [tested]
+  static bool SkipUtf8Bom(const char*& out_szUtf8); // [tested]
 
   /// \brief If the given string starts with a Utf16 little endian Bom, the pointer is incremented behind the Bom, and the function returns
   /// true.
   ///
   /// Otherwise the pointer is unchanged and false is returned.
-  static bool SkipUtf16BomLE(const ezUInt16*& szUtf16); // [tested]
+  static bool SkipUtf16BomLE(const ezUInt16*& out_pUtf16); // [tested]
 
   /// \brief If the given string starts with a Utf16 big endian Bom, the pointer is incremented behind the Bom, and the function returns
   /// true.
   ///
   /// Otherwise the pointer is unchanged and false is returned.
-  static bool SkipUtf16BomBE(const ezUInt16*& szUtf16); // [tested]
+  static bool SkipUtf16BomBE(const ezUInt16*& out_pUtf16); // [tested]
 
   /// \brief Decodes the next character from the given Utf8 sequence to Utf32 and increments the iterator as far as necessary.
   template <typename ByteIterator>

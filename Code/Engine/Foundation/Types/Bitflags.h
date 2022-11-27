@@ -163,7 +163,7 @@ public:
   }
 
   /// \brief Sets or clears the given flag.
-  EZ_ALWAYS_INLINE void AddOrRemove(const ezBitflags<T>& rhs, bool state) // [tested]
+  EZ_ALWAYS_INLINE void AddOrRemove(const ezBitflags<T>& rhs, bool bState) // [tested]
   {
     m_Value = (state) ? m_Value | rhs.m_Value : m_Value & (~rhs.m_Value);
   }

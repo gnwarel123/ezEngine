@@ -371,8 +371,8 @@ struct ezVariantAdapter<T, ezVariant, 1, 1>
 template <>
 struct ezVariantAdapter<const char*, const char*, 1, 0>
 {
-  ezVariantAdapter(ezVariant& value)
-    : m_value(value)
+  ezVariantAdapter(ezVariant& out_value)
+    : m_value(out_value)
   {
   }
 

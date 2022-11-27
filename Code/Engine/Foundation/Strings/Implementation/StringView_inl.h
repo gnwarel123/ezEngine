@@ -46,7 +46,7 @@ EZ_ALWAYS_INLINE ezStringView::ezStringView(const char (&str)[N])
 }
 
 template <size_t N>
-EZ_ALWAYS_INLINE ezStringView::ezStringView(char (&str)[N])
+EZ_ALWAYS_INLINE ezStringView::ezStringView(char (&out_str)[N])
 {
   m_pStart = str;
   m_pEnd = m_pStart + ezStringUtils::GetStringElementCount(str, str + N);
@@ -124,9 +124,9 @@ EZ_ALWAYS_INLINE void ezStringView::Trim(const char* szTrimCharsStart, const cha
   }
 }
 
-constexpr EZ_ALWAYS_INLINE ezStringView operator"" _ezsv(const char* pString, size_t len)
+constexpr EZ_ALWAYS_INLINE ezStringView operator"" _ezsv(const char* pString, size_t uiLen)
 {
-  return ezStringView(pString, static_cast<ezUInt32>(len));
+  return ezStringView(pString, static_cast<ezUInt32>(uiLen));
 }
 
 template <typename Container>

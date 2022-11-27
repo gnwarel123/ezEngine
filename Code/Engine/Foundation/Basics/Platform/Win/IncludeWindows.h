@@ -37,28 +37,28 @@ namespace ezMinWindows
   struct ToNativeImpl<HINSTANCE>
   {
     typedef ::HINSTANCE type;
-    static EZ_ALWAYS_INLINE ::HINSTANCE ToNative(HINSTANCE hInstance) { return reinterpret_cast<::HINSTANCE>(hInstance); }
+    static EZ_ALWAYS_INLINE ::HINSTANCE ToNative(HINSTANCE pInstance) { return reinterpret_cast<::HINSTANCE>(pInstance); }
   };
 
   template <>
   struct ToNativeImpl<HWND>
   {
     using type = ::HWND;
-    static EZ_ALWAYS_INLINE ::HWND ToNative(HWND hWnd) { return reinterpret_cast<::HWND>(hWnd); }
+    static EZ_ALWAYS_INLINE ::HWND ToNative(HWND pWnd) { return reinterpret_cast<::HWND>(pWnd); }
   };
 
   template <>
   struct FromNativeImpl<::HWND>
   {
     using type = HWND;
-    static EZ_ALWAYS_INLINE HWND FromNative(::HWND hWnd) { return reinterpret_cast<HWND>(hWnd); }
+    static EZ_ALWAYS_INLINE HWND FromNative(::HWND pWnd) { return reinterpret_cast<HWND>(pWnd); }
   };
 
   template <>
   struct FromNativeImpl<::HINSTANCE>
   {
     using type = HINSTANCE;
-    static EZ_ALWAYS_INLINE HINSTANCE FromNative(::HINSTANCE hInstance) { return reinterpret_cast<HINSTANCE>(hInstance); }
+    static EZ_ALWAYS_INLINE HINSTANCE FromNative(::HINSTANCE pInstance) { return reinterpret_cast<HINSTANCE>(pInstance); }
   };
 } // namespace ezMinWindows
 #endif

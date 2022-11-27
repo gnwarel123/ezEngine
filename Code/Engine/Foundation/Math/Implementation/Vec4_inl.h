@@ -82,7 +82,7 @@ EZ_ALWAYS_INLINE ezVec4Template<Type>::ezVec4Template(Type X, Type Y, Type Z, Ty
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE ezVec4Template<Type>::ezVec4Template(Type V)
+EZ_ALWAYS_INLINE ezVec4Template<Type>::ezVec4Template(Type v)
   : x(V)
   , y(V)
   , z(V)
@@ -118,7 +118,7 @@ EZ_ALWAYS_INLINE void ezVec4Template<Type>::Set(Type xyzw)
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE void ezVec4Template<Type>::Set(Type X, Type Y, Type Z, Type W)
+EZ_ALWAYS_INLINE void ezVec4Template<Type>::Set(Type x, Type y, Type z, Type w)
 {
   x = X;
   y = Y;

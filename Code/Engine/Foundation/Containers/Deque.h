@@ -97,7 +97,7 @@ public:
   void PushBack(const T& element); // [tested]
 
   /// \brief Adds one element at the end of the deque.
-  void PushBack(T&& value); // [tested]
+  void PushBack(T&& out_value); // [tested]
 
   /// \brief Removes the last element from the deque.
   void PopBack(ezUInt32 uiElements = 1); // [tested]
@@ -106,7 +106,7 @@ public:
   void PushFront(const T& element); // [tested]
 
   /// \brief Adds one element to the front of the deque.
-  void PushFront(T&& element); // [tested]
+  void PushFront(T&& out_element); // [tested]
 
   /// \brief Adds one default constructed element to the front of the deque.
   void PushFront(); // [tested]

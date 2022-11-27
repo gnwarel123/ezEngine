@@ -48,7 +48,7 @@ public:
   void SetCount(ezUInt32 uiCount); // [tested]
 
   /// \brief Resizes the array to have exactly uiCount elements. Constructs all new elements by copying the FillValue.
-  void SetCount(ezUInt32 uiCount, const T& FillValue); // [tested]
+  void SetCount(ezUInt32 uiCount, const T& fillValue); // [tested]
 
   /// \brief Resizes the array to have exactly uiCount elements. Extra elements might be uninitialized.
   template <typename = void> // Template is used to only conditionally compile this function in when it is actually used.
@@ -74,7 +74,7 @@ public:
   void Insert(const T& value, ezUInt32 uiIndex); // [tested]
 
   /// \brief Inserts value at index by shifting all following elements.
-  void Insert(T&& value, ezUInt32 uiIndex); // [tested]
+  void Insert(T&& out_value, ezUInt32 uiIndex); // [tested]
 
   /// \brief Inserts all elements in the range starting at the given index, shifting the elements after the index.
   void InsertRange(const ezArrayPtr<const T>& range, ezUInt32 uiIndex); // [tested]
@@ -101,7 +101,7 @@ public:
   T& ExpandAndGetRef(); // [tested]
 
   /// \brief Expands the array by N new items and returns a pointer to the first new one.
-  T* ExpandBy(ezUInt32 numNewItems);
+  T* ExpandBy(ezUInt32 uiNumNewItems);
 
   /// \brief Pushes value at the end of the array.
   void PushBack(const T& value); // [tested]
@@ -113,7 +113,7 @@ public:
   void PushBackUnchecked(const T& value); // [tested]
 
   /// \brief Pushes value at the end of the array. Does NOT ensure capacity.
-  void PushBackUnchecked(T&& value); // [tested]
+  void PushBackUnchecked(T&& out_value); // [tested]
 
   /// \brief Pushes all elements in range at the end of the array. Increases the capacity if necessary.
   void PushBackRange(const ezArrayPtr<const T>& range); // [tested]
@@ -174,9 +174,9 @@ protected:
 };
 
 template <typename T, typename Derived>
-typename ezArrayBase<T, Derived>::iterator begin(ezArrayBase<T, Derived>& container)
+typename ezArrayBase<T, Derived>::iterator begin(ezArrayBase<T, Derived>& out_container)
 {
-  return container.GetData();
+  return out_container.GetData();
 }
 
 template <typename T, typename Derived>
@@ -210,9 +210,9 @@ typename ezArrayBase<T, Derived>::const_reverse_iterator crbegin(const ezArrayBa
 }
 
 template <typename T, typename Derived>
-typename ezArrayBase<T, Derived>::iterator end(ezArrayBase<T, Derived>& container)
+typename ezArrayBase<T, Derived>::iterator end(ezArrayBase<T, Derived>& out_container)
 {
-  return container.GetData() + container.GetCount();
+  return out_container.GetData() + out_container.GetCount();
 }
 
 template <typename T, typename Derived>

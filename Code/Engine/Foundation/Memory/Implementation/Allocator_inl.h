@@ -9,8 +9,8 @@ namespace ezInternal
 
     // ezAllocatorBase implementation
     virtual void* Allocate(size_t uiSize, size_t uiAlign, ezMemoryUtils::DestructorFunction destructorFunc = nullptr) override;
-    virtual void Deallocate(void* ptr) override;
-    virtual size_t AllocatedSize(const void* ptr) override;
+    virtual void Deallocate(void* pPtr) override;
+    virtual size_t AllocatedSize(const void* pPtr) override;
     virtual ezAllocatorId GetId() const override;
     virtual Stats GetStats() const override;
 

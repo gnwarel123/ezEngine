@@ -6,7 +6,7 @@ EZ_ALWAYS_INLINE ezRectTemplate<Type>::ezRectTemplate()
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE ezRectTemplate<Type>::ezRectTemplate(Type X, Type Y, Type Width, Type Height)
+EZ_ALWAYS_INLINE ezRectTemplate<Type>::ezRectTemplate(Type x, Type y, Type Width, Type Height)
   : x(X)
   , y(Y)
   , width(Width)

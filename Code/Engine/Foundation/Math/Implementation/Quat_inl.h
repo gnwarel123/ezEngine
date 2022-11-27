@@ -14,7 +14,7 @@ EZ_ALWAYS_INLINE ezQuatTemplate<Type>::ezQuatTemplate()
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE ezQuatTemplate<Type>::ezQuatTemplate(Type X, Type Y, Type Z, Type W)
+EZ_ALWAYS_INLINE ezQuatTemplate<Type>::ezQuatTemplate(Type x, Type y, Type z, Type w)
   : v(X, Y, Z)
   , w(W)
 {
@@ -27,7 +27,7 @@ EZ_ALWAYS_INLINE const ezQuatTemplate<Type> ezQuatTemplate<Type>::IdentityQuater
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE void ezQuatTemplate<Type>::SetElements(Type X, Type Y, Type Z, Type W)
+EZ_ALWAYS_INLINE void ezQuatTemplate<Type>::SetElements(Type x, Type y, Type z, Type w)
 {
   v.Set(X, Y, Z);
   w = W;

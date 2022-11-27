@@ -35,7 +35,7 @@ struct EZ_FOUNDATION_DLL ezFileStats
   ezFileStats();
 
   /// \brief Stores the concatenated m_sParentPath and m_sName in \a path.
-  void GetFullPath(ezStringBuilder& path) const;
+  void GetFullPath(ezStringBuilder& out_sPath) const;
 
   /// \brief Path to the parent folder.
   /// Append m_sName to m_sParentPath to obtain the full path.
@@ -174,7 +174,7 @@ public:
   ~ezOSFile();
 
   /// \brief Opens a file for reading or writing. Returns EZ_SUCCESS if the file could be opened successfully.
-  ezResult Open(const char* szFile, ezFileOpenMode::Enum OpenMode, ezFileShareMode::Enum FileShareMode = ezFileShareMode::Default); // [tested]
+  ezResult Open(const char* szFile, ezFileOpenMode::Enum openMode, ezFileShareMode::Enum fileShareMode = ezFileShareMode::Default); // [tested]
 
   /// \brief Returns true if a file is currently open.
   bool IsOpen() const; // [tested]
@@ -189,7 +189,7 @@ public:
   ezUInt64 Read(void* pBuffer, ezUInt64 uiBytes); // [tested]
 
   /// \brief Reads the entire file content into the given array
-  ezUInt64 ReadAll(ezDynamicArray<ezUInt8>& out_FileContent); // [tested]
+  ezUInt64 ReadAll(ezDynamicArray<ezUInt8>& out_fileContent); // [tested]
 
   /// \brief Returns the name of the file that is currently opened. Returns an empty string, if no file is open.
   const char* GetOpenFileName() const { return m_sFileName.GetData(); } // [tested]
@@ -198,7 +198,7 @@ public:
   ezUInt64 GetFilePosition() const; // [tested]
 
   /// \brief Sets the position where in the file to read/write next.
-  void SetFilePosition(ezInt64 iDistance, ezFileSeekMode::Enum Pos) const; // [tested]
+  void SetFilePosition(ezInt64 iDistance, ezFileSeekMode::Enum pos) const; // [tested]
 
   /// \brief Returns the current total size of the file.
   ezUInt64 GetFileSize() const; // [tested]
@@ -243,7 +243,7 @@ public:
 
 #if EZ_ENABLED(EZ_SUPPORTS_FILE_STATS) || defined(EZ_DOCS)
   /// \brief Gets the stats about the given file or folder. Returns false, if the stats could not be determined.
-  static ezResult GetFileStats(const char* szFileOrFolder, ezFileStats& out_Stats); // [tested]
+  static ezResult GetFileStats(const char* szFileOrFolder, ezFileStats& out_stats); // [tested]
 
 #  if (EZ_ENABLED(EZ_SUPPORTS_CASE_INSENSITIVE_PATHS) && EZ_ENABLED(EZ_SUPPORTS_UNRESTRICTED_FILE_ACCESS)) || defined(EZ_DOCS)
   /// \brief Useful on systems that are not strict about the casing of file names. Determines the correct name of a file.
@@ -255,12 +255,12 @@ public:
 #if (EZ_ENABLED(EZ_SUPPORTS_FILE_ITERATORS) && EZ_ENABLED(EZ_SUPPORTS_FILE_STATS)) || defined(EZ_DOCS)
 
   /// \brief Returns the ezFileStats for all files and folders in the given folder
-  static void GatherAllItemsInFolder(ezDynamicArray<ezFileStats>& out_ItemList, const char* szFolder, ezBitflags<ezFileSystemIteratorFlags> flags = ezFileSystemIteratorFlags::Default);
+  static void GatherAllItemsInFolder(ezDynamicArray<ezFileStats>& out_itemList, const char* szFolder, ezBitflags<ezFileSystemIteratorFlags> flags = ezFileSystemIteratorFlags::Default);
 
   /// \brief Copies \a szSourceFolder to \a szDestinationFolder. Overwrites existing files.
   ///
   /// If \a out_FilesCopied is provided, the destination path of every successfully copied file is appended to it.
-  static ezResult CopyFolder(const char* szSourceFolder, const char* szDestinationFolder, ezDynamicArray<ezString>* out_FilesCopied = nullptr);
+  static ezResult CopyFolder(const char* szSourceFolder, const char* szDestinationFolder, ezDynamicArray<ezString>* pFilesCopied = nullptr);
 
   /// \brief Deletes all files recursively in \a szFolder.
   ///

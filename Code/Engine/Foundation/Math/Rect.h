@@ -26,7 +26,7 @@ public:
   ezRectTemplate();
 
   /// \brief Constructor to set all values.
-  ezRectTemplate(Type X, Type Y, Type Width, Type Height);
+  ezRectTemplate(Type x, Type y, Type Width, Type Height);
 
   /// \brief Initializes x and y with zero, width and height with the given values.
   ezRectTemplate(Type Width, Type Height);

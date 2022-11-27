@@ -5,8 +5,8 @@ template <typename T>
 class ezLock
 {
 public:
-  EZ_ALWAYS_INLINE explicit ezLock(T& lock)
-    : m_Lock(lock)
+  EZ_ALWAYS_INLINE explicit ezLock(T& out_lock)
+    : m_Lock(out_lock)
   {
     m_Lock.Lock();
   }

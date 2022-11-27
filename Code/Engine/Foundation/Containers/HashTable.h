@@ -184,7 +184,7 @@ public:
   ValueType& operator[](const KeyType& key); // [tested]
 
   /// \brief Returns the value stored at the given key. If none exists, one is created. \a bExisted indicates whether an element needed to be created.
-  ValueType& FindOrAdd(const KeyType& key, bool* bExisted); // [tested]
+  ValueType& FindOrAdd(const KeyType& key, bool* pExisted); // [tested]
 
   /// \brief Returns if an entry with given key exists in the table.
   template <typename CompatibleKeyType>

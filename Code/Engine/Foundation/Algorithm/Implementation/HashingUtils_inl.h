@@ -44,11 +44,11 @@ EZ_ALWAYS_INLINE bool ezHashHelper<T>::Equal(const T& a, const U& b)
 template <>
 struct ezHashHelper<ezUInt32>
 {
-  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezUInt32 value)
+  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezUInt32 uiValue)
   {
     // Knuth: multiplication by the golden ratio will minimize gaps in the hash space.
     // 2654435761U: prime close to 2^32/phi with phi = golden ratio (sqrt(5) - 1) / 2
-    return value * 2654435761U;
+    return uiValue * 2654435761U;
   }
 
   EZ_ALWAYS_INLINE static bool Equal(ezUInt32 a, ezUInt32 b) { return a == b; }
@@ -57,7 +57,7 @@ struct ezHashHelper<ezUInt32>
 template <>
 struct ezHashHelper<ezInt32>
 {
-  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezInt32 value) { return ezHashHelper<ezUInt32>::Hash(ezUInt32(value)); }
+  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezInt32 iValue) { return ezHashHelper<ezUInt32>::Hash(ezUInt32(iValue)); }
 
   EZ_ALWAYS_INLINE static bool Equal(ezInt32 a, ezInt32 b) { return a == b; }
 };
@@ -65,11 +65,11 @@ struct ezHashHelper<ezInt32>
 template <>
 struct ezHashHelper<ezUInt64>
 {
-  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezUInt64 value)
+  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezUInt64 uiValue)
   {
     // boost::hash_combine.
-    ezUInt32 a = ezUInt32(value >> 32);
-    ezUInt32 b = ezUInt32(value);
+    ezUInt32 a = ezUInt32(uiValue >> 32);
+    ezUInt32 b = ezUInt32(uiValue);
     return a ^ (b + 0x9e3779b9 + (a << 6) + (b >> 2));
   }
 
@@ -79,7 +79,7 @@ struct ezHashHelper<ezUInt64>
 template <>
 struct ezHashHelper<ezInt64>
 {
-  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezInt64 value) { return ezHashHelper<ezUInt64>::Hash(ezUInt64(value)); }
+  EZ_ALWAYS_INLINE static ezUInt32 Hash(ezInt64 iValue) { return ezHashHelper<ezUInt64>::Hash(ezUInt64(iValue)); }
 
   EZ_ALWAYS_INLINE static bool Equal(ezInt64 a, ezInt64 b) { return a == b; }
 };
@@ -119,19 +119,19 @@ constexpr EZ_ALWAYS_INLINE ezUInt64 ezHashingUtils::StringHash(const char (&str)
   return xxHash64String(str, uiSeed);
 }
 
-EZ_ALWAYS_INLINE ezUInt64 ezHashingUtils::StringHash(ezStringView str, ezUInt64 uiSeed)
+EZ_ALWAYS_INLINE ezUInt64 ezHashingUtils::StringHash(ezStringView sStr, ezUInt64 uiSeed)
 {
-  return xxHash64String(str, uiSeed);
+  return xxHash64String(sStr, uiSeed);
 }
 
-constexpr EZ_ALWAYS_INLINE ezUInt32 ezHashingUtils::StringHashTo32(ezUInt64 hash)
+constexpr EZ_ALWAYS_INLINE ezUInt32 ezHashingUtils::StringHashTo32(ezUInt64 uiHash)
 {
   // just throw away the upper bits
-  return static_cast<ezUInt32>(hash);
+  return static_cast<ezUInt32>(uiHash);
 }
 
-constexpr EZ_ALWAYS_INLINE ezUInt32 ezHashingUtils::CombineHashValues32(ezUInt32 h0, ezUInt32 h1)
+constexpr EZ_ALWAYS_INLINE ezUInt32 ezHashingUtils::CombineHashValues32(ezUInt32 ui0, ezUInt32 ui1)
 {
   // See boost::hash_combine
-  return h0 ^ (h1 + 0x9e3779b9 + (h0 << 6) + (h1 >> 2));
+  return ui0 ^ (ui1 + 0x9e3779b9 + (ui0 << 6) + (ui1 >> 2));
 }

@@ -85,7 +85,7 @@ protected:
 #include <Foundation/Strings/Implementation/FormatStringImpl.h>
 
 template <typename... ARGS>
-EZ_ALWAYS_INLINE ezFormatStringImpl<ARGS...> ezFmt(const char* szFormat, ARGS&&... args)
+EZ_ALWAYS_INLINE ezFormatStringImpl<ARGS...> ezFmt(const char* szFormat, ARGS&&... out_args)
 {
-  return ezFormatStringImpl<ARGS...>(szFormat, std::forward<ARGS>(args)...);
+  return ezFormatStringImpl<ARGS...>(szFormat, std::forward<ARGS>(out_args)...);
 }

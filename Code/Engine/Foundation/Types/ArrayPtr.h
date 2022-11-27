@@ -63,8 +63,8 @@ public:
   }
 
   /// \brief Initializes the ezArrayPtr with the given pointer and number of elements. No memory is allocated or copied.
-  inline ezArrayPtr(T* ptr, ezUInt32 uiCount) // [tested]
-    : m_pPtr(ptr)
+  inline ezArrayPtr(T* pPtr, ezUInt32 uiCount) // [tested]
+    : m_pPtr(pPtr)
     , m_uiCount(uiCount)
   {
     // If any of the arguments is invalid, we invalidate ourself.
@@ -327,15 +327,15 @@ EZ_ALWAYS_INLINE ezByteArrayPtr ezMakeByteArrayPtr(T* ptr, ezUInt32 uiCount)
 }
 
 /// \brief Helper function to create ezByteArrayPtr from a void pointer and a count.
-EZ_ALWAYS_INLINE ezByteArrayPtr ezMakeByteArrayPtr(void* ptr, ezUInt32 uiBytes)
+EZ_ALWAYS_INLINE ezByteArrayPtr ezMakeByteArrayPtr(void* pPtr, ezUInt32 uiBytes)
 {
-  return ezByteArrayPtr(reinterpret_cast<ezUInt8*>(ptr), uiBytes);
+  return ezByteArrayPtr(reinterpret_cast<ezUInt8*>(pPtr), uiBytes);
 }
 
 /// \brief Helper function to create ezConstByteArrayPtr from a const void pointer and a count.
-EZ_ALWAYS_INLINE ezConstByteArrayPtr ezMakeByteArrayPtr(const void* ptr, ezUInt32 uiBytes)
+EZ_ALWAYS_INLINE ezConstByteArrayPtr ezMakeByteArrayPtr(const void* pPtr, ezUInt32 uiBytes)
 {
-  return ezConstByteArrayPtr(static_cast<const ezUInt8*>(ptr), uiBytes);
+  return ezConstByteArrayPtr(static_cast<const ezUInt8*>(pPtr), uiBytes);
 }
 
 //////////////////////////////////////////////////////////////////////////

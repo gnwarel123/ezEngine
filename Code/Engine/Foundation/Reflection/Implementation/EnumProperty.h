@@ -23,7 +23,7 @@ public:
   /// \brief Modifies the value of the property. Pass the instance pointer to the surrounding class along.
   ///
   /// \note Make sure the property is not read-only before calling this, otherwise an assert will fire.
-  virtual void SetValue(void* pInstance, ezInt64 value) = 0;
+  virtual void SetValue(void* pInstance, ezInt64 iValue) = 0;
 
   virtual void GetValuePtr(const void* pInstance, void* pObject) const override
   {

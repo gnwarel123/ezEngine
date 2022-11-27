@@ -40,13 +40,13 @@ public:
   virtual ezUInt64 GetHeapMemoryUsage() const = 0;
 
   /// \brief Copies all data from the given stream into the storage.
-  void ReadAll(ezStreamReader& Stream, ezUInt64 uiMaxBytes = ezMath::MaxValue<ezUInt64>());
+  void ReadAll(ezStreamReader& out_stream, ezUInt64 uiMaxBytes = ezMath::MaxValue<ezUInt64>());
 
   /// \brief Reserves N bytes of storage.
   virtual void Reserve(ezUInt64 uiBytes) = 0;
 
   /// \brief Writes the entire content of the storage to the provided stream.
-  virtual ezResult CopyToStream(ezStreamWriter& stream) const = 0;
+  virtual ezResult CopyToStream(ezStreamWriter& out_stream) const = 0;
 
   /// \brief Returns a read-only ezArrayPtr that represents a contiguous area in memory which starts at the given first byte.
   ///
@@ -97,9 +97,9 @@ public:
     m_Storage.Reserve(static_cast<ezUInt32>(uiBytes));
   }
 
-  virtual ezResult CopyToStream(ezStreamWriter& stream) const override
+  virtual ezResult CopyToStream(ezStreamWriter& out_stream) const override
   {
-    return stream.WriteBytes(m_Storage.GetData(), m_Storage.GetCount());
+    return out_stream.WriteBytes(m_Storage.GetData(), m_Storage.GetCount());
   }
 
   virtual ezArrayPtr<const ezUInt8> GetContiguousMemoryRange(ezUInt64 uiStartByte) const override
@@ -163,13 +163,13 @@ public:
   ezDefaultMemoryStreamStorage(ezUInt32 uiInitialCapacity = 0, ezAllocatorBase* pAllocator = ezFoundation::GetDefaultAllocator());
   ~ezDefaultMemoryStreamStorage();
 
-  virtual void Reserve(ezUInt64 bytes) override; // [tested]
+  virtual void Reserve(ezUInt64 uiBytes) override; // [tested]
 
   virtual ezUInt64 GetStorageSize64() const override; // [tested]
   virtual void Clear() override;
   virtual void Compact() override;
   virtual ezUInt64 GetHeapMemoryUsage() const override;
-  virtual ezResult CopyToStream(ezStreamWriter& stream) const override;
+  virtual ezResult CopyToStream(ezStreamWriter& out_stream) const override;
   virtual ezArrayPtr<const ezUInt8> GetContiguousMemoryRange(ezUInt64 uiStartByte) const override; // [tested]
   virtual ezArrayPtr<ezUInt8> GetContiguousMemoryRange(ezUInt64 uiStartByte) override;             // [tested]
 

@@ -67,11 +67,11 @@ EZ_ALWAYS_INLINE ezMemoryUtils::CopyConstructorFunction ezMemoryUtils::MakeCopyC
 }
 
 template <typename T>
-EZ_ALWAYS_INLINE void ezMemoryUtils::MoveConstruct(T* pDestination, T&& source)
+EZ_ALWAYS_INLINE void ezMemoryUtils::MoveConstruct(T* pDestination, T&& out_source)
 {
   // Make sure source is actually an rvalue reference (T&& is a universal reference).
-  static_assert(std::is_rvalue_reference<decltype(source)>::value, "'source' parameter is not an rvalue reference.");
-  ::new (pDestination) T(std::forward<T>(source));
+  static_assert(std::is_rvalue_reference<decltype(out_source)>::value, "'source' parameter is not an rvalue reference.");
+  ::new (pDestination) T(std::forward<T>(out_source));
 }
 
 template <typename T>
@@ -230,9 +230,9 @@ EZ_ALWAYS_INLINE T ezMemoryUtils::AlignSize(T uiSize, T uiAlignment)
 }
 
 template <typename T>
-EZ_ALWAYS_INLINE bool ezMemoryUtils::IsAligned(const T* ptr, size_t uiAlignment)
+EZ_ALWAYS_INLINE bool ezMemoryUtils::IsAligned(const T* pPtr, size_t uiAlignment)
 {
-  return (reinterpret_cast<size_t>(ptr) & (uiAlignment - 1)) == 0;
+  return (reinterpret_cast<size_t>(pPtr) & (uiAlignment - 1)) == 0;
 }
 
 template <typename T>

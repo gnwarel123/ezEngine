@@ -113,7 +113,7 @@ public:
   /// \brief This function will broadcast to all registered users, that this event has just happened.
   ///  Setting uiMaxRecursionDepth will allow you to permit recursions. When broadcasting consider up to what depth
   ///  you want recursions to be permitted. By default no recursion is allowed.
-  void Broadcast(EventData pEventData, ezUInt8 uiMaxRecursionDepth = MaxRecursionDepthDefault); // [tested]
+  void Broadcast(EventData eventData, ezUInt8 uiMaxRecursionDepth = MaxRecursionDepthDefault); // [tested]
 
   /// \brief Adds a function as an event handler. All handlers will be notified in the order that they were registered.
   ///
@@ -123,7 +123,7 @@ public:
   /// \brief An overload that adds an event handler and initializes the given \a Unsubscriber object.
   ///
   /// When the Unsubscriber is destroyed, it will automatically remove the event handler.
-  void AddEventHandler(Handler handler, Unsubscriber& unsubscriber) const; // [tested]
+  void AddEventHandler(Handler handler, Unsubscriber& out_unsubscriber) const; // [tested]
 
   /// \brief Removes a previously registered handler. It is an error to remove a handler that was not registered.
   void RemoveEventHandler(const Handler& handler) const; // [tested]

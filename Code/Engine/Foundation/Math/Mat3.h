@@ -21,8 +21,8 @@ public:
   /// \brief The matrix as a 9-element Type array (column-major)
   Type m_fElementsCM[9];
 
-  EZ_ALWAYS_INLINE Type& Element(ezInt32 column, ezInt32 row) { return m_fElementsCM[column * 3 + row]; }
-  EZ_ALWAYS_INLINE Type Element(ezInt32 column, ezInt32 row) const { return m_fElementsCM[column * 3 + row]; }
+  EZ_ALWAYS_INLINE Type& Element(ezInt32 iColumn, ezInt32 iRow) { return m_fElementsCM[column * 3 + row]; }
+  EZ_ALWAYS_INLINE Type Element(ezInt32 iColumn, ezInt32 iRow) const { return m_fElementsCM[column * 3 + row]; }
 
   // *** Constructors ***
 public:
@@ -60,7 +60,7 @@ public:
 
   /// \brief Copies the 9 values of this matrix into the given array. 'layout' defines whether the data should end up in column-major or row-major
   /// format.
-  void GetAsArray(Type* out_pData, ezMatrixLayout::Enum layout) const; // [tested]
+  void GetAsArray(Type* pData, ezMatrixLayout::Enum layout) const; // [tested]
 
   /// \brief Sets each element manually: Naming is "column-n row-m"
   void SetElements(Type c1r1, Type c2r1, Type c3r1, Type c1r2, Type c2r2, Type c3r2, Type c1r3, Type c2r3, Type c3r3); // [tested]
@@ -128,19 +128,19 @@ public:
   ezVec3Template<Type> GetRow(ezUInt32 uiRow) const; // [tested]
 
   /// \brief Sets all 3 components of the i-th row.
-  void SetRow(ezUInt32 uiRow, const ezVec3Template<Type>& row); // [tested]
+  void SetRow(ezUInt32 uiRow, const ezVec3Template<Type>& vRow); // [tested]
 
   /// \brief Returns all 3 components of the i-th column.
   ezVec3Template<Type> GetColumn(ezUInt32 uiColumn) const; // [tested]
 
   /// \brief Sets all 3 components of the i-th column.
-  void SetColumn(ezUInt32 uiColumn, const ezVec3Template<Type>& column); // [tested]
+  void SetColumn(ezUInt32 uiColumn, const ezVec3Template<Type>& vColumn); // [tested]
 
   /// \brief Returns all 3 components on the diagonal of the matrix.
   ezVec3Template<Type> GetDiagonal() const; // [tested]
 
   /// \brief Sets all 3 components on the diagonal of the matrix.
-  void SetDiagonal(const ezVec3Template<Type>& diag); // [tested]
+  void SetDiagonal(const ezVec3Template<Type>& vDiag); // [tested]
 
   /// \brief Returns the 3 scaling factors that are encoded in the matrix.
   const ezVec3Template<Type> GetScalingFactors() const; // [tested]

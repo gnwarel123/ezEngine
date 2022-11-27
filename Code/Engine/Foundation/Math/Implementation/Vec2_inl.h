@@ -19,7 +19,7 @@ EZ_ALWAYS_INLINE ezVec2Template<Type>::ezVec2Template(Type X, Type Y)
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE ezVec2Template<Type>::ezVec2Template(Type V)
+EZ_ALWAYS_INLINE ezVec2Template<Type>::ezVec2Template(Type v)
   : x(V)
   , y(V)
 {
@@ -33,7 +33,7 @@ EZ_ALWAYS_INLINE void ezVec2Template<Type>::Set(Type xy)
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE void ezVec2Template<Type>::Set(Type X, Type Y)
+EZ_ALWAYS_INLINE void ezVec2Template<Type>::Set(Type x, Type y)
 {
   x = X;
   y = Y;

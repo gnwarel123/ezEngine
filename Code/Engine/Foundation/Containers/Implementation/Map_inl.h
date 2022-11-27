@@ -517,10 +517,10 @@ typename ezMapBase<KeyType, ValueType, Comparer>::Iterator ezMapBase<KeyType, Va
 
 template <typename KeyType, typename ValueType, typename Comparer>
 template <typename CompatibleKeyType, typename CompatibleValueType>
-typename ezMapBase<KeyType, ValueType, Comparer>::Iterator ezMapBase<KeyType, ValueType, Comparer>::Insert(CompatibleKeyType&& key, CompatibleValueType&& value)
+typename ezMapBase<KeyType, ValueType, Comparer>::Iterator ezMapBase<KeyType, ValueType, Comparer>::Insert(CompatibleKeyType&& key, CompatibleValueType&& out_value)
 {
   auto it = FindOrAdd(std::forward<CompatibleKeyType>(key));
-  it.Value() = std::forward<CompatibleValueType>(value);
+  it.Value() = std::forward<CompatibleValueType>(out_value);
 
   return it;
 }

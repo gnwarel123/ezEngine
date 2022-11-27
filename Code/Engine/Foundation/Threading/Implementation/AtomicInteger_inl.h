@@ -126,9 +126,9 @@ EZ_ALWAYS_INLINE ezAtomicInteger<T>::operator T() const
 EZ_ALWAYS_INLINE ezAtomicBool::ezAtomicBool() = default;
 EZ_ALWAYS_INLINE ezAtomicBool::~ezAtomicBool() = default;
 
-EZ_ALWAYS_INLINE ezAtomicBool::ezAtomicBool(bool value)
+EZ_ALWAYS_INLINE ezAtomicBool::ezAtomicBool(bool bValue)
 {
-  Set(value);
+  Set(bValue);
 }
 
 EZ_ALWAYS_INLINE ezAtomicBool::ezAtomicBool(const ezAtomicBool& rhs)
@@ -136,14 +136,14 @@ EZ_ALWAYS_INLINE ezAtomicBool::ezAtomicBool(const ezAtomicBool& rhs)
   Set(static_cast<bool>(rhs));
 }
 
-EZ_ALWAYS_INLINE bool ezAtomicBool::Set(bool value)
+EZ_ALWAYS_INLINE bool ezAtomicBool::Set(bool bValue)
 {
-  return m_iAtomicInt.Set(value ? 1 : 0) != 0;
+  return m_iAtomicInt.Set(bValue ? 1 : 0) != 0;
 }
 
-EZ_ALWAYS_INLINE void ezAtomicBool::operator=(bool value)
+EZ_ALWAYS_INLINE void ezAtomicBool::operator=(bool bValue)
 {
-  Set(value);
+  Set(bValue);
 }
 
 EZ_ALWAYS_INLINE void ezAtomicBool::operator=(const ezAtomicBool& rhs)
@@ -156,7 +156,7 @@ EZ_ALWAYS_INLINE ezAtomicBool::operator bool() const
   return static_cast<ezInt32>(m_iAtomicInt) != 0;
 }
 
-EZ_ALWAYS_INLINE bool ezAtomicBool::TestAndSet(bool expected, bool newValue)
+EZ_ALWAYS_INLINE bool ezAtomicBool::TestAndSet(bool bExpected, bool bNewValue)
 {
-  return m_iAtomicInt.TestAndSet(expected ? 1 : 0, newValue ? 1 : 0) != 0;
+  return m_iAtomicInt.TestAndSet(bExpected ? 1 : 0, bNewValue ? 1 : 0) != 0;
 }

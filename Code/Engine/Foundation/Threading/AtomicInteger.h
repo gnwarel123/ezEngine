@@ -18,13 +18,13 @@ public:
   ezAtomicInteger(const T value); // [tested]
 
   /// \brief Copy-constructor
-  ezAtomicInteger(const ezAtomicInteger<T>& value); // [tested]
+  ezAtomicInteger(const ezAtomicInteger<T>& iValue); // [tested]
 
   /// \brief Assigns a new integer value to this object
   ezAtomicInteger& operator=(T value); // [tested]
 
   /// \brief Assignment operator
-  ezAtomicInteger& operator=(const ezAtomicInteger& value); // [tested]
+  ezAtomicInteger& operator=(const ezAtomicInteger& iValue); // [tested]
 
   /// \brief Increments the internal value and returns the incremented value
   T Increment(); // [tested]
@@ -73,16 +73,16 @@ public:
   ~ezAtomicBool();
 
   /// \brief Initializes the object with a value
-  ezAtomicBool(bool value); // [tested]
+  ezAtomicBool(bool bValue); // [tested]
 
   /// \brief Copy-constructor
   ezAtomicBool(const ezAtomicBool& rhs);
 
   /// \brief Sets the bool to the given value and returns its previous value.
-  bool Set(bool value); // [tested]
+  bool Set(bool bValue); // [tested]
 
   /// \brief Sets the bool to the given value.
-  void operator=(bool value); // [tested]
+  void operator=(bool bValue); // [tested]
 
   /// \brief Sets the bool to the given value.
   void operator=(const ezAtomicBool& rhs);
@@ -92,7 +92,7 @@ public:
 
   /// \brief Sets the internal value to \a newValue if the internal value is equal to \a expected and returns true, otherwise does nothing and returns
   /// false.
-  bool TestAndSet(bool expected, bool newValue);
+  bool TestAndSet(bool bExpected, bool bNewValue);
 
 private:
   ezAtomicInteger<ezInt32> m_iAtomicInt;

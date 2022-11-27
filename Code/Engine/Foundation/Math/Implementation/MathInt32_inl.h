@@ -2,28 +2,28 @@
 
 namespace ezMath
 {
-  constexpr EZ_ALWAYS_INLINE ezInt32 RoundUp(ezInt32 value, ezUInt16 multiple)
+  constexpr EZ_ALWAYS_INLINE ezInt32 RoundUp(ezInt32 iValue, ezUInt16 uiMultiple)
   {
     //
-    return (value >= 0) ? ((value + multiple - 1) / multiple) * multiple : (value / multiple) * multiple;
+    return (iValue >= 0) ? ((iValue + uiMultiple - 1) / uiMultiple) * uiMultiple : (iValue / uiMultiple) * uiMultiple;
   }
 
-  constexpr EZ_ALWAYS_INLINE ezInt32 RoundDown(ezInt32 value, ezUInt16 multiple)
+  constexpr EZ_ALWAYS_INLINE ezInt32 RoundDown(ezInt32 iValue, ezUInt16 uiMultiple)
   {
     //
-    return (value <= 0) ? ((value - multiple + 1) / multiple) * multiple : (value / multiple) * multiple;
+    return (iValue <= 0) ? ((iValue - uiMultiple + 1) / uiMultiple) * uiMultiple : (iValue / uiMultiple) * uiMultiple;
   }
 
-  constexpr EZ_ALWAYS_INLINE ezUInt32 RoundUp(ezUInt32 value, ezUInt16 multiple)
+  constexpr EZ_ALWAYS_INLINE ezUInt32 RoundUp(ezUInt32 uiValue, ezUInt16 uiMultiple)
   {
     //
-    return ((value + multiple - 1) / multiple) * multiple;
+    return ((uiValue + uiMultiple - 1) / uiMultiple) * uiMultiple;
   }
 
-  constexpr EZ_ALWAYS_INLINE ezUInt32 RoundDown(ezUInt32 value, ezUInt16 multiple)
+  constexpr EZ_ALWAYS_INLINE ezUInt32 RoundDown(ezUInt32 uiValue, ezUInt16 uiMultiple)
   {
     //
-    return (value / multiple) * multiple;
+    return (uiValue / uiMultiple) * uiMultiple;
   }
 
   constexpr EZ_ALWAYS_INLINE bool IsOdd(ezInt32 i)
@@ -38,12 +38,12 @@ namespace ezMath
     return ((i & 1) == 0);
   }
 
-  inline ezUInt32 Log2i(ezUInt32 val)
+  inline ezUInt32 Log2i(ezUInt32 uiVal)
   {
     ezInt32 ret = -1;
-    while (val != 0)
+    while (uiVal != 0)
     {
-      val >>= 1;
+      uiVal >>= 1;
       ret++;
     }
 
@@ -56,13 +56,13 @@ namespace ezMath
     return (1 << i);
   }
 
-  inline int Pow(int base, int exp)
+  inline int Pow(int iBase, int iExp)
   {
     int res = 1;
-    while (exp > 0)
+    while (iExp > 0)
     {
-      res *= base;
-      --exp;
+      res *= iBase;
+      --iExp;
     }
 
     return res;

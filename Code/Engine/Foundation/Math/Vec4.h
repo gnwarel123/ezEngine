@@ -123,10 +123,10 @@ public:
   const ezVec4Template<Type> operator-() const; // [tested]
 
   /// \brief Adds cc component-wise to this vector.
-  void operator+=(const ezVec4Template<Type>& cc); // [tested]
+  void operator+=(const ezVec4Template<Type>& vCc); // [tested]
 
   /// \brief Subtracts cc component-wise from this vector.
-  void operator-=(const ezVec4Template<Type>& cc); // [tested]
+  void operator-=(const ezVec4Template<Type>& vCc); // [tested]
 
   /// \brief Multiplies all components of this vector with f.
   void operator*=(Type f); // [tested]
@@ -153,7 +153,7 @@ public:
   const ezVec4Template<Type> CompMax(const ezVec4Template<Type>& rhs) const; // [tested]
 
   /// \brief Returns the component-wise clamped value of *this between low and high.
-  const ezVec4Template<Type> CompClamp(const ezVec4Template<Type>& low, const ezVec4Template<Type>& high) const; // [tested]
+  const ezVec4Template<Type> CompClamp(const ezVec4Template<Type>& vLow, const ezVec4Template<Type>& vHigh) const; // [tested]
 
   /// \brief Returns the component-wise multiplication of *this and rhs.
   const ezVec4Template<Type> CompMul(const ezVec4Template<Type>& rhs) const; // [tested]

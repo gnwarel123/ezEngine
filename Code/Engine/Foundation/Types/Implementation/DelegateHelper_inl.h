@@ -213,7 +213,7 @@ public:
   EZ_FORCE_INLINE void operator=(std::nullptr_t) { Invalidate(); }
 
   /// \brief Function call operator. This will call the function that is bound to the delegate, or assert if nothing was bound.
-  EZ_FORCE_INLINE R operator()(Args... params) const
+  EZ_FORCE_INLINE R operator()(Args... pParams) const
   {
     EZ_ASSERT_DEBUG(m_DispatchFunction != nullptr, "Delegate is not bound.");
     return (*m_DispatchFunction)(*this, params...);

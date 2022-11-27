@@ -96,10 +96,10 @@ inline ezUInt32 ezStringUtils::GetCharacterCount(const char* szUtf8, const char*
 }
 
 inline void ezStringUtils::GetCharacterAndElementCount(
-  const char* szUtf8, ezUInt32& uiCharacterCount, ezUInt32& uiElementCount, const char* pStringEnd)
+  const char* szUtf8, ezUInt32& out_uiCharacterCount, ezUInt32& out_uiElementCount, const char* pStringEnd)
 {
-  uiCharacterCount = 0;
-  uiElementCount = 0;
+  out_uiCharacterCount = 0;
+  out_uiElementCount = 0;
 
   if (IsNullOrEmpty(szUtf8))
     return;
@@ -114,10 +114,10 @@ inline void ezStringUtils::GetCharacterAndElementCount(
 
     // skip all the Utf8 continuation bytes
     if (!ezUnicodeUtils::IsUtf8ContinuationByte(uiByte))
-      ++uiCharacterCount;
+      ++out_uiCharacterCount;
 
     ++szUtf8;
-    ++uiElementCount;
+    ++out_uiElementCount;
   }
 }
 

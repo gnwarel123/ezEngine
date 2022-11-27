@@ -65,10 +65,10 @@ public:
   ezResult ReadHashTable(ezHashTableBase<KeyType, ValueType, Hasher>& HashTable); // [tested]
 
   /// \brief Reads a string into an ezStringBuilder
-  ezResult ReadString(ezStringBuilder& builder); // [tested]
+  ezResult ReadString(ezStringBuilder& out_sBuilder); // [tested]
 
   /// \brief Reads a string into an ezString
-  ezResult ReadString(ezString& string);
+  ezResult ReadString(ezString& out_sString);
 
 
   /// \brief Helper method to skip a number of bytes (implementations of the stream reader may implement this more efficiently for example)
@@ -94,7 +94,7 @@ public:
     return uiBytesSkipped;
   }
 
-  EZ_ALWAYS_INLINE ezTypeVersion ReadVersion(ezTypeVersion uiExpectedMaxVersion);
+  EZ_ALWAYS_INLINE ezTypeVersion ReadVersion(ezTypeVersion expectedMaxVersion);
 };
 
 /// \brief Interface for binary out (write) streams.
@@ -133,7 +133,7 @@ public:
   ezResult WriteQWordValue(const T* pQWordValue); // [tested]
 
   /// \brief Writes a type version to the stream
-  EZ_ALWAYS_INLINE void WriteVersion(ezTypeVersion uiVersion);
+  EZ_ALWAYS_INLINE void WriteVersion(ezTypeVersion version);
 
   /// \brief Writes an array of elements to the stream
   template <typename ArrayType, typename ValueType>
@@ -156,7 +156,7 @@ public:
   ezResult WriteHashTable(const ezHashTableBase<KeyType, ValueType, Hasher>& HashTable); // [tested]
 
   /// \brief Writes a string
-  ezResult WriteString(const ezStringView szStringView); // [tested]
+  ezResult WriteString(const ezStringView sStringView); // [tested]
 };
 
 // Contains the helper methods of both interfaces

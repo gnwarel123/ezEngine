@@ -20,59 +20,59 @@ EZ_ALWAYS_INLINE ezVariant::ezVariant(ezVariant&& other) noexcept
   MoveFrom(std::move(other));
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const bool& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const bool& bValue)
 {
-  InitInplace(value);
+  InitInplace(bValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt8& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt8& iValue)
 {
-  InitInplace(value);
+  InitInplace(iValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt8& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt8& uiValue)
 {
-  InitInplace(value);
+  InitInplace(uiValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt16& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt16& iValue)
 {
-  InitInplace(value);
+  InitInplace(iValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt16& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt16& uiValue)
 {
-  InitInplace(value);
+  InitInplace(uiValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt32& iValue)
 {
-  InitInplace(value);
+  InitInplace(iValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt32& uiValue)
 {
-  InitInplace(value);
+  InitInplace(uiValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt64& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezInt64& iValue)
 {
-  InitInplace(value);
+  InitInplace(iValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt64& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezUInt64& uiValue)
 {
-  InitInplace(value);
+  InitInplace(uiValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const float& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const float& fValue)
 {
-  InitInplace(value);
+  InitInplace(fValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const double& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const double& fValue)
 {
-  InitInplace(value);
+  InitInplace(fValue);
 }
 
 EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezColor& value)
@@ -80,59 +80,59 @@ EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezColor& value)
   InitInplace(value);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2I32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2I32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3I32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3I32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4I32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4I32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2U32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec2U32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3U32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec3U32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4U32& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezVec4U32& vValue)
 {
-  InitInplace(value);
+  InitInplace(vValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezQuat& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezQuat& qValue)
 {
-  InitInplace(value);
+  InitInplace(qValue);
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezStringView& value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezStringView& sValue)
 {
-  InitInplace(value);
+  InitInplace(sValue);
 }
 
 EZ_ALWAYS_INLINE ezVariant::ezVariant(const ezTime& value)
@@ -165,16 +165,16 @@ EZ_ALWAYS_INLINE ezVariant::ezVariant(const T& value)
 }
 
 template <typename T>
-EZ_ALWAYS_INLINE ezVariant::ezVariant(const T* value)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(const T* pValue)
 {
   constexpr bool bla = !std::is_same<T, void>::value;
   EZ_CHECK_AT_COMPILETIME(bla);
   InitTypedPointer(const_cast<T*>(value), ezGetStaticRTTI<T>());
 }
 
-EZ_ALWAYS_INLINE ezVariant::ezVariant(void* value, const ezRTTI* pType)
+EZ_ALWAYS_INLINE ezVariant::ezVariant(void* pValue, const ezRTTI* pType)
 {
-  InitTypedPointer(value, pType);
+  InitTypedPointer(pValue, pType);
 }
 
 EZ_ALWAYS_INLINE ezVariant::~ezVariant()

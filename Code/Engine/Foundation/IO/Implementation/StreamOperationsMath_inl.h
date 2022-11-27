@@ -323,21 +323,21 @@ inline ezStreamReader& operator>>(ezStreamReader& stream, ezBoundingBoxSphereTem
 }
 
 // ezColor
-inline ezStreamWriter& operator<<(ezStreamWriter& stream, const ezColor& Value)
+inline ezStreamWriter& operator<<(ezStreamWriter& out_stream, const ezColor& value)
 {
-  stream.WriteBytes(&Value, sizeof(ezColor)).AssertSuccess();
-  return stream;
+  out_stream.WriteBytes(&value, sizeof(ezColor)).AssertSuccess();
+  return out_stream;
 }
 
-inline ezStreamReader& operator>>(ezStreamReader& stream, ezColor& Value)
+inline ezStreamReader& operator>>(ezStreamReader& out_stream, ezColor& out_value)
 {
-  stream.ReadBytes(&Value, sizeof(ezColor));
-  return stream;
+  out_stream.ReadBytes(&out_value, sizeof(ezColor));
+  return out_stream;
 }
 
-inline ezResult SerializeArray(ezStreamWriter& stream, const ezColor* pArray, ezUInt64 uiCount)
+inline ezResult SerializeArray(ezStreamWriter& out_stream, const ezColor* pArray, ezUInt64 uiCount)
 {
-  return stream.WriteBytes(pArray, sizeof(ezColor) * uiCount);
+  return out_stream.WriteBytes(pArray, sizeof(ezColor) * uiCount);
 }
 
 template <typename Type>
@@ -352,16 +352,16 @@ ezResult DeserializeArray(ezStreamReader& stream, ezColor* pArray, ezUInt64 uiCo
 
 
 // ezColorGammaUB
-inline ezStreamWriter& operator<<(ezStreamWriter& stream, const ezColorGammaUB& Value)
+inline ezStreamWriter& operator<<(ezStreamWriter& out_stream, const ezColorGammaUB& value)
 {
-  stream.WriteBytes(&Value, sizeof(ezColorGammaUB)).AssertSuccess();
-  return stream;
+  out_stream.WriteBytes(&value, sizeof(ezColorGammaUB)).AssertSuccess();
+  return out_stream;
 }
 
-inline ezStreamReader& operator>>(ezStreamReader& stream, ezColorGammaUB& Value)
+inline ezStreamReader& operator>>(ezStreamReader& out_stream, ezColorGammaUB& out_value)
 {
-  stream.ReadBytes(&Value, sizeof(ezColorGammaUB));
-  return stream;
+  out_stream.ReadBytes(&out_value, sizeof(ezColorGammaUB));
+  return out_stream;
 }
 
 template <typename Type>
@@ -382,18 +382,18 @@ ezResult DeserializeArray(ezStreamReader& stream, ezColorGammaUB* pArray, ezUInt
 
 
 // ezAngle
-inline ezStreamWriter& operator<<(ezStreamWriter& stream, const ezAngle& Value)
+inline ezStreamWriter& operator<<(ezStreamWriter& out_stream, const ezAngle& value)
 {
-  stream << Value.GetRadian();
-  return stream;
+  out_stream << value.GetRadian();
+  return out_stream;
 }
 
-inline ezStreamReader& operator>>(ezStreamReader& stream, ezAngle& Value)
+inline ezStreamReader& operator>>(ezStreamReader& out_stream, ezAngle& out_value)
 {
   float fRadian;
-  stream >> fRadian;
-  Value.SetRadian(fRadian);
-  return stream;
+  out_stream >> fRadian;
+  out_value.SetRadian(fRadian);
+  return out_stream;
 }
 
 template <typename Type>
@@ -414,16 +414,16 @@ ezResult DeserializeArray(ezStreamReader& stream, ezAngle* pArray, ezUInt64 uiCo
 
 
 // ezColor8Unorm
-inline ezStreamWriter& operator<<(ezStreamWriter& stream, const ezColorLinearUB& Value)
+inline ezStreamWriter& operator<<(ezStreamWriter& out_stream, const ezColorLinearUB& value)
 {
-  stream.WriteBytes(&Value, sizeof(ezColorLinearUB)).AssertSuccess();
-  return stream;
+  out_stream.WriteBytes(&value, sizeof(ezColorLinearUB)).AssertSuccess();
+  return out_stream;
 }
 
-inline ezStreamReader& operator>>(ezStreamReader& stream, ezColorLinearUB& Value)
+inline ezStreamReader& operator>>(ezStreamReader& out_stream, ezColorLinearUB& out_value)
 {
-  stream.ReadBytes(&Value, sizeof(ezColorLinearUB));
-  return stream;
+  out_stream.ReadBytes(&out_value, sizeof(ezColorLinearUB));
+  return out_stream;
 }
 
 template <typename Type>

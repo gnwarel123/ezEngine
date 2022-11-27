@@ -21,7 +21,7 @@ EZ_ALWAYS_INLINE ezVec3Template<Type>::ezVec3Template(Type X, Type Y, Type Z)
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE ezVec3Template<Type>::ezVec3Template(Type V)
+EZ_ALWAYS_INLINE ezVec3Template<Type>::ezVec3Template(Type v)
   : x(V)
   , y(V)
   , z(V)
@@ -37,7 +37,7 @@ EZ_ALWAYS_INLINE void ezVec3Template<Type>::Set(Type xyz)
 }
 
 template <typename Type>
-EZ_ALWAYS_INLINE void ezVec3Template<Type>::Set(Type X, Type Y, Type Z)
+EZ_ALWAYS_INLINE void ezVec3Template<Type>::Set(Type x, Type y, Type z)
 {
   x = X;
   y = Y;
