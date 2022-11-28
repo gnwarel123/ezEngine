@@ -1,11 +1,14 @@
 #pragma once
 
 #include <Foundation/Containers/HashTable.h>
+#include <Foundation/Containers/SmallArray.h>
 #include <Foundation/DataProcessing/Stream/ProcessingStream.h>
 #include <Foundation/SimdMath/SimdVec4f.h>
 #include <Foundation/SimdMath/SimdVec4i.h>
-#include <Foundation/Types/Delegate.h>
 #include <Foundation/Types/Variant.h>
+
+class ezStreamWriter;
+class ezStreamReader;
 
 namespace ezExpression
 {
@@ -31,7 +34,11 @@ namespace ezExpression
       Int,
       Bool,
 
-      Default = Float
+      Unknown,
+
+      Count,
+
+      Default = Float,
     };
 
     static const char* GetName(Enum registerType);
@@ -51,21 +58,29 @@ namespace ezExpression
     {
       return m_sName == other.m_sName && m_DataType == other.m_DataType;
     }
+
+    ezResult Serialize(ezStreamWriter& stream) const;
+    ezResult Deserialize(ezStreamReader& stream);
   };
 
   /// \brief Describes an expression function and its signature, e.g. how many input parameter it has and their type
   struct FunctionDesc
   {
     ezHashedString m_sName;
-    ezArrayPtr<ezEnum<ezExpression::RegisterType>> m_InputTypes;
+    ezSmallArray<ezEnum<ezExpression::RegisterType>, 8> m_InputTypes;
+    ezUInt8 m_uiNumRequiredInputs = 0;
     ezEnum<ezExpression::RegisterType> m_OutputType;
 
     bool operator==(const FunctionDesc& other) const
     {
       return m_sName == other.m_sName &&
-        m_InputTypes == other.m_InputTypes &&
-        m_OutputType == other.m_OutputType;
+             m_InputTypes == other.m_InputTypes &&
+             m_uiNumRequiredInputs == other.m_uiNumRequiredInputs &&
+             m_OutputType == other.m_OutputType;
     }
+
+    ezResult Serialize(ezStreamWriter& stream) const;
+    ezResult Deserialize(ezStreamReader& stream);
   };
 
   using Function = void (*)(ezExpression::Inputs, ezExpression::Output, const ezExpression::GlobalData&);

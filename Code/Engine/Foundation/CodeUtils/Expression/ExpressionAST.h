@@ -103,8 +103,10 @@ public:
 
     static Enum FromStreamType(ezProcessingStream::DataType dataType);
 
-    static ezExpression::RegisterType::Enum GetRegisterType(Enum dataType);
-    static Enum FromRegisterType(ezExpression::RegisterType::Enum registerType);
+    EZ_ALWAYS_INLINE static ezExpression::RegisterType::Enum GetRegisterType(Enum dataType) { return static_cast<ezExpression::RegisterType::Enum>(dataType >> 2); }
+    EZ_ALWAYS_INLINE static Enum FromRegisterType(ezExpression::RegisterType::Enum registerType) { return static_cast<ezExpressionAST::DataType::Enum>(registerType << 2); }
+
+    EZ_ALWAYS_INLINE static ezUInt32 GetElementCount(Enum dataType) { return dataType & 0x3; }
 
     static const char* GetName(Enum dataType);
   };

@@ -150,6 +150,11 @@ namespace
   };
   static_assert(EZ_ARRAY_SIZE(s_DataTypeFromStreamType) == (size_t)ezProcessingStream::DataType::Count);
 
+  static_assert(ezExpressionAST::DataType::Float >> 2 == ezExpression::RegisterType::Float);
+  static_assert(ezExpressionAST::DataType::Int >> 2 == ezExpression::RegisterType::Int);
+  static_assert(ezExpressionAST::DataType::Bool >> 2 == ezExpression::RegisterType::Bool);
+  static_assert(ezExpressionAST::DataType::Unknown >> 2 == ezExpression::RegisterType::Unknown);
+
   static const char* s_szDataTypeNames[] = {
     "Unknown", // Unknown,
 

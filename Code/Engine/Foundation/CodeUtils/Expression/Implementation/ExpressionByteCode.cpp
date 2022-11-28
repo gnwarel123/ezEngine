@@ -168,11 +168,11 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
       {
         if (opCode == OpCode::LoadF || opCode == OpCode::LoadI)
         {
-          out_sDisassembly.AppendFormat("{} r{} i{}({})\n", szOpCode, r, x, m_Inputs[x]);
+          out_sDisassembly.AppendFormat("{} r{} i{}({})\n", szOpCode, r, x, m_Inputs[x].m_sName);
         }
         else if (opCode == OpCode::StoreF || opCode == OpCode::StoreI)
         {
-          out_sDisassembly.AppendFormat("{} o{}({}) r{}\n", szOpCode, r, m_Outputs[r], x);
+          out_sDisassembly.AppendFormat("{} o{}({}) r{}\n", szOpCode, r, m_Outputs[r].m_sName, x);
         }
         else
         {

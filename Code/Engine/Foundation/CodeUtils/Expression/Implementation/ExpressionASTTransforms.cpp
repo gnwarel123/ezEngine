@@ -7,13 +7,15 @@ namespace
 {
   ezExpressionAST::DataType::Enum BiggerDataType(ezExpressionAST::DataType::Enum a, ezExpressionAST::DataType::Enum b)
   {
-    if (a == ezExpressionAST::DataType::Unknown)
-      return b;
+    ezExpression::RegisterType::Enum ra = ezExpressionAST::DataType::GetRegisterType(a);
+    ezExpression::RegisterType::Enum rb = ezExpressionAST::DataType::GetRegisterType(a);
 
-    if (b == ezExpressionAST::DataType::Unknown)
-      return a;
+    EZ_ASSERT_NOT_IMPLEMENTED;
+    const ezUInt32 ea = ezExpressionAST::DataType::GetElementCount(a);
+    const ezUInt32 eb = ezExpressionAST::DataType::GetElementCount(b);
 
-    return static_cast<ezUInt32>(a) < static_cast<ezUInt32>(b) ? a : b;
+    const ezUInt32 res = ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb)) + ezMath::Max(ea, eb);
+    return static_cast<ezExpressionAST::DataType::Enum>(res);
   }
 } // namespace
 
