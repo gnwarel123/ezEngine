@@ -1,66 +1,93 @@
 #include <Foundation/FoundationPCH.h>
 
 #include <Foundation/CodeUtils/Expression/ExpressionByteCode.h>
-#include <Foundation/CodeUtils/Expression/ExpressionFunctions.h>
 #include <Foundation/IO/ChunkStream.h>
 #include <Foundation/Logging/Log.h>
 
 namespace
 {
   static const char* s_szOpCodeNames[] = {
+    "Nop",
+
     // Unary
     "",
 
-    "Abs_R",
-    "Sqrt_R",
-    "Sin_R",
-    "Cos_R",
-    "Tan_R",
-    "ASin_R",
-    "ACos_R",
-    "ATan_R",
+    "AbsF_R",
+    "AbsI_R",
+    "SqrtF_R",
 
-    "Mov_R",
-    "Mov_C",
-    "Load",
-    "Store",
+    "SinF_R",
+    "CosF_R",
+    "TanF_R",
+
+    "ASinF_R",
+    "ACosF_R",
+    "ATanF_R",
 
     "",
 
     // Binary
     "",
 
-    "Add_RR",
-    "Add_CR",
+    "AddF_RR",
+    "AddI_RR",
 
-    "Sub_RR",
-    "Sub_CR",
+    "SubF_RR",
+    "SubI_RR",
 
-    "Mul_RR",
-    "Mul_CR",
+    "MulF_RR",
+    "MulI_RR",
 
-    "Div_RR",
-    "Div_CR",
+    "DivF_RR",
+    "DivI_RR",
 
-    "Min_RR",
-    "Min_CR",
+    "MinF_RR",
+    "MinI_RR",
 
-    "Max_RR",
-    "Max_CR",
+    "MaxF_RR",
+    "MaxI_RR",
 
     "",
 
-    "Call",
+    // Binary With Constant
+    "",
 
-    "Nop",
+    "AddF_CR",
+    "AddI_CR",
+
+    "SubF_CR",
+    "SubI_CR",
+
+    "MulF_CR",
+    "MulI_CR",
+
+    "DivF_CR",
+    "DivI_CR",
+
+    "MinF_CR",
+    "MinI_CR",
+
+    "MaxF_CR",
+    "MaxI_CR",
+
+    "",
+
+    "MovX_R",
+    "MovX_C",
+    "LoadF",
+    "LoadI",
+    "StoreF",
+    "StoreI",
+
+    "Call",
   };
 
-  EZ_CHECK_AT_COMPILETIME_MSG(EZ_ARRAY_SIZE(s_szOpCodeNames) == ezExpressionByteCode::OpCode::Count, "OpCode name array size does not match OpCode type count");
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames) == ezExpressionByteCode::OpCode::Count);
+  static_assert(ezExpressionByteCode::OpCode::LastBinary - ezExpressionByteCode::OpCode::FirstBinary == ezExpressionByteCode::OpCode::LastBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinaryWithConstant);
 
   static bool FirstArgIsConstant(ezExpressionByteCode::OpCode::Enum opCode)
   {
-    return opCode == ezExpressionByteCode::OpCode::Mov_C || opCode == ezExpressionByteCode::OpCode::Add_CR || opCode == ezExpressionByteCode::OpCode::Sub_CR || opCode == ezExpressionByteCode::OpCode::Mul_CR || opCode == ezExpressionByteCode::OpCode::Div_CR ||
-           opCode == ezExpressionByteCode::OpCode::Min_CR || opCode == ezExpressionByteCode::OpCode::Max_CR;
+    return opCode > ezExpressionByteCode::OpCode::FirstBinaryWithConstant && opCode < ezExpressionByteCode::OpCode::LastBinaryWithConstant;
   }
 } // namespace
 
@@ -91,23 +118,33 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
   out_sDisassembly.Append("// Inputs:\n");
   for (ezUInt32 i = 0; i < m_Inputs.GetCount(); ++i)
   {
-    out_sDisassembly.AppendFormat("//  {0}: {1}\n", i, m_Inputs[i]);
+    out_sDisassembly.AppendFormat("//  {}: {}({})\n", i, m_Inputs[i].m_sName, ezProcessingStream::GetDataTypeName(m_Outputs[i].m_DataType));
   }
 
   out_sDisassembly.Append("\n// Outputs:\n");
   for (ezUInt32 i = 0; i < m_Outputs.GetCount(); ++i)
   {
-    out_sDisassembly.AppendFormat("//  {0}: {1}\n", i, m_Outputs[i]);
+    out_sDisassembly.AppendFormat("//  {}: {}({})\n", i, m_Outputs[i].m_sName, ezProcessingStream::GetDataTypeName(m_Outputs[i].m_DataType));
   }
 
   out_sDisassembly.Append("\n// Functions:\n");
   for (ezUInt32 i = 0; i < m_Functions.GetCount(); ++i)
   {
-    out_sDisassembly.AppendFormat("//  {0}: {1}\n", i, m_Functions[i]);
+    out_sDisassembly.AppendFormat("//  {}: {} {}(", i, ezExpression::RegisterType::GetName(m_Functions[i].m_OutputType), m_Functions[i].m_sName);
+    const ezUInt32 uiNumArguments = m_Functions[i].m_InputTypes.GetCount();
+    for (ezUInt32 j = 0; j < uiNumArguments; ++i)
+    {
+      out_sDisassembly.Append(ezExpression::RegisterType::GetName(m_Functions[i].m_InputTypes[j]));
+      if (j < uiNumArguments-1)
+      {
+        out_sDisassembly.Append(", ");
+      }
+    }
+    out_sDisassembly.Append(")\n");
   }
 
-  out_sDisassembly.AppendFormat("\n// Temp Registers: {0}\n", m_uiNumTempRegisters);
-  out_sDisassembly.AppendFormat("// Instructions: {0}\n\n", m_uiNumInstructions);
+  out_sDisassembly.AppendFormat("\n// Temp Registers: {}\n", m_uiNumTempRegisters);
+  out_sDisassembly.AppendFormat("// Instructions: {}\n\n", m_uiNumInstructions);
 
 
   const StorageType* pByteCode = GetByteCode();
@@ -125,21 +162,21 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
 
       if (FirstArgIsConstant(opCode))
       {
-        out_sDisassembly.AppendFormat("{0} r{1} {2}\n", szOpCode, r, ezArgF(*reinterpret_cast<float*>(&x), 6));
+        out_sDisassembly.AppendFormat("{} r{} {}({})\n", szOpCode, r, ezArgU(x, 8, false, 16), ezArgF(*reinterpret_cast<float*>(&x), 6));
       }
       else
       {
-        if (opCode == OpCode::Load)
+        if (opCode == OpCode::LoadF || opCode == OpCode::LoadI)
         {
-          out_sDisassembly.AppendFormat("{0} r{1} i{2}({3})\n", szOpCode, r, x, m_Inputs[x]);
+          out_sDisassembly.AppendFormat("{} r{} i{}({})\n", szOpCode, r, x, m_Inputs[x]);
         }
-        else if (opCode == OpCode::Store)
+        else if (opCode == OpCode::StoreF || opCode == OpCode::StoreI)
         {
-          out_sDisassembly.AppendFormat("{0} o{1}({3}) r{2}\n", szOpCode, r, x, m_Outputs[r]);
+          out_sDisassembly.AppendFormat("{} o{}({}) r{}\n", szOpCode, r, m_Outputs[r], x);
         }
         else
         {
-          out_sDisassembly.AppendFormat("{0} r{1} r{2}\n", szOpCode, r, x);
+          out_sDisassembly.AppendFormat("{} r{} r{}\n", szOpCode, r, x);
         }
       }
     }
@@ -151,17 +188,17 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
 
       if (FirstArgIsConstant(opCode))
       {
-        out_sDisassembly.AppendFormat("{0} r{1} {2} r{3}\n", szOpCode, r, ezArgF(*reinterpret_cast<float*>(&a), 6), b);
+        out_sDisassembly.AppendFormat("{} r{} {}({}) r{}\n", szOpCode, r, ezArgU(a, 8, false, 16) , ezArgF(*reinterpret_cast<float*>(&a), 6), b);
       }
       else
       {
-        out_sDisassembly.AppendFormat("{0} r{1} r{2} r{3}\n", szOpCode, r, a, b);
+        out_sDisassembly.AppendFormat("{} r{} r{} r{}\n", szOpCode, r, a, b);
       }
     }
     else if (opCode == OpCode::Call)
     {
       ezUInt32 uiIndex = GetFunctionIndex(pByteCode);
-      const char* szName = m_Functions[uiIndex];
+      const char* szName = m_Functions[uiIndex].m_sName;
 
       ezStringBuilder sName;
       if (ezStringUtils::IsNullOrEmpty(szName))
@@ -198,6 +235,9 @@ const char* ezExpressionByteCode::GetOpCodeName(OpCode::Enum opCode)
   return s_szOpCodeNames[opCode];
 }
 
+static constexpr ezUInt32 s_uiMetaDataVersion = 4;
+static constexpr ezUInt32 s_uiCodeVersion = 3;
+
 void ezExpressionByteCode::Save(ezStreamWriter& stream) const
 {
   ezChunkStreamWriter chunk(stream);
@@ -205,7 +245,7 @@ void ezExpressionByteCode::Save(ezStreamWriter& stream) const
   chunk.BeginStream(1);
 
   {
-    chunk.BeginChunk("MetaData", 3);
+    chunk.BeginChunk("MetaData", s_uiMetaDataVersion);
 
     chunk << m_uiNumInstructions;
     chunk << m_uiNumTempRegisters;
@@ -217,7 +257,7 @@ void ezExpressionByteCode::Save(ezStreamWriter& stream) const
   }
 
   {
-    chunk.BeginChunk("Code", 2);
+    chunk.BeginChunk("Code", s_uiCodeVersion);
 
     chunk << m_ByteCode.GetCount();
     chunk.WriteBytes(m_ByteCode.GetData(), m_ByteCode.GetCount() * sizeof(StorageType)).IgnoreResult();
@@ -239,7 +279,7 @@ ezResult ezExpressionByteCode::Load(ezStreamReader& stream)
   {
     if (chunk.GetCurrentChunk().m_sChunkName == "MetaData")
     {
-      if (chunk.GetCurrentChunk().m_uiChunkVersion >= 3)
+      if (chunk.GetCurrentChunk().m_uiChunkVersion >= s_uiMetaDataVersion)
       {
         chunk >> m_uiNumInstructions;
         chunk >> m_uiNumTempRegisters;
@@ -249,7 +289,7 @@ ezResult ezExpressionByteCode::Load(ezStreamReader& stream)
       }
       else
       {
-        ezLog::Error("Invalid MetaData Chunk Version {0}. Expected >= 3", chunk.GetCurrentChunk().m_uiChunkVersion);
+        ezLog::Error("Invalid MetaData Chunk Version {}. Expected >= {}", chunk.GetCurrentChunk().m_uiChunkVersion, s_uiMetaDataVersion);
 
         chunk.EndStream();
         return EZ_FAILURE;
@@ -257,7 +297,7 @@ ezResult ezExpressionByteCode::Load(ezStreamReader& stream)
     }
     else if (chunk.GetCurrentChunk().m_sChunkName == "Code")
     {
-      if (chunk.GetCurrentChunk().m_uiChunkVersion >= 2)
+      if (chunk.GetCurrentChunk().m_uiChunkVersion >= s_uiCodeVersion)
       {
         ezUInt32 uiByteCodeCount = 0;
         chunk >> uiByteCodeCount;
@@ -267,7 +307,7 @@ ezResult ezExpressionByteCode::Load(ezStreamReader& stream)
       }
       else
       {
-        ezLog::Error("Invalid Code Chunk Version {0}. Expected >= 2", chunk.GetCurrentChunk().m_uiChunkVersion);
+        ezLog::Error("Invalid Code Chunk Version {}. Expected >= {}", chunk.GetCurrentChunk().m_uiChunkVersion, s_uiCodeVersion);
 
         chunk.EndStream();
         return EZ_FAILURE;

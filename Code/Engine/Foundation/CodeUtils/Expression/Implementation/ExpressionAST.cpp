@@ -252,32 +252,33 @@ ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& valu
   return pConstant;
 }
 
-ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType)
+ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezExpression::StreamDesc& desc)
 {
   auto pInput = EZ_NEW(&m_Allocator, Input);
   pInput->m_Type = NodeType::Input;
-  pInput->m_DataType = DataType::FromStreamType(streamDataType);
-  pInput->m_sName = sName;
+  pInput->m_DataType = DataType::FromStreamType(desc.m_DataType);
+  pInput->m_Desc = desc;
 
   return pInput;
 }
 
-ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType, Node* pExpression)
+ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression)
 {
   auto pOutput = EZ_NEW(&m_Allocator, Output);
   pOutput->m_Type = NodeType::Output;
-  pOutput->m_DataType = DataType::FromStreamType(streamDataType);
-  pOutput->m_sName = sName;
+  pOutput->m_DataType = DataType::FromStreamType(desc.m_DataType);
+  pOutput->m_Desc = desc;
   pOutput->m_pExpression = pExpression;
 
   return pOutput;
 }
 
-ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezHashedString& sName)
+ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpression::FunctionDesc& desc)
 {
   auto pFunctionCall = EZ_NEW(&m_Allocator, FunctionCall);
   pFunctionCall->m_Type = NodeType::FunctionCall;
-  pFunctionCall->m_sName = sName;
+  pFunctionCall->m_DataType = DataType::FromRegisterType(desc.m_OutputType);
+  pFunctionCall->m_Desc = desc;
 
   return pFunctionCall;
 }
@@ -373,7 +374,7 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
 
     sTmp = NodeType::GetName(pOutputNode->m_Type);
     sTmp.Append("(", DataType::GetName(pOutputNode->m_DataType), ")");
-    sTmp.Append(": ", pOutputNode->m_sName);
+    sTmp.Append(": ", pOutputNode->m_Desc.m_sName);
 
     ezDGMLGraph::NodeDesc nd;
     nd.m_Color = ezColorScheme::LightUI(ezColorScheme::Blue);
@@ -406,12 +407,12 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
         else if (NodeType::IsInput(nodeType))
         {
           auto pInputNode = static_cast<const Input*>(currentNodeInfo.m_pNode);
-          sTmp.Append(": ", pInputNode->m_sName);
+          sTmp.Append(": ", pInputNode->m_Desc.m_sName);
           color = ezColorScheme::LightUI(ezColorScheme::Green);
         }
         else if (nodeType == NodeType::FunctionCall)
         {
-          sTmp.Append(": ", static_cast<const FunctionCall*>(currentNodeInfo.m_pNode)->m_sName);
+          sTmp.Append(": ", static_cast<const FunctionCall*>(currentNodeInfo.m_pNode)->m_Desc.m_sName);
           color = ezColorScheme::LightUI(ezColorScheme::Yellow);
         }
 

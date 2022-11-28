@@ -2,7 +2,6 @@
 
 #include <Foundation/CodeUtils/Expression/ExpressionAST.h>
 #include <Foundation/CodeUtils/TokenParseUtils.h>
-#include <Foundation/DataProcessing/Stream/ProcessingStream.h>
 
 class EZ_FOUNDATION_DLL ezExpressionParser
 {
@@ -10,31 +9,21 @@ public:
   ezExpressionParser();
   ~ezExpressionParser();
 
-  struct Stream
-  {
-    Stream(ezStringView sName, ezProcessingStream::DataType dataType)
-      : m_DataType(dataType)
-    {
-      m_sName.Assign(sName);
-    }
-
-    ezHashedString m_sName;
-    ezProcessingStream::DataType m_DataType;
-  };
+  void RegisterFunction(const ezExpression::FunctionDesc& funcDesc);
 
   struct Options
   {
     bool m_bTreatUnknownVariablesAsInputs = false;
   };
 
-  ezResult Parse(ezStringView code, ezArrayPtr<Stream> inputs, ezArrayPtr<Stream> outputs, const Options& options, ezExpressionAST& out_ast);
+  ezResult Parse(ezStringView code, ezArrayPtr<ezExpression::StreamDesc> inputs, ezArrayPtr<ezExpression::StreamDesc> outputs, const Options& options, ezExpressionAST& out_ast);
 
 private:
   static constexpr int s_iLowestPrecedence = 20;
 
   void RegisterKnownTypes();
   void RegisterBuiltinFunctions();
-  void SetupInAndOutputs(ezArrayPtr<Stream> inputs, ezArrayPtr<Stream> outputs);
+  void SetupInAndOutputs(ezArrayPtr<ezExpression::StreamDesc> inputs, ezArrayPtr<ezExpression::StreamDesc> outputs);
 
   ezResult ParseStatement();
   ezResult ParseType(ezStringView sTypeName, ezEnum<ezExpressionAST::DataType>& out_type);
@@ -76,6 +65,7 @@ private:
 
   ezHashTable<ezHashedString, KnownVariable> m_KnownVariables;
   ezHashTable<ezHashedString, ezEnum<ezExpressionAST::NodeType>> m_BuiltinFunctions;
+  ezHashTable<ezHashedString, ezExpression::FunctionDesc> m_FunctionDescs;
 };
 
 #include <Foundation/CodeUtils/Expression/Implementation/ExpressionParser_inl.h>

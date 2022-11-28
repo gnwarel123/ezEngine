@@ -13,7 +13,12 @@ ezExpressionParser::ezExpressionParser()
 
 ezExpressionParser::~ezExpressionParser() = default;
 
-ezResult ezExpressionParser::Parse(ezStringView code, ezArrayPtr<Stream> inputs, ezArrayPtr<Stream> outputs, const Options& options, ezExpressionAST& out_ast)
+void ezExpressionParser::RegisterFunction(const ezExpression::FunctionDesc& funcDesc)
+{
+  m_FunctionDescs.Insert(funcDesc.m_sName, funcDesc);
+}
+
+ezResult ezExpressionParser::Parse(ezStringView code, ezArrayPtr<ezExpression::StreamDesc> inputs, ezArrayPtr<ezExpression::StreamDesc> outputs, const Options& options, ezExpressionAST& out_ast)
 {
   if (code.IsEmpty())
     return EZ_FAILURE;
@@ -95,29 +100,29 @@ void ezExpressionParser::RegisterBuiltinFunctions()
   m_BuiltinFunctions.Insert(ezMakeHashedString("clamp"), ezExpressionAST::NodeType::Clamp);
 }
 
-void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<Stream> inputs, ezArrayPtr<Stream> outputs)
+void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<ezExpression::StreamDesc> inputs, ezArrayPtr<ezExpression::StreamDesc> outputs)
 {
   m_KnownVariables.Clear();
 
-  for (auto& input : inputs)
+  for (auto& inputDesc : inputs)
   {
     KnownVariable knownVariable;
-    knownVariable.m_pNode = m_pAST->CreateInput(input.m_sName, input.m_DataType);
-    knownVariable.m_Type = ezExpressionAST::DataType::FromStreamType(input.m_DataType);
+    knownVariable.m_pNode = m_pAST->CreateInput(inputDesc);
+    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
 
-    m_KnownVariables.Insert(input.m_sName, knownVariable);
+    m_KnownVariables.Insert(inputDesc.m_sName, knownVariable);
   }
 
-  for (auto& output : outputs)
+  for (auto& outputDesc : outputs)
   {
-    auto pOutputNode = m_pAST->CreateOutput(output.m_sName, output.m_DataType, nullptr);
+    auto pOutputNode = m_pAST->CreateOutput(outputDesc, nullptr);
     m_pAST->m_OutputNodes.PushBack(pOutputNode);
 
     KnownVariable knownVariable;
     knownVariable.m_pNode = pOutputNode;
-    knownVariable.m_Type = ezExpressionAST::DataType::FromStreamType(output.m_DataType);
+    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
 
-    m_KnownVariables.Insert(output.m_sName, knownVariable);
+    m_KnownVariables.Insert(outputDesc.m_sName, knownVariable);
   }
 }
 
@@ -411,9 +416,16 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   }
 
   // external function
-  auto pFunctionCall = m_pAST->CreateFunctionCall(sHashedFuncName);
-  pFunctionCall->m_Arguments = std::move(arguments);
-  return pFunctionCall;
+  const ezExpression::FunctionDesc* pFunctionDesc = nullptr;
+  if (m_FunctionDescs.TryGetValue(sHashedFuncName, pFunctionDesc))
+  {
+    auto pFunctionCall = m_pAST->CreateFunctionCall(*pFunctionDesc);
+    pFunctionCall->m_Arguments = std::move(arguments);
+    return pFunctionCall;
+  }
+
+  EZ_ASSERT_NOT_IMPLEMENTED;
+  return nullptr;
 }
 
 // Does NOT advance the current token beyond the binary operator!
@@ -471,7 +483,7 @@ ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
   KnownVariable knownVariable;
   if (m_KnownVariables.TryGetValue(sHashedVarName, knownVariable) == false && m_Options.m_bTreatUnknownVariablesAsInputs)
   {
-    knownVariable.m_pNode = m_pAST->CreateInput(sHashedVarName, ezProcessingStream::DataType::Float);
+    knownVariable.m_pNode = m_pAST->CreateInput({sHashedVarName, ezProcessingStream::DataType::Float});
     knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
     m_KnownVariables.Insert(sHashedVarName, knownVariable);
   }
@@ -485,7 +497,7 @@ ezResult ezExpressionParser::CheckOutputs()
   {
     if (pOutputNode->m_pExpression == nullptr)
     {
-      ezLog::Error("Output '{}' was never written", pOutputNode->m_sName);
+      ezLog::Error("Output '{}' was never written", pOutputNode->m_Desc.m_sName);
       return EZ_FAILURE;
     }
   }

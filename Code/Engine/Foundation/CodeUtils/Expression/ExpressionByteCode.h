@@ -1,8 +1,7 @@
 #pragma once
 
+#include <Foundation/CodeUtils/Expression/ExpressionDeclarations.h>
 #include <Foundation/Containers/DynamicArray.h>
-#include <Foundation/SimdMath/SimdVec4f.h>
-#include <Foundation/Strings/HashedString.h>
 
 class ezStreamWriter;
 class ezStreamReader;
@@ -14,59 +13,84 @@ public:
   {
     enum Enum
     {
+      Nop,
+
       // Unary
       FirstUnary,
 
-      Abs_R,
-      Sqrt_R,
+      AbsF_R,
+      AbsI_R,
+      SqrtF_R,
 
-      Sin_R,
-      Cos_R,
-      Tan_R,
+      SinF_R,
+      CosF_R,
+      TanF_R,
 
-      ASin_R,
-      ACos_R,
-      ATan_R,
-
-      Mov_R,
-      Mov_C,
-      Load,
-      Store,
+      ASinF_R,
+      ACosF_R,
+      ATanF_R,
 
       LastUnary,
 
       // Binary
       FirstBinary,
 
-      Add_RR,
-      Add_CR,
+      AddF_RR,
+      AddI_RR,
 
-      Sub_RR,
-      Sub_CR,
+      SubF_RR,
+      SubI_RR,
 
-      Mul_RR,
-      Mul_CR,
+      MulF_RR,
+      MulI_RR,
 
-      Div_RR,
-      Div_CR,
+      DivF_RR,
+      DivI_RR,
 
-      Min_RR,
-      Min_CR,
+      MinF_RR,
+      MinI_RR,
 
-      Max_RR,
-      Max_CR,
+      MaxF_RR,
+      MaxI_RR,
 
       LastBinary,
 
-      Call,
+      FirstBinaryWithConstant,
 
-      Nop,
+      AddF_CR,
+      AddI_CR,
+
+      SubF_CR,
+      SubI_CR,
+
+      MulF_CR,
+      MulI_CR,
+
+      DivF_CR,
+      DivI_CR,
+
+      MinF_CR,
+      MinI_CR,
+
+      MaxF_CR,
+      MaxI_CR,
+
+      LastBinaryWithConstant,
+
+      MovX_R,
+      MovX_C,
+      LoadF,
+      LoadI,
+      StoreF,
+      StoreI,
+
+      Call,
 
       Count
     };
   };
 
-  typedef ezUInt32 StorageType;
+  using StorageType = ezUInt32;
 
   ezExpressionByteCode();
   ~ezExpressionByteCode();
@@ -82,9 +106,9 @@ public:
 
   ezUInt32 GetNumInstructions() const;
   ezUInt32 GetNumTempRegisters() const;
-  ezArrayPtr<const ezHashedString> GetInputs() const;
-  ezArrayPtr<const ezHashedString> GetOutputs() const;
-  ezArrayPtr<const ezHashedString> GetFunctions() const;
+  ezArrayPtr<const ezExpression::StreamDesc> GetInputs() const;
+  ezArrayPtr<const ezExpression::StreamDesc> GetOutputs() const;
+  ezArrayPtr<const ezExpression::FunctionDesc> GetFunctions() const;
 
   static OpCode::Enum GetOpCode(const StorageType*& pByteCode);
   static ezUInt32 GetRegisterIndex(const StorageType*& pByteCode, ezUInt32 uiNumRegisters);
@@ -102,9 +126,9 @@ private:
   friend class ezExpressionCompiler;
 
   ezDynamicArray<StorageType> m_ByteCode;
-  ezDynamicArray<ezHashedString> m_Inputs;
-  ezDynamicArray<ezHashedString> m_Outputs;
-  ezDynamicArray<ezHashedString> m_Functions;
+  ezDynamicArray<ezExpression::StreamDesc> m_Inputs;
+  ezDynamicArray<ezExpression::StreamDesc> m_Outputs;
+  ezDynamicArray<ezExpression::FunctionDesc> m_Functions;
 
   ezUInt32 m_uiNumInstructions = 0;
   ezUInt32 m_uiNumTempRegisters = 0;

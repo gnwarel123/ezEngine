@@ -19,17 +19,17 @@ EZ_ALWAYS_INLINE ezUInt32 ezExpressionByteCode::GetNumTempRegisters() const
   return m_uiNumTempRegisters;
 }
 
-EZ_ALWAYS_INLINE ezArrayPtr<const ezHashedString> ezExpressionByteCode::GetInputs() const
+EZ_ALWAYS_INLINE ezArrayPtr<const ezExpression::StreamDesc> ezExpressionByteCode::GetInputs() const
 {
   return m_Inputs;
 }
 
-EZ_ALWAYS_INLINE ezArrayPtr<const ezHashedString> ezExpressionByteCode::GetOutputs() const
+EZ_ALWAYS_INLINE ezArrayPtr<const ezExpression::StreamDesc> ezExpressionByteCode::GetOutputs() const
 {
   return m_Outputs;
 }
 
-EZ_ALWAYS_INLINE ezArrayPtr<const ezHashedString> ezExpressionByteCode::GetFunctions() const
+EZ_ALWAYS_INLINE ezArrayPtr<const ezExpression::FunctionDesc> ezExpressionByteCode::GetFunctions() const
 {
   return m_Functions;
 }

@@ -138,7 +138,7 @@ namespace
       ezProcessingStream(s_sD, ezMakeArrayPtr(&d, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
     };
 
-    T output = ezMath::NaN<float>();
+    T output = ezMath::MinValue<T>();
     ezProcessingStream outputs[] = {
       ezProcessingStream(s_sOutput, ezMakeArrayPtr(&output, 1).ToByteArray(), StreamDataTypeDeduction<T>::Type),
     };

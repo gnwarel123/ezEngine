@@ -1,9 +1,7 @@
 #pragma once
 
-#include <Foundation/DataProcessing/Stream/ProcessingStream.h>
+#include <Foundation/CodeUtils/Expression/ExpressionDeclarations.h>
 #include <Foundation/Memory/StackAllocator.h>
-#include <Foundation/Strings/HashedString.h>
-#include <Foundation/Types/Variant.h>
 
 class ezDGMLGraph;
 
@@ -80,9 +78,6 @@ public:
 
     enum Enum
     {
-      Unknown,
-      Default = Unknown,
-
       Float,
       Float2,
       Float3,
@@ -98,11 +93,18 @@ public:
       Bool3,
       Bool4,
 
+      Unknown,
+      Default = Unknown,
+
       Count
     };
 
     static ezVariantType::Enum GetVariantType(Enum dataType);
+
     static Enum FromStreamType(ezProcessingStream::DataType dataType);
+
+    static ezExpression::RegisterType::Enum GetRegisterType(Enum dataType);
+    static Enum FromRegisterType(ezExpression::RegisterType::Enum registerType);
 
     static const char* GetName(Enum dataType);
   };
@@ -138,18 +140,18 @@ public:
 
   struct Input : public Node
   {
-    ezHashedString m_sName;
+    ezExpression::StreamDesc m_Desc;
   };
 
   struct Output : public Node
   {
-    ezHashedString m_sName;
+    ezExpression::StreamDesc m_Desc;
     Node* m_pExpression = nullptr;
   };
 
   struct FunctionCall : public Node
   {
-    ezHashedString m_sName;
+    ezExpression::FunctionDesc m_Desc;
     ezHybridArray<Node*, 8> m_Arguments;
   };
 
@@ -161,9 +163,9 @@ public:
   BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand, DataType::Enum dataType = DataType::Unknown);
   TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand, DataType::Enum dataType = DataType::Unknown);
   Constant* CreateConstant(const ezVariant& value, DataType::Enum dataType = DataType::Float);
-  Input* CreateInput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType);
-  Output* CreateOutput(const ezHashedString& sName, ezProcessingStream::DataType streamDataType, Node* pExpression);
-  FunctionCall* CreateFunctionCall(const ezHashedString& sName);
+  Input* CreateInput(const ezExpression::StreamDesc& desc);
+  Output* CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression);
+  FunctionCall* CreateFunctionCall(const ezExpression::FunctionDesc& desc);
 
   static ezArrayPtr<Node*> GetChildren(Node* pNode);
   static ezArrayPtr<const Node*> GetChildren(const Node* pNode);

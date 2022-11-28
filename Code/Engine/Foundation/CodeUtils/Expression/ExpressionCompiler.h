@@ -19,6 +19,7 @@ private:
   ezResult UpdateRegisterLifetime(const ezExpressionAST& ast);
   ezResult AssignRegisters();
   ezResult GenerateByteCode(const ezExpressionAST& ast, ezExpressionByteCode& out_byteCode);
+  ezResult GenerateConstantByteCode(const ezExpressionAST::Constant* pConstant, ezExpressionByteCode& out_byteCode);
 
   using TransformFunc = ezDelegate<ezExpressionAST::Node*(ezExpressionAST::Node*)>;
   ezResult TransformASTPreOrder(ezExpressionAST& ast, TransformFunc func);
