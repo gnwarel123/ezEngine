@@ -181,24 +181,24 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
 
     if (opCode > OpCode::FirstUnary && opCode < OpCode::LastUnary)
     {
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 x = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
+      ezUInt32 x = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("r{} r{}\n", r, x);
     }
     else if (opCode > OpCode::FirstBinary && opCode < OpCode::LastBinary)
     {
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 a = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 b = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
+      ezUInt32 a = GetRegisterIndex(pByteCode);
+      ezUInt32 b = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("r{} r{} r{}\n", r, a, b);
     }
     else if (opCode > OpCode::FirstBinaryWithConstant && opCode < OpCode::LastBinaryWithConstant)
     {
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 a = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 b = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
+      ezUInt32 a = GetRegisterIndex(pByteCode);
+      ezUInt32 b = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("r{} ", r);
       AppendConstant(a, out_sDisassembly);
@@ -206,8 +206,8 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
     }
     else if (opCode == OpCode::MovX_C)
     {
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 x = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
+      ezUInt32 x = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("r{} ", r);
       AppendConstant(x, out_sDisassembly);
@@ -215,15 +215,15 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
     }
     else if (opCode == OpCode::LoadF || opCode == OpCode::LoadI)
     {
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 i = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
+      ezUInt32 i = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("r{} i{}({})\n", r, i, m_Inputs[i].m_sName);
     }
     else if (opCode == OpCode::StoreF || opCode == OpCode::StoreI)
     {
-      ezUInt32 o = GetRegisterIndex(pByteCode, 1);
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 o = GetRegisterIndex(pByteCode);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("o{}({}) r{}\n", o, m_Outputs[o].m_sName, r);
     }
@@ -242,14 +242,14 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
         sName = szName;
       }
 
-      ezUInt32 r = GetRegisterIndex(pByteCode, 1);
+      ezUInt32 r = GetRegisterIndex(pByteCode);
 
       out_sDisassembly.AppendFormat("{1} r{2}", sName, r);
 
       ezUInt32 uiNumArgs = GetFunctionArgCount(pByteCode);
       for (ezUInt32 uiArgIndex = 0; uiArgIndex < uiNumArgs; ++uiArgIndex)
       {
-        ezUInt32 x = GetRegisterIndex(pByteCode, 1);
+        ezUInt32 x = GetRegisterIndex(pByteCode);
         out_sDisassembly.AppendFormat(" r{0}", x);
       }
 

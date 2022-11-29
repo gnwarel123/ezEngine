@@ -173,7 +173,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
   s_pVM = EZ_DEFAULT_NEW(ezExpressionVM);
   EZ_SCOPE_EXIT(s_pParser = nullptr; s_pCompiler = nullptr; s_pVM = nullptr;);
 
-  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Local variables")
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")
   {
     ezExpressionByteCode referenceByteCode;
     {

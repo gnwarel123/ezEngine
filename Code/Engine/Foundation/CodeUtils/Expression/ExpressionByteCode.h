@@ -114,8 +114,8 @@ public:
   ezArrayPtr<const ezExpression::FunctionDesc> GetFunctions() const;
 
   static OpCode::Enum GetOpCode(const StorageType*& pByteCode);
-  static ezUInt32 GetRegisterIndex(const StorageType*& pByteCode, ezUInt32 uiNumRegisters);
-  static ezSimdVec4f GetConstant(const StorageType*& pByteCode);
+  static ezUInt32 GetRegisterIndex(const StorageType*& pByteCode);
+  static ezExpression::Register GetConstant(const StorageType*& pByteCode);
   static ezUInt32 GetFunctionIndex(const StorageType*& pByteCode);
   static ezUInt32 GetFunctionArgCount(const StorageType*& pByteCode);
 

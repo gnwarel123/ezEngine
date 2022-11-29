@@ -43,19 +43,20 @@ EZ_ALWAYS_INLINE ezExpressionByteCode::OpCode::Enum ezExpressionByteCode::GetOpC
 }
 
 // static
-EZ_ALWAYS_INLINE ezUInt32 ezExpressionByteCode::GetRegisterIndex(const StorageType*& pByteCode, ezUInt32 uiNumRegisters)
+EZ_ALWAYS_INLINE ezUInt32 ezExpressionByteCode::GetRegisterIndex(const StorageType*& pByteCode)
 {
-  ezUInt32 uiIndex = *pByteCode * uiNumRegisters;
+  ezUInt32 uiIndex = *pByteCode;
   ++pByteCode;
   return uiIndex;
 }
 
 // static
-EZ_ALWAYS_INLINE ezSimdVec4f ezExpressionByteCode::GetConstant(const StorageType*& pByteCode)
+EZ_ALWAYS_INLINE ezExpression::Register ezExpressionByteCode::GetConstant(const StorageType*& pByteCode)
 {
-  float c = *reinterpret_cast<const float*>(pByteCode);
+  ezExpression::Register r;
+  r.i = ezSimdVec4i(*pByteCode);
   ++pByteCode;
-  return ezSimdVec4f(c);
+  return r;
 }
 
 // static

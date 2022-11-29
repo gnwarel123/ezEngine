@@ -16,6 +16,8 @@ namespace ezExpression
   {
     EZ_DECLARE_POD_TYPE();
 
+    Register() {}
+
     union
     {
       ezSimdVec4f f;
