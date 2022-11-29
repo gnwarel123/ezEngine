@@ -103,8 +103,6 @@ const char* ezExpressionAST::NodeType::GetName(Enum nodeType)
 namespace
 {
   static ezVariantType::Enum s_DataTypeVariantTypes[] = {
-    ezVariantType::Invalid, // Unknown,
-
     ezVariantType::Float,   // Float,
     ezVariantType::Vector2, // Float2,
     ezVariantType::Vector3, // Float3,
@@ -119,6 +117,8 @@ namespace
     ezVariantType::Invalid, // Bool2,
     ezVariantType::Invalid, // Bool3,
     ezVariantType::Invalid, // Bool4,
+
+    ezVariantType::Invalid, // Unknown,
   };
   static_assert(EZ_ARRAY_SIZE(s_DataTypeVariantTypes) == (size_t)ezExpressionAST::DataType::Count);
 
@@ -156,8 +156,6 @@ namespace
   static_assert(ezExpressionAST::DataType::Unknown >> 2 == ezExpression::RegisterType::Unknown);
 
   static const char* s_szDataTypeNames[] = {
-    "Unknown", // Unknown,
-
     "Float",  // Float,
     "Float2", // Float2,
     "Float3", // Float3,
@@ -172,6 +170,8 @@ namespace
     "Bool2", // Bool2,
     "Bool3", // Bool3,
     "Bool4", // Bool4,
+
+    "Unknown", // Unknown,
   };
 
   static_assert(EZ_ARRAY_SIZE(s_szDataTypeNames) == ezExpressionAST::DataType::Count);

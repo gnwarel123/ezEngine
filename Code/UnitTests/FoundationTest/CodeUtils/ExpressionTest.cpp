@@ -98,15 +98,15 @@ namespace
   template <typename T>
   void Compile(ezStringView code, ezExpressionByteCode& out_ByteCode, ezStringView sDumpAstOutputName = ezStringView())
   {
-    ezExpressionParser::Stream inputs[] = {
-      ezExpressionParser::Stream(s_sA, StreamDataTypeDeduction<T>::Type),
-      ezExpressionParser::Stream(s_sB, StreamDataTypeDeduction<T>::Type),
-      ezExpressionParser::Stream(s_sC, StreamDataTypeDeduction<T>::Type),
-      ezExpressionParser::Stream(s_sD, StreamDataTypeDeduction<T>::Type),
+    ezExpression::StreamDesc inputs[] = {
+      {s_sA, StreamDataTypeDeduction<T>::Type},
+      {s_sB, StreamDataTypeDeduction<T>::Type},
+      {s_sC, StreamDataTypeDeduction<T>::Type},
+      {s_sD, StreamDataTypeDeduction<T>::Type},
     };
 
-    ezExpressionParser::Stream outputs[] = {
-      ezExpressionParser::Stream(s_sOutput, StreamDataTypeDeduction<T>::Type),
+    ezExpression::StreamDesc outputs[] = {
+      {s_sOutput, StreamDataTypeDeduction<T>::Type},
     };
 
     ezExpressionAST ast;
@@ -223,7 +223,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
     {
       ezExpressionByteCode testByteCode;
-      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
+      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode));
 
       EZ_TEST_INT(Execute<int>(testByteCode), 42);
     }
@@ -237,9 +237,9 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
     ezStringView testCode = "output = (a + 2) + (b - 1) + (c * 2) + (d / 10) + min(c, 1) + max(d, 2)";
 
-    ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (0.1 * d) + min(1, c) + max(2, d)";
-
     {
+      ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (0.1 * d) + min(1, c) + max(2, d)";
+
       ezExpressionByteCode testByteCode;
       EZ_TEST_BOOL(CompareCode<float>(testCode, referenceCode, testByteCode));
 
@@ -251,6 +251,8 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     }
 
     {
+      ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (d / 10) + min(1, c) + max(2, d)";
+
       ezExpressionByteCode testByteCode;
       EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
 

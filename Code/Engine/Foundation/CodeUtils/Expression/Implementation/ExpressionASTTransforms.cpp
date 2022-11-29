@@ -8,13 +8,12 @@ namespace
   ezExpressionAST::DataType::Enum BiggerDataType(ezExpressionAST::DataType::Enum a, ezExpressionAST::DataType::Enum b)
   {
     ezExpression::RegisterType::Enum ra = ezExpressionAST::DataType::GetRegisterType(a);
-    ezExpression::RegisterType::Enum rb = ezExpressionAST::DataType::GetRegisterType(a);
+    ezExpression::RegisterType::Enum rb = ezExpressionAST::DataType::GetRegisterType(b);
 
-    EZ_ASSERT_NOT_IMPLEMENTED;
     const ezUInt32 ea = ezExpressionAST::DataType::GetElementCount(a);
     const ezUInt32 eb = ezExpressionAST::DataType::GetElementCount(b);
 
-    const ezUInt32 res = ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb)) + ezMath::Max(ea, eb);
+    const ezUInt32 res = ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb)) + ezMath::Max(ea, eb) - 1;
     return static_cast<ezExpressionAST::DataType::Enum>(res);
   }
 } // namespace
@@ -246,7 +245,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
       else if (dataType == DataType::Float) // Divide optimization only works for float
       {
         const float fValue = pConstantNode->m_Value.Get<float>();
-        return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, CreateConstant(1.0f / fValue), pOperand);
+        return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, CreateConstant(1.0f / fValue), pOperand, dataType);
       }
     }
   }

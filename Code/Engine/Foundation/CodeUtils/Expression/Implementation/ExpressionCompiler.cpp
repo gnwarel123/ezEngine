@@ -32,6 +32,9 @@ namespace
       case ezExpressionAST::NodeType::ATan:
         return ezExpressionByteCode::OpCode::ATanF_R;
 
+      case ezExpressionAST::NodeType::TypeConversion:
+        return registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::IToF_R : ezExpressionByteCode::OpCode::FToI_R;
+
       case ezExpressionAST::NodeType::Add:
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::AddF_RR : ezExpressionByteCode::OpCode::AddI_RR) + uiOffset);
       case ezExpressionAST::NodeType::Subtract:
@@ -45,6 +48,8 @@ namespace
       case ezExpressionAST::NodeType::Max:
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::MaxF_RR : ezExpressionByteCode::OpCode::MaxI_RR) + uiOffset);
 
+      case ezExpressionAST::NodeType::Constant:
+        return ezExpressionByteCode::OpCode::MovX_C;
       case ezExpressionAST::NodeType::Input:
         return registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::LoadF : ezExpressionByteCode::OpCode::LoadI;
       case ezExpressionAST::NodeType::Output:

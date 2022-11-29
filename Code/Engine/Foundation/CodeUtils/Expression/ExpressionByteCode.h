@@ -30,6 +30,9 @@ public:
       ACosF_R,
       ATanF_R,
 
+      IToF_R,
+      FToI_R,
+
       LastUnary,
 
       // Binary
