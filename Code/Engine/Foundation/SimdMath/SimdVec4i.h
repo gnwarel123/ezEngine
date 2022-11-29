@@ -24,6 +24,12 @@ public:
 
   void SetZero(); // [tested]
 
+  template <int N>
+  void Load(const ezInt32* pInts);
+
+  template <int N>
+  void Store(ezInt32* pInts) const;
+
 public:
   explicit ezSimdVec4i(const ezSimdVec4u& u); // [tested]
 

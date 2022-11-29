@@ -43,6 +43,30 @@ EZ_ALWAYS_INLINE void ezSimdVec4i::SetZero()
   m_v = _mm_setzero_si128();
 }
 
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Load<1>(const ezInt32* pInts)
+{
+  m_v = _mm_set1_epi32(pInts[0]);
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Load<2>(const ezInt32* pInts)
+{
+  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[0], pInts[0]);
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Load<3>(const ezInt32* pInts)
+{
+  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[2], pInts[0]);
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Load<4>(const ezInt32* pInts)
+{
+  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[2], pInts[3]);
+}
+
 EZ_ALWAYS_INLINE ezSimdVec4f ezSimdVec4i::ToFloat() const
 {
   return _mm_cvtepi32_ps(m_v);
