@@ -373,21 +373,41 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   if (Expect(")").Failed())
     return nullptr;
 
+  auto CheckArgumentCount = [&](ezUInt32 uiExpectedArgumentCount) -> ezResult
+  {
+    if (arguments.GetCount() != uiExpectedArgumentCount)
+    {
+      ReportError(pFunctionToken, ezFmt("Invalid argument count for '{}'. Expected {} but got {}", sFunctionName, uiExpectedArgumentCount, arguments.GetCount()));
+      return EZ_FAILURE;
+    }
+    return EZ_SUCCESS;
+  };
+
   ezHashedString sHashedFuncName;
   sHashedFuncName.Assign(sFunctionName);
+
+  ezEnum<ezExpressionAST::DataType> dataType;
+  if (m_KnownTypes.TryGetValue(sHashedFuncName, dataType))
+  {
+    ezUInt32 uiElementCount = ezExpressionAST::DataType::GetElementCount(dataType);
+    if (uiElementCount > 1)
+    {
+      EZ_ASSERT_NOT_IMPLEMENTED;
+      return nullptr;
+    }
+    else
+    {
+      if (CheckArgumentCount(1).Failed())
+        return nullptr;
+
+      return m_pAST->CreateUnaryOperator(ezExpressionAST::NodeType::TypeConversion, arguments[0], dataType);
+    }
+  }
 
   ezEnum<ezExpressionAST::NodeType> builtinType;
   if (m_BuiltinFunctions.TryGetValue(sHashedFuncName, builtinType))
   {
-    auto CheckArgumentCount = [&](ezUInt32 uiExpectedArgumentCount) -> ezResult
-    {
-      if (arguments.GetCount() != uiExpectedArgumentCount)
-      {
-        ReportError(pFunctionToken, ezFmt("Invalid argument count for '{}'. Expected {} but got {}", sFunctionName, uiExpectedArgumentCount, arguments.GetCount()));
-        return EZ_FAILURE;
-      }
-      return EZ_SUCCESS;
-    };
+    
 
     if (ezExpressionAST::NodeType::IsUnary(builtinType))
     {
