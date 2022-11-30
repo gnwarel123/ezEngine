@@ -254,7 +254,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
       ezStringView referenceCode = "output = (2 + a) + (-1 + b) + (2 * c) + (d / 10) + min(1, c) + max(2, d)";
 
       ezExpressionByteCode testByteCode;
-      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
+      EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode));
 
       const int a = 1;
       const int b = 2;
@@ -266,17 +266,20 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Integer and float conversions")
   {
-    ezStringView testCode = "var x = 7; var y = 0.1\n"
-                            "var e = a * x + b * y\n"
-                            "int i = 20; e += i\n"
+    ezStringView testCode = "var x = 7; var y = 0.6\n"
+                            "var e = a * x * b * y\n"
+                            "int i = c * 2; i *= i; e += i\n"
                             "output = e";
 
-    ezStringView referenceCode = "output = (a * 7) + (b * 0.1) + 20";
+    ezStringView referenceCode = "int i = (c * 2); output = (a * 7 * b * 0.6) + i * i";
 
     ezExpressionByteCode testByteCode;
     EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
 
-    EZ_TEST_INT(Execute<int>(testByteCode), 42.0f);
+    const int a = 1;
+    const int b = 2;
+    const int c = 3;
+    EZ_TEST_INT(Execute(testByteCode, a, b, c), 44);
   }
 
 #if 0

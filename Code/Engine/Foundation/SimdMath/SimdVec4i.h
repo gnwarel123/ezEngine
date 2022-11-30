@@ -25,10 +25,10 @@ public:
   void SetZero(); // [tested]
 
   template <int N>
-  void Load(const ezInt32* pInts);
+  void Load(const ezInt32* pInts); // [tested]
 
   template <int N>
-  void Store(ezInt32* pInts) const;
+  void Store(ezInt32* pInts) const; // [tested]
 
 public:
   explicit ezSimdVec4i(const ezSimdVec4u& u); // [tested]
@@ -56,6 +56,7 @@ public:
   ezSimdVec4i operator-(const ezSimdVec4i& v) const; // [tested]
 
   ezSimdVec4i CompMul(const ezSimdVec4i& v) const; // [tested]
+  ezSimdVec4i CompDiv(const ezSimdVec4i& v) const; // [tested]
 
   ezSimdVec4i operator|(const ezSimdVec4i& v) const; // [tested]
   ezSimdVec4i operator&(const ezSimdVec4i& v) const; // [tested]

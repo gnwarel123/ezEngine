@@ -46,25 +46,51 @@ EZ_ALWAYS_INLINE void ezSimdVec4i::SetZero()
 template <>
 EZ_ALWAYS_INLINE void ezSimdVec4i::Load<1>(const ezInt32* pInts)
 {
-  m_v = _mm_set1_epi32(pInts[0]);
+  m_v = _mm_loadu_si32(pInts);
 }
 
 template <>
 EZ_ALWAYS_INLINE void ezSimdVec4i::Load<2>(const ezInt32* pInts)
 {
-  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[0], pInts[0]);
+  m_v = _mm_loadu_si64(pInts);
 }
 
 template <>
 EZ_ALWAYS_INLINE void ezSimdVec4i::Load<3>(const ezInt32* pInts)
 {
-  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[2], pInts[0]);
+  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[2], 0);
 }
 
 template <>
 EZ_ALWAYS_INLINE void ezSimdVec4i::Load<4>(const ezInt32* pInts)
 {
-  m_v = _mm_setr_epi32(pInts[0], pInts[1], pInts[2], pInts[3]);
+  m_v = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pInts));
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Store<1>(ezInt32* pInts) const
+{
+  _mm_storeu_si32(pInts, m_v);
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Store<2>(ezInt32* pInts) const
+{
+  _mm_storeu_si64(pInts, m_v);
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Store<3>(ezInt32* pInts) const
+{
+  pInts[0] = m_v.m128i_i32[0];
+  pInts[1] = m_v.m128i_i32[1];
+  pInts[2] = m_v.m128i_i32[2];
+}
+
+template <>
+EZ_ALWAYS_INLINE void ezSimdVec4i::Store<4>(ezInt32* pInts) const
+{
+  _mm_storeu_si128(reinterpret_cast<__m128i*>(pInts), m_v);
 }
 
 EZ_ALWAYS_INLINE ezSimdVec4f ezSimdVec4i::ToFloat() const
@@ -139,6 +165,11 @@ EZ_ALWAYS_INLINE ezSimdVec4i ezSimdVec4i::CompMul(const ezSimdVec4i& v) const
   __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(m_v, 4), _mm_srli_si128(v.m_v, 4));
   return _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, EZ_SHUFFLE(0, 2, 0, 0)), _mm_shuffle_epi32(tmp2, EZ_SHUFFLE(0, 2, 0, 0)));
 #endif
+}
+
+EZ_ALWAYS_INLINE ezSimdVec4i ezSimdVec4i::CompDiv(const ezSimdVec4i& v) const
+{
+  return _mm_div_epi32(m_v, v.m_v);
 }
 
 EZ_ALWAYS_INLINE ezSimdVec4i ezSimdVec4i::operator|(const ezSimdVec4i& v) const
