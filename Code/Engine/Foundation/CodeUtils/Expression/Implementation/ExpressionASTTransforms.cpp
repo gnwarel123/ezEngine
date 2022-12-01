@@ -97,6 +97,17 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     auto pMaxValue = pTernaryNode->m_pThirdOperand;
     return CreateBinaryOperator(NodeType::Max, pMinValue, CreateBinaryOperator(NodeType::Min, pMaxValue, pValue, dataType), dataType);
   }
+  else if (nodeType == NodeType::ConstructorCall)
+  {
+    auto pConstructorCallNode = static_cast<const ConstructorCall*>(pNode);
+    if (pConstructorCallNode->m_Arguments.GetCount() > 1)
+    {
+      ezLog::Error("Constructor of type '{}' has too many arguments", DataType::GetName(dataType));
+      return nullptr;
+    }
+
+    return pConstructorCallNode->m_Arguments[0];
+  }
 
   return pNode;
 }

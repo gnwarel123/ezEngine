@@ -16,7 +16,7 @@ public:
       Nop,
 
       // Unary
-      FirstUnary,
+      FirstUnary = 100,
 
       AbsF_R,
       AbsI_R,
@@ -36,7 +36,7 @@ public:
       LastUnary,
 
       // Binary
-      FirstBinary,
+      FirstBinary = 200,
 
       AddF_RR,
       AddI_RR,
@@ -58,7 +58,7 @@ public:
 
       LastBinary,
 
-      FirstBinaryWithConstant,
+      FirstBinaryWithConstant = 300,
 
       AddF_CR,
       AddI_CR,
@@ -80,6 +80,8 @@ public:
 
       LastBinaryWithConstant,
 
+      FirstSpecial = 400,
+
       MovX_R,
       MovX_C,
       LoadF,
@@ -89,8 +91,10 @@ public:
 
       Call,
 
-      Count
+      LastSpecial,
     };
+
+    static const char* GetName(Enum opCode);
   };
 
   using StorageType = ezUInt32;
@@ -120,7 +124,6 @@ public:
   static ezUInt32 GetFunctionArgCount(const StorageType*& pByteCode);
 
   void Disassemble(ezStringBuilder& out_sDisassembly) const;
-  static const char* GetOpCodeName(OpCode::Enum opCode);
 
   void Save(ezStreamWriter& stream) const;
   ezResult Load(ezStreamReader& stream);

@@ -6,10 +6,11 @@
 
 namespace
 {
-  static constexpr const char* s_szOpCodeNames[] = {
+  static constexpr const char* s_szOpCodeNames_Nop[] = {
     "Nop",
+  };
 
-    // Unary
+  static constexpr const char* s_szOpCodeNames_Unary[] = {
     "",
 
     "AbsF_R",
@@ -26,10 +27,9 @@ namespace
 
     "IToF_R",
     "FToI_R",
+  };
 
-    "",
-
-    // Binary
+  static constexpr const char* s_szOpCodeNames_Binary[] = {
     "",
 
     "AddF_RR",
@@ -49,10 +49,9 @@ namespace
 
     "MaxF_RR",
     "MaxI_RR",
+  };
 
-    "",
-
-    // Binary With Constant
+  static constexpr const char* s_szOpCodeNames_BinaryWithConstant[] = {
     "",
 
     "AddF_CR",
@@ -72,7 +71,9 @@ namespace
 
     "MaxF_CR",
     "MaxI_CR",
+  };
 
+  static constexpr const char* s_szOpCodeNames_Special[] = {
     "",
 
     "MovX_R",
@@ -85,15 +86,37 @@ namespace
     "Call",
   };
 
-  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames) == ezExpressionByteCode::OpCode::Count);
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Unary) == ezExpressionByteCode::OpCode::LastUnary - ezExpressionByteCode::OpCode::FirstUnary);
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Binary) == ezExpressionByteCode::OpCode::LastBinary - ezExpressionByteCode::OpCode::FirstBinary);
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_BinaryWithConstant) == ezExpressionByteCode::OpCode::LastBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinaryWithConstant);
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Special) == ezExpressionByteCode::OpCode::LastSpecial - ezExpressionByteCode::OpCode::FirstSpecial);
   static_assert(ezExpressionByteCode::OpCode::LastBinary - ezExpressionByteCode::OpCode::FirstBinary == ezExpressionByteCode::OpCode::LastBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinaryWithConstant);
+
+  static constexpr const char* const* s_szOpCodeNames[] = {
+    s_szOpCodeNames_Nop,
+    s_szOpCodeNames_Unary,
+    s_szOpCodeNames_Binary,
+    s_szOpCodeNames_BinaryWithConstant,
+    s_szOpCodeNames_Special,
+  };
+  static constexpr ezUInt32 s_uiOpCodeNameCounts[] = {
+    EZ_ARRAY_SIZE(s_szOpCodeNames_Nop),
+    EZ_ARRAY_SIZE(s_szOpCodeNames_Unary),
+    EZ_ARRAY_SIZE(s_szOpCodeNames_Binary),
+    EZ_ARRAY_SIZE(s_szOpCodeNames_BinaryWithConstant),
+    EZ_ARRAY_SIZE(s_szOpCodeNames_Special),
+  };
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames) == EZ_ARRAY_SIZE(s_uiOpCodeNameCounts));
 
   static constexpr ezUInt32 GetMaxOpCodeLength()
   {
     ezUInt32 uiMaxLength = 0;
     for (ezUInt32 i = 0; i < EZ_ARRAY_SIZE(s_szOpCodeNames); ++i)
     {
-      uiMaxLength = ezMath::Max(uiMaxLength, ezStringUtils::GetStringElementCount(s_szOpCodeNames[i]));
+      for (ezUInt32 j = 0; j < s_uiOpCodeNameCounts[i]; ++j)
+      {
+        uiMaxLength = ezMath::Max(uiMaxLength, ezStringUtils::GetStringElementCount(s_szOpCodeNames[i][j]));
+      }
     }
     return uiMaxLength;
   }
@@ -101,6 +124,15 @@ namespace
   static constexpr ezUInt32 s_uiMaxOpCodeLength = GetMaxOpCodeLength();
 
 } // namespace
+
+const char* ezExpressionByteCode::OpCode::GetName(Enum opCode)
+{
+  const ezUInt32 uiCategory = opCode / 100;
+  const ezUInt32 uiIndex = opCode - (uiCategory * 100);
+  return s_szOpCodeNames[uiCategory][uiIndex];
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 ezExpressionByteCode::ezExpressionByteCode() = default;
 ezExpressionByteCode::~ezExpressionByteCode() = default;
@@ -169,7 +201,7 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
   {
     OpCode::Enum opCode = GetOpCode(pByteCode);
     {
-      const char* szOpCode = s_szOpCodeNames[opCode];
+      const char* szOpCode = OpCode::GetName(opCode);
       ezUInt32 uiOpCodeLength = ezStringUtils::GetStringElementCount(szOpCode);
 
       out_sDisassembly.Append(szOpCode);
@@ -260,11 +292,6 @@ void ezExpressionByteCode::Disassemble(ezStringBuilder& out_sDisassembly) const
       EZ_ASSERT_NOT_IMPLEMENTED;
     }
   }
-}
-
-const char* ezExpressionByteCode::GetOpCodeName(OpCode::Enum opCode)
-{
-  return s_szOpCodeNames[opCode];
 }
 
 static constexpr ezUInt32 s_uiMetaDataVersion = 4;
