@@ -54,7 +54,11 @@ namespace
         return registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::LoadF : ezExpressionByteCode::OpCode::LoadI;
       case ezExpressionAST::NodeType::Output:
         return registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::StoreF : ezExpressionByteCode::OpCode::StoreI;
-
+      case ezExpressionAST::NodeType::FunctionCall:
+        return ezExpressionByteCode::OpCode::Call;
+      case ezExpressionAST::NodeType::ConstructorCall:
+        EZ_REPORT_FAILURE("Constructor calls should not exist anymore after AST transformations");
+        return ezExpressionByteCode::OpCode::Nop;
 
       default:
         EZ_ASSERT_NOT_IMPLEMENTED;
@@ -347,7 +351,7 @@ ezResult ezExpressionCompiler::GenerateByteCode(const ezExpressionAST& ast, ezEx
       byteCode.PushBack(uiOutputIndex);
       byteCode.PushBack(m_NodeToRegisterIndex[pOutput->m_pExpression]);
     }
-    else if (nodeType == ezExpressionAST::NodeType::FunctionCall)
+    else if (ezExpressionAST::NodeType::IsFunctionCall(nodeType))
     {
       auto pFunctionCall = static_cast<const ezExpressionAST::FunctionCall*>(pCurrentNode);
       auto& desc = pFunctionCall->m_Desc;

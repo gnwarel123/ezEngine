@@ -48,16 +48,12 @@ public:
       Select,
       LastTernary,
 
-      // Constant
       Constant,
-
-      // Input
       Input,
-
-      // Output
       Output,
 
       FunctionCall,
+      ConstructorCall,
 
       Count
     };
@@ -68,6 +64,8 @@ public:
     static bool IsConstant(Enum nodeType);
     static bool IsInput(Enum nodeType);
     static bool IsOutput(Enum nodeType);
+    static bool IsFunctionCall(Enum nodeType);
+    static bool IsConstructorCall(Enum nodeType);
 
     static const char* GetName(Enum nodeType);
   };
@@ -103,8 +101,15 @@ public:
 
     static Enum FromStreamType(ezProcessingStream::DataType dataType);
 
-    EZ_ALWAYS_INLINE static ezExpression::RegisterType::Enum GetRegisterType(Enum dataType) { return static_cast<ezExpression::RegisterType::Enum>(dataType >> 2); }
-    EZ_ALWAYS_INLINE static Enum FromRegisterType(ezExpression::RegisterType::Enum registerType) { return static_cast<ezExpressionAST::DataType::Enum>(registerType << 2); }
+    EZ_ALWAYS_INLINE static ezExpression::RegisterType::Enum GetRegisterType(Enum dataType)
+    {
+      return static_cast<ezExpression::RegisterType::Enum>(dataType >> 2);
+    }
+
+    EZ_ALWAYS_INLINE static Enum FromRegisterType(ezExpression::RegisterType::Enum registerType, ezUInt32 uiElementCount = 1)
+    {
+      return static_cast<ezExpressionAST::DataType::Enum>((registerType << 2) + uiElementCount - 1);
+    }
 
     EZ_ALWAYS_INLINE static ezUInt32 GetElementCount(Enum dataType) { return (dataType & 0x3) + 1; }
 
@@ -154,7 +159,12 @@ public:
   struct FunctionCall : public Node
   {
     ezExpression::FunctionDesc m_Desc;
-    ezHybridArray<Node*, 8> m_Arguments;
+    ezSmallArray<Node*, 8> m_Arguments;
+  };
+
+  struct ConstructorCall : public Node
+  {
+    ezSmallArray<Node*, 4> m_Arguments;
   };
 
 public:
@@ -168,9 +178,12 @@ public:
   Input* CreateInput(const ezExpression::StreamDesc& desc);
   Output* CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression);
   FunctionCall* CreateFunctionCall(const ezExpression::FunctionDesc& desc);
+  ConstructorCall* CreateConstructorCall(DataType::Enum dataType);
 
   static ezArrayPtr<Node*> GetChildren(Node* pNode);
   static ezArrayPtr<const Node*> GetChildren(const Node* pNode);
+
+  static DataType::Enum GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex);
 
   void PrintGraph(ezDGMLGraph& graph) const;
 

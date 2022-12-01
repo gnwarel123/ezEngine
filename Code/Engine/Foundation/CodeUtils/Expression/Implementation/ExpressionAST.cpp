@@ -40,6 +40,18 @@ bool ezExpressionAST::NodeType::IsOutput(Enum nodeType)
   return nodeType == Output;
 }
 
+// static
+bool ezExpressionAST::NodeType::IsFunctionCall(Enum nodeType)
+{
+  return nodeType == FunctionCall;
+}
+
+// static
+bool ezExpressionAST::NodeType::IsConstructorCall(Enum nodeType)
+{
+  return nodeType == ConstructorCall;
+}
+
 namespace
 {
   static const char* s_szNodeTypeNames[] = {
@@ -76,16 +88,12 @@ namespace
     "Select",
     "",
 
-    // Constant
     "Constant",
-
-    // Input
     "Input",
-
-    // Output
     "Output",
 
     "FunctionCall",
+    "ConstructorCall",
   };
 
   EZ_CHECK_AT_COMPILETIME_MSG(EZ_ARRAY_SIZE(s_szNodeTypeNames) == ezExpressionAST::NodeType::Count, "Node name array size does not match node type count");
@@ -288,6 +296,15 @@ ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpre
   return pFunctionCall;
 }
 
+ezExpressionAST::ConstructorCall* ezExpressionAST::CreateConstructorCall(DataType::Enum dataType)
+{
+  auto pConstructorCall = EZ_NEW(&m_Allocator, ConstructorCall);
+  pConstructorCall->m_Type = NodeType::ConstructorCall;
+  pConstructorCall->m_DataType = dataType;
+
+  return pConstructorCall;
+}
+
 // static
 ezArrayPtr<ezExpressionAST::Node*> ezExpressionAST::GetChildren(Node* pNode)
 {
@@ -312,9 +329,14 @@ ezArrayPtr<ezExpressionAST::Node*> ezExpressionAST::GetChildren(Node* pNode)
     auto& pChild = static_cast<Output*>(pNode)->m_pExpression;
     return ezMakeArrayPtr(&pChild, 1);
   }
-  else if (nodeType == NodeType::FunctionCall)
+  else if (NodeType::IsFunctionCall(nodeType))
   {
     auto& args = static_cast<FunctionCall*>(pNode)->m_Arguments;
+    return args;
+  }
+  else if (NodeType::IsConstructorCall(nodeType))
+  {
+    auto& args = static_cast<ConstructorCall*>(pNode)->m_Arguments;
     return args;
   }
 
@@ -346,14 +368,50 @@ ezArrayPtr<const ezExpressionAST::Node*> ezExpressionAST::GetChildren(const Node
     auto& pChild = static_cast<const Output*>(pNode)->m_pExpression;
     return ezMakeArrayPtr((const Node**)&pChild, 1);
   }
-  else if (nodeType == NodeType::FunctionCall)
+  else if (NodeType::IsFunctionCall(nodeType))
   {
     auto& args = static_cast<const FunctionCall*>(pNode)->m_Arguments;
+    return ezArrayPtr<const Node*>((const Node**)args.GetData(), args.GetCount());
+  }
+  else if (NodeType::IsConstructorCall(nodeType))
+  {
+    auto& args = static_cast<const ConstructorCall*>(pNode)->m_Arguments;
     return ezArrayPtr<const Node*>((const Node**)args.GetData(), args.GetCount());
   }
 
   EZ_ASSERT_DEV(NodeType::IsInput(nodeType) || NodeType::IsConstant(nodeType), "Unknown node type");
   return ezArrayPtr<const Node*>();
+}
+
+ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex)
+{
+  NodeType::Enum nodeType = pNode->m_Type;
+  DataType::Enum dataType = pNode->m_DataType;
+  if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsOutput(nodeType))
+  {
+    return dataType;
+  }
+  else if (NodeType::IsTernary(nodeType))
+  {
+    if (nodeType == NodeType::Select && uiChildIndex == 0)
+    {
+      return DataType::FromRegisterType(ezExpression::RegisterType::Bool, DataType::GetElementCount(dataType));
+    }
+
+    return dataType;
+  }
+  else if (NodeType::IsFunctionCall(nodeType))
+  {
+    auto& desc = static_cast<const FunctionCall*>(pNode)->m_Desc;
+    return DataType::FromRegisterType(desc.m_InputTypes[uiChildIndex]);
+  }
+  else if (NodeType::IsConstructorCall(nodeType))
+  {
+    return DataType::FromRegisterType(DataType::GetRegisterType(dataType));
+  }
+
+  EZ_ASSERT_NOT_IMPLEMENTED;
+  return DataType::Unknown;
 }
 
 namespace
@@ -415,7 +473,7 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
           sTmp.Append(": ", pInputNode->m_Desc.m_sName);
           color = ezColorScheme::LightUI(ezColorScheme::Green);
         }
-        else if (nodeType == NodeType::FunctionCall)
+        else if (NodeType::IsFunctionCall(nodeType))
         {
           sTmp.Append(": ", static_cast<const FunctionCall*>(currentNodeInfo.m_pNode)->m_Desc.m_sName);
           color = ezColorScheme::LightUI(ezColorScheme::Yellow);

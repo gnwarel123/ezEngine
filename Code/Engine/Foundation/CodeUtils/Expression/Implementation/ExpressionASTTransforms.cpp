@@ -13,8 +13,7 @@ namespace
     const ezUInt32 ea = ezExpressionAST::DataType::GetElementCount(a);
     const ezUInt32 eb = ezExpressionAST::DataType::GetElementCount(b);
 
-    const ezUInt32 res = ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb)) + ezMath::Max(ea, eb) - 1;
-    return static_cast<ezExpressionAST::DataType::Enum>(res);
+    return ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb), ezMath::Max(ea, eb));
   }
 } // namespace
 
@@ -39,11 +38,14 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
     pNode->m_DataType = dataType;
   }
 
-  for (auto& pChildNode : children)
+  for (ezUInt32 i = 0; i < children.GetCount(); ++i)
   {
-    if (pChildNode->m_DataType != pNode->m_DataType)
+    auto& pChildNode = children[i];
+    DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
+    
+    if (pChildNode->m_DataType != expectedChildDataType)
     {
-      pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, pNode->m_DataType);
+      pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, expectedChildDataType);
     }
   }
 

@@ -362,7 +362,7 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   // "(" of the function call
   const ezToken* pFunctionToken = m_TokenStream[m_uiCurrentToken - 1];
 
-  ezHybridArray<ezExpressionAST::Node*, 8> arguments;
+  ezSmallArray<ezExpressionAST::Node*, 8> arguments;
   if (Accept(m_TokenStream, m_uiCurrentToken, ")") == false)
   {
     do
@@ -390,25 +390,17 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   if (m_KnownTypes.TryGetValue(sHashedFuncName, dataType))
   {
     ezUInt32 uiElementCount = ezExpressionAST::DataType::GetElementCount(dataType);
-    if (uiElementCount > 1)
-    {
-      EZ_ASSERT_NOT_IMPLEMENTED;
+    if (arguments.GetCount() != 1 && CheckArgumentCount(uiElementCount).Failed())
       return nullptr;
-    }
-    else
-    {
-      if (CheckArgumentCount(1).Failed())
-        return nullptr;
 
-      return m_pAST->CreateUnaryOperator(ezExpressionAST::NodeType::TypeConversion, arguments[0], dataType);
-    }
+    auto pConstructorCall = m_pAST->CreateConstructorCall(dataType);
+    pConstructorCall->m_Arguments = std::move(arguments);
+    return pConstructorCall;
   }
 
   ezEnum<ezExpressionAST::NodeType> builtinType;
   if (m_BuiltinFunctions.TryGetValue(sHashedFuncName, builtinType))
   {
-    
-
     if (ezExpressionAST::NodeType::IsUnary(builtinType))
     {
       if (CheckArgumentCount(1).Failed())
@@ -439,6 +431,9 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   const ezExpression::FunctionDesc* pFunctionDesc = nullptr;
   if (m_FunctionDescs.TryGetValue(sHashedFuncName, pFunctionDesc))
   {
+    if (CheckArgumentCount(pFunctionDesc->m_InputTypes.GetCount()).Failed())
+      return nullptr;
+
     auto pFunctionCall = m_pAST->CreateFunctionCall(*pFunctionDesc);
     pFunctionCall->m_Arguments = std::move(arguments);
     return pFunctionCall;
