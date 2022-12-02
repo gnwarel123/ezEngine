@@ -204,6 +204,18 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(Execute(testByteCode, a, b), 10.0f, ezMath::DefaultEpsilon<float>());
   }
 
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Integer arithmetic")
+  {
+    ezExpressionByteCode testByteCode;
+
+    ezStringView code = "output = ((a & 0xFF) << 8) | (b & 0xFFFF >> 8)";
+    Compile<int>(code, testByteCode, "HHHH");
+
+    const int a = 0xABABABAB;
+    const int b = 0xCDCDCDCD;
+    EZ_TEST_INT(Execute(testByteCode, a, b), 0xABCD);
+  }
+
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant folding")
   {
     ezStringView testCode = "var x = abs(-7) + saturate(2) + 2\n"
@@ -227,6 +239,8 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
 
       EZ_TEST_INT(Execute<int>(testByteCode), 42);
     }
+
+    testCode = "";
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Constant instructions")

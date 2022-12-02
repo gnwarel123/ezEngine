@@ -27,6 +27,11 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
   {
     for (auto pChildNode : children)
     {
+      if (pChildNode == nullptr)
+      {
+        return nullptr;
+      }
+
       dataType = BiggerDataType(dataType, pChildNode->m_DataType);
     }
 
@@ -42,6 +47,11 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
   for (ezUInt32 i = 0; i < children.GetCount(); ++i)
   {
     auto& pChildNode = children[i];
+    if (pChildNode == nullptr)
+    {
+      return nullptr;
+    }
+
     DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
     
     if (expectedChildDataType != DataType::Unknown && pChildNode->m_DataType != expectedChildDataType)

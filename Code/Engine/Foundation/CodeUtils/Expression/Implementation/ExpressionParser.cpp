@@ -3,6 +3,29 @@
 #include <Foundation/CodeUtils/Expression/ExpressionParser.h>
 #include <Foundation/CodeUtils/Tokenizer.h>
 
+namespace
+{
+  struct AssignOperator
+  {
+    const char* m_szOperator;
+    ezExpressionAST::NodeType::Enum m_OperatorType;
+  };
+
+  static constexpr AssignOperator s_assignOperators[] = {
+    {"+=", ezExpressionAST::NodeType::Add},
+    {"-=", ezExpressionAST::NodeType::Subtract},
+    {"*=", ezExpressionAST::NodeType::Multiply},
+    {"/=", ezExpressionAST::NodeType::Divide},
+    {"%=", ezExpressionAST::NodeType::Modulo},
+    {"<<=", ezExpressionAST::NodeType::BitshiftLeft},
+    {">>=", ezExpressionAST::NodeType::BitshiftRight},
+    {"&=", ezExpressionAST::NodeType::BitwiseAnd},
+    {"^=", ezExpressionAST::NodeType::BitwiseXor},
+    {"|=", ezExpressionAST::NodeType::BitwiseOr},
+  };
+
+} // namespace
+
 using namespace ezTokenParseUtils;
 
 ezExpressionParser::ezExpressionParser()
@@ -85,19 +108,31 @@ void ezExpressionParser::RegisterBuiltinFunctions()
   m_BuiltinFunctions.Insert(ezMakeHashedString("abs"), ezExpressionAST::NodeType::Absolute);
   m_BuiltinFunctions.Insert(ezMakeHashedString("saturate"), ezExpressionAST::NodeType::Saturate);
   m_BuiltinFunctions.Insert(ezMakeHashedString("sqrt"), ezExpressionAST::NodeType::Sqrt);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("exp"), ezExpressionAST::NodeType::Exp);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("exp2"), ezExpressionAST::NodeType::Exp2);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("log"), ezExpressionAST::NodeType::Log);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("log2"), ezExpressionAST::NodeType::Log2);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("log10"), ezExpressionAST::NodeType::Log10);
   m_BuiltinFunctions.Insert(ezMakeHashedString("sin"), ezExpressionAST::NodeType::Sin);
   m_BuiltinFunctions.Insert(ezMakeHashedString("cos"), ezExpressionAST::NodeType::Cos);
   m_BuiltinFunctions.Insert(ezMakeHashedString("tan"), ezExpressionAST::NodeType::Tan);
   m_BuiltinFunctions.Insert(ezMakeHashedString("asin"), ezExpressionAST::NodeType::ASin);
   m_BuiltinFunctions.Insert(ezMakeHashedString("acos"), ezExpressionAST::NodeType::ACos);
   m_BuiltinFunctions.Insert(ezMakeHashedString("atan"), ezExpressionAST::NodeType::ATan);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("round"), ezExpressionAST::NodeType::Round);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("floor"), ezExpressionAST::NodeType::Floor);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("ceil"), ezExpressionAST::NodeType::Ceil);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("trunc"), ezExpressionAST::NodeType::Trunc);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("frac"), ezExpressionAST::NodeType::Frac);
 
   // Binary
+  m_BuiltinFunctions.Insert(ezMakeHashedString("pow"), ezExpressionAST::NodeType::Pow);
   m_BuiltinFunctions.Insert(ezMakeHashedString("min"), ezExpressionAST::NodeType::Min);
   m_BuiltinFunctions.Insert(ezMakeHashedString("max"), ezExpressionAST::NodeType::Max);
 
   // Ternary
   m_BuiltinFunctions.Insert(ezMakeHashedString("clamp"), ezExpressionAST::NodeType::Clamp);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("lerp"), ezExpressionAST::NodeType::Lerp);
 }
 
 void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<ezExpression::StreamDesc> inputs, ezArrayPtr<ezExpression::StreamDesc> outputs)
@@ -218,24 +253,36 @@ ezResult ezExpressionParser::ParseAssignment()
     return EZ_FAILURE;
   }
 
+  SkipWhitespace(m_TokenStream, m_uiCurrentToken);
+
   ezExpressionAST::NodeType::Enum assignOperator = ezExpressionAST::NodeType::Invalid;
-  if (Accept(m_TokenStream, m_uiCurrentToken, "+", "="))
+  for (ezUInt32 i = 0; i < EZ_ARRAY_SIZE(s_assignOperators); ++i)
   {
-    assignOperator = ezExpressionAST::NodeType::Add;
+    auto& op = s_assignOperators[i];
+    const ezUInt32 uiAssignOperatorLength = ezStringUtils::GetStringElementCount(op.m_szOperator);
+
+    if (m_uiCurrentToken + uiAssignOperatorLength - 1 >= m_TokenStream.GetCount())
+      continue;
+
+    bool match = true;
+    for (ezUInt32 charIndex = 0; charIndex < uiAssignOperatorLength; ++charIndex)
+    {
+      if (m_TokenStream[m_uiCurrentToken + charIndex]->m_DataView.GetCharacter() != op.m_szOperator[charIndex])
+      {
+        match = false;
+        break;
+      }
+    }
+
+    if (match)
+    {
+      assignOperator = op.m_OperatorType;
+      m_uiCurrentToken += uiAssignOperatorLength;
+      break;
+    }
   }
-  else if (Accept(m_TokenStream, m_uiCurrentToken, "-", "="))
-  {
-    assignOperator = ezExpressionAST::NodeType::Subtract;
-  }
-  else if (Accept(m_TokenStream, m_uiCurrentToken, "*", "="))
-  {
-    assignOperator = ezExpressionAST::NodeType::Multiply;
-  }
-  else if (Accept(m_TokenStream, m_uiCurrentToken, "/", "="))
-  {
-    assignOperator = ezExpressionAST::NodeType::Divide;
-  }
-  else
+
+  if (assignOperator == ezExpressionAST::NodeType::Invalid)
   {
     EZ_SUCCEED_OR_RETURN(Expect("="));
   }
