@@ -21,6 +21,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
 {
   auto children = GetChildren(pNode);
 
+  NodeType::Enum nodeType = pNode->m_Type;
   DataType::Enum dataType = pNode->m_DataType;
   if (dataType == DataType::Unknown)
   {
@@ -31,11 +32,11 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
 
     if (dataType == DataType::Unknown)
     {
-      ezLog::Error("Failed to deduce type for '{}' node", NodeType::GetName(pNode->m_Type));
+      ezLog::Error("Failed to deduce type for '{}' node", NodeType::GetName(nodeType));
       return nullptr;
     }
 
-    pNode->m_DataType = dataType;
+    pNode->m_DataType = DataType::ClampToSupportedDataTypes(dataType, pNode->m_uiSupportedDataTypes);
   }
 
   for (ezUInt32 i = 0; i < children.GetCount(); ++i)
@@ -43,7 +44,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
     auto& pChildNode = children[i];
     DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
     
-    if (pChildNode->m_DataType != expectedChildDataType)
+    if (expectedChildDataType != DataType::Unknown && pChildNode->m_DataType != expectedChildDataType)
     {
       pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, expectedChildDataType);
     }
@@ -265,9 +266,66 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
   else if (NodeType::IsTernary(nodeType))
   {
     auto pTernaryNode = static_cast<const TernaryOperator*>(pNode);
-    const bool bFirstIsConstant = NodeType::IsConstant(pTernaryNode->m_pFirstOperand->m_Type);
-    const bool bSecondIsConstant = NodeType::IsConstant(pTernaryNode->m_pSecondOperand->m_Type);
-    const bool bThirdIsConstant = NodeType::IsConstant(pTernaryNode->m_pThirdOperand->m_Type);
+    if (nodeType == NodeType::Select)
+    {
+      if (NodeType::IsConstant(pTernaryNode->m_pFirstOperand->m_Type))
+      {
+        auto pConstantNode = static_cast<Constant*>(pTernaryNode->m_pFirstOperand);
+        const bool bValue = pConstantNode->m_Value.Get<bool>();
+        return bValue ? pTernaryNode->m_pSecondOperand : pTernaryNode->m_pThirdOperand;
+      }
+    }
+
+    EZ_ASSERT_NOT_IMPLEMENTED;
+    return pNode;
+  }
+
+  return pNode;
+}
+
+ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
+{
+  NodeType::Enum nodeType = pNode->m_Type;
+  DataType::Enum dataType = pNode->m_DataType;
+
+  if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsTernary(nodeType))
+  {
+    if (DataType::IsSupported(dataType, pNode->m_uiSupportedDataTypes) == false)
+    {
+      ezLog::Error("Unsupported data type {} on '{}'", DataType::GetName(dataType), NodeType::GetName(nodeType));
+      return nullptr;
+    }
+  }
+  else if (NodeType::IsConstant(nodeType))
+  {
+    auto pConstantNode = static_cast<Constant*>(pNode);
+    if (pConstantNode->m_Value.IsValid() == false)
+    {
+      ezLog::Error("Invalid constant value");
+      return nullptr;
+    }
+  }
+  else if (NodeType::IsFunctionCall(nodeType))
+  {
+    auto pFunctionCall = static_cast<FunctionCall*>(pNode);
+    if (pFunctionCall->m_Arguments.GetCount() < pFunctionCall->m_Desc.m_uiNumRequiredInputs)
+    {
+      ezLog::Error("Not enough arguments for function '{}'", pFunctionCall->m_Desc.m_sName);
+      return nullptr;
+    }
+  }
+
+  auto children = GetChildren(pNode);
+  for (ezUInt32 i = 0; i < children.GetCount(); ++i)
+  {
+    auto& pChildNode = children[i];
+    DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
+
+    if (expectedChildDataType != DataType::Unknown && pChildNode->m_DataType != expectedChildDataType)
+    {
+      ezLog::Error("Invalid data type for argument {} on '{}'. Expected {} got {}", i, NodeType::GetName(nodeType), DataType::GetName(expectedChildDataType), DataType::GetName(pChildNode->m_DataType));
+      return nullptr;
+    }
   }
 
   return pNode;

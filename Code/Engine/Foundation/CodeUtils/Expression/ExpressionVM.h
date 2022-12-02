@@ -1,9 +1,6 @@
 #pragma once
 
-#include <Foundation/CodeUtils/Expression/ExpressionDeclarations.h>
-#include <Foundation/Containers/DynamicArray.h>
-
-class ezExpressionByteCode;
+#include <Foundation/CodeUtils/Expression/ExpressionByteCode.h>
 
 class EZ_FOUNDATION_DLL ezExpressionVM
 {

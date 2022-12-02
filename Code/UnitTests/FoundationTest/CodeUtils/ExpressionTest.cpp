@@ -274,7 +274,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     ezStringView referenceCode = "int i = (int(c) * 2); output = int((float(a * 7 * b) * 0.6) + float(i * i))";
 
     ezExpressionByteCode testByteCode;
-    EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode, true));
+    EZ_TEST_BOOL(CompareCode<int>(testCode, referenceCode, testByteCode));
 
     const int a = 1;
     const int b = 2;

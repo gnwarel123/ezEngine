@@ -72,7 +72,7 @@ public:
 
   struct DataType
   {
-    using StorageType = ezUInt32;
+    using StorageType = ezUInt8;
 
     enum Enum
     {
@@ -113,6 +113,14 @@ public:
 
     EZ_ALWAYS_INLINE static ezUInt32 GetElementCount(Enum dataType) { return (dataType & 0x3) + 1; }
 
+    EZ_ALWAYS_INLINE static bool IsSupported(Enum dataType, ezUInt32 uiSupportedDataTypes)
+    {
+      ezUInt32 dataTypeBit = EZ_BIT(DataType::GetRegisterType(dataType));
+      return (uiSupportedDataTypes & dataTypeBit) != 0;
+    }
+
+    static Enum ClampToSupportedDataTypes(Enum dataType, ezUInt32 uiSupportedDataTypes);
+
     static const char* GetName(Enum dataType);
   };
 
@@ -120,6 +128,7 @@ public:
   {
     ezEnum<NodeType> m_Type;
     ezEnum<DataType> m_DataType;
+    ezUInt8 m_uiSupportedDataTypes = 0;
   };
 
   struct UnaryOperator : public Node
@@ -193,6 +202,7 @@ public:
   Node* TypeDeductionAndConversion(Node* pNode);
   Node* ReplaceUnsupportedInstructions(Node* pNode);
   Node* FoldConstants(Node* pNode);
+  Node* Validate(Node* pNode);
 
 private:
   ezStackAllocator<> m_Allocator;

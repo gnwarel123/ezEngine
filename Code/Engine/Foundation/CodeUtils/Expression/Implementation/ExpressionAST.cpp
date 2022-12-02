@@ -96,7 +96,51 @@ namespace
     "ConstructorCall",
   };
 
-  EZ_CHECK_AT_COMPILETIME_MSG(EZ_ARRAY_SIZE(s_szNodeTypeNames) == ezExpressionAST::NodeType::Count, "Node name array size does not match node type count");
+  static_assert(EZ_ARRAY_SIZE(s_szNodeTypeNames) == ezExpressionAST::NodeType::Count);
+
+  static ezUInt8 s_uiNodeTypeValidDataTypes[] = {
+    0, // Invalid,
+
+    // Unary
+    0,                                           // FirstUnary,
+    ezExpression::RegisterType::FloatAndIntBits, // Negate,
+    ezExpression::RegisterType::FloatAndIntBits, // Absolute,
+    ezExpression::RegisterType::FloatAndIntBits, // Saturate,
+    ezExpression::RegisterType::FloatBit,        // Sqrt,
+    ezExpression::RegisterType::FloatBit,        // Sin,
+    ezExpression::RegisterType::FloatBit,        // Cos,
+    ezExpression::RegisterType::FloatBit,        // Tan,
+    ezExpression::RegisterType::FloatBit,        // ASin,
+    ezExpression::RegisterType::FloatBit,        // ACos,
+    ezExpression::RegisterType::FloatBit,        // ATan,
+    ezExpression::RegisterType::AnyBits,         // TypeConversion,
+    0,                                           // LastUnary,
+
+    // Binary
+    0,                                           // FirstBinary,
+    ezExpression::RegisterType::FloatAndIntBits, // Add,
+    ezExpression::RegisterType::FloatAndIntBits, // Subtract,
+    ezExpression::RegisterType::FloatAndIntBits, // Multiply,
+    ezExpression::RegisterType::FloatAndIntBits, // Divide,
+    ezExpression::RegisterType::FloatAndIntBits, // Min,
+    ezExpression::RegisterType::FloatAndIntBits, // Max,
+    0,                                           // LastBinary,
+
+    // Ternary
+    0,                                           // FirstTernary,
+    ezExpression::RegisterType::FloatAndIntBits, // Clamp,
+    ezExpression::RegisterType::AnyBits,         // Select,
+    0,                                           // LastTernary,
+
+    ezExpression::RegisterType::AnyBits, // Constant,
+    ezExpression::RegisterType::AnyBits, // Input,
+    ezExpression::RegisterType::AnyBits, // Output,
+
+    ezExpression::RegisterType::AnyBits, // FunctionCall,
+    ezExpression::RegisterType::AnyBits, // ConstructorCall,
+  };
+
+  static_assert(EZ_ARRAY_SIZE(s_uiNodeTypeValidDataTypes) == ezExpressionAST::NodeType::Count);
 } // namespace
 
 // static
@@ -193,12 +237,25 @@ ezVariantType::Enum ezExpressionAST::DataType::GetVariantType(Enum dataType)
   return s_DataTypeVariantTypes[dataType];
 }
 
+// static
 ezExpressionAST::DataType::Enum ezExpressionAST::DataType::FromStreamType(ezProcessingStream::DataType dataType)
 {
   EZ_ASSERT_DEBUG(static_cast<ezUInt32>(dataType) >= 0 && static_cast<ezUInt32>(dataType) < EZ_ARRAY_SIZE(s_DataTypeFromStreamType), "Out of bounds access");
   return s_DataTypeFromStreamType[static_cast<ezUInt32>(dataType)];
 }
 
+// static
+ezExpressionAST::DataType::Enum ezExpressionAST::DataType::ClampToSupportedDataTypes(Enum dataType, ezUInt32 uiSupportedDataTypes)
+{
+  auto lowerType = static_cast<ezExpression::RegisterType::Enum>(ezMath::FirstBitLow(uiSupportedDataTypes));
+  auto upperType = static_cast<ezExpression::RegisterType::Enum>(ezMath::FirstBitHigh(uiSupportedDataTypes));
+  if (dataType == Unknown && lowerType != upperType)
+    return Unknown;
+
+  return ezMath::Clamp(dataType, FromRegisterType(lowerType), FromRegisterType(upperType));
+}
+
+// static
 const char* ezExpressionAST::DataType::GetName(Enum dataType)
 {
   EZ_ASSERT_DEBUG(dataType >= 0 && dataType < EZ_ARRAY_SIZE(s_szDataTypeNames), "Out of bounds access");
@@ -220,7 +277,8 @@ ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::E
 
   auto pUnaryOperator = EZ_NEW(&m_Allocator, UnaryOperator);
   pUnaryOperator->m_Type = type;
-  pUnaryOperator->m_DataType = dataType;
+  pUnaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
+  pUnaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
   pUnaryOperator->m_pOperand = pOperand;
 
   return pUnaryOperator;
@@ -232,7 +290,8 @@ ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType:
 
   auto pBinaryOperator = EZ_NEW(&m_Allocator, BinaryOperator);
   pBinaryOperator->m_Type = type;
-  pBinaryOperator->m_DataType = dataType;
+  pBinaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
+  pBinaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
   pBinaryOperator->m_pLeftOperand = pLeftOperand;
   pBinaryOperator->m_pRightOperand = pRightOperand;
 
@@ -245,7 +304,8 @@ ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeTyp
 
   auto pTernaryOperator = EZ_NEW(&m_Allocator, TernaryOperator);
   pTernaryOperator->m_Type = type;
-  pTernaryOperator->m_DataType = dataType;
+  pTernaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
+  pTernaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
   pTernaryOperator->m_pFirstOperand = pFirstOperand;
   pTernaryOperator->m_pSecondOperand = pSecondOperand;
   pTernaryOperator->m_pThirdOperand = pThirdOperand;
@@ -255,6 +315,9 @@ ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeTyp
 
 ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& value, DataType::Enum dataType /*= DataType::Float*/)
 {
+  ezVariantType::Enum variantType = DataType::GetVariantType(dataType);
+  EZ_ASSERT_DEV(variantType != ezVariantType::Invalid, "Invalid constant type '{}'", DataType::GetName(dataType));
+
   auto pConstant = EZ_NEW(&m_Allocator, Constant);
   pConstant->m_Type = NodeType::Constant;
   pConstant->m_DataType = dataType;
@@ -298,6 +361,8 @@ ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpre
 
 ezExpressionAST::ConstructorCall* ezExpressionAST::CreateConstructorCall(DataType::Enum dataType)
 {
+  EZ_ASSERT_DEV(dataType < DataType::Unknown, "Invalid data type for constructor");
+
   auto pConstructorCall = EZ_NEW(&m_Allocator, ConstructorCall);
   pConstructorCall->m_Type = NodeType::ConstructorCall;
   pConstructorCall->m_DataType = dataType;
@@ -387,8 +452,14 @@ ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(Node* 
 {
   NodeType::Enum nodeType = pNode->m_Type;
   DataType::Enum dataType = pNode->m_DataType;
+  EZ_ASSERT_DEV(dataType != DataType::Unknown, "Data type must not be unknown");
   if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsOutput(nodeType))
   {
+    if (nodeType == NodeType::TypeConversion)
+    {
+      return DataType::Unknown;
+    }
+
     return dataType;
   }
   else if (NodeType::IsTernary(nodeType))

@@ -137,7 +137,10 @@ namespace
 
 //////////////////////////////////////////////////////////////////////////
 
-ezExpressionVM::ezExpressionVM() = default;
+ezExpressionVM::ezExpressionVM()
+{
+  RegisterDefaultFunctions();
+}
 ezExpressionVM::~ezExpressionVM() = default;
 
 void ezExpressionVM::RegisterFunction(const ezExpressionFunction& func)

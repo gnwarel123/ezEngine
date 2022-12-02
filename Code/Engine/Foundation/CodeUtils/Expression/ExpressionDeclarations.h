@@ -41,6 +41,12 @@ namespace ezExpression
       Count,
 
       Default = Float,
+
+      FloatBit = EZ_BIT(Float),
+      IntBit = EZ_BIT(Int),
+      BoolBit = EZ_BIT(Bool),
+      FloatAndIntBits = FloatBit | IntBit,
+      AnyBits = FloatBit | IntBit | BoolBit,
     };
 
     static const char* GetName(Enum registerType);
