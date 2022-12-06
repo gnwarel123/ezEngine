@@ -36,7 +36,8 @@ private:
   ezExpressionAST::Node* ParseFunctionCall(ezStringView sFunctionName);
 
   bool AcceptStatementTerminator();
-  bool AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& out_binaryOp, int& out_iOperatorPrecedence);
+  bool AcceptOperator(ezStringView sName);
+  bool AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& out_binaryOp, int& out_iOperatorPrecedence, ezUInt32& out_uiOperatorLength);
   ezExpressionAST::Node* GetVariable(ezStringView sVarName);
 
   ezResult Expect(const char* szToken, const ezToken** pExpectedToken = nullptr);

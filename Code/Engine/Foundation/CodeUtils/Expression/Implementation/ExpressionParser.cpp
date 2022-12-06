@@ -7,21 +7,51 @@ namespace
 {
   struct AssignOperator
   {
-    const char* m_szOperator;
-    ezExpressionAST::NodeType::Enum m_OperatorType;
+    ezStringView m_sName;
+    ezExpressionAST::NodeType::Enum m_NodeType;
   };
 
   static constexpr AssignOperator s_assignOperators[] = {
-    {"+=", ezExpressionAST::NodeType::Add},
-    {"-=", ezExpressionAST::NodeType::Subtract},
-    {"*=", ezExpressionAST::NodeType::Multiply},
-    {"/=", ezExpressionAST::NodeType::Divide},
-    {"%=", ezExpressionAST::NodeType::Modulo},
-    {"<<=", ezExpressionAST::NodeType::BitshiftLeft},
-    {">>=", ezExpressionAST::NodeType::BitshiftRight},
-    {"&=", ezExpressionAST::NodeType::BitwiseAnd},
-    {"^=", ezExpressionAST::NodeType::BitwiseXor},
-    {"|=", ezExpressionAST::NodeType::BitwiseOr},
+    {"+="_ezsv, ezExpressionAST::NodeType::Add},
+    {"-="_ezsv, ezExpressionAST::NodeType::Subtract},
+    {"*="_ezsv, ezExpressionAST::NodeType::Multiply},
+    {"/="_ezsv, ezExpressionAST::NodeType::Divide},
+    {"%="_ezsv, ezExpressionAST::NodeType::Modulo},
+    {"<<="_ezsv, ezExpressionAST::NodeType::BitshiftLeft},
+    {">>="_ezsv, ezExpressionAST::NodeType::BitshiftRight},
+    {"&="_ezsv, ezExpressionAST::NodeType::BitwiseAnd},
+    {"^="_ezsv, ezExpressionAST::NodeType::BitwiseXor},
+    {"|="_ezsv, ezExpressionAST::NodeType::BitwiseOr},
+  };
+
+  struct BinaryOperator
+  {
+    ezStringView m_sName;
+    ezExpressionAST::NodeType::Enum m_NodeType;
+    int m_iPrecedence;
+  };
+
+  // Operator precedence according to https://en.cppreference.com/w/cpp/language/operator_precedence,
+  // lower value means higher precedence
+  static constexpr BinaryOperator s_binaryOperators[] = {
+    {"+"_ezsv, ezExpressionAST::NodeType::Add, 6},
+    {"-"_ezsv, ezExpressionAST::NodeType::Subtract, 6},
+    {"*"_ezsv, ezExpressionAST::NodeType::Multiply, 5},
+    {"/"_ezsv, ezExpressionAST::NodeType::Divide, 5},
+    {"%"_ezsv, ezExpressionAST::NodeType::Modulo, 5},
+    {"<<"_ezsv, ezExpressionAST::NodeType::BitshiftLeft, 7},
+    {">>"_ezsv, ezExpressionAST::NodeType::BitshiftRight, 7},
+    {"&"_ezsv, ezExpressionAST::NodeType::BitwiseAnd, 11},
+    {"^"_ezsv, ezExpressionAST::NodeType::BitwiseXor, 12},
+    {"|"_ezsv, ezExpressionAST::NodeType::BitwiseOr, 13},
+    {"=="_ezsv, ezExpressionAST::NodeType::Equal, 10},
+    {"!="_ezsv, ezExpressionAST::NodeType::NotEqual, 10},
+    {"<"_ezsv, ezExpressionAST::NodeType::Less, 9},
+    {"<="_ezsv, ezExpressionAST::NodeType::LessEqual, 9},
+    {">"_ezsv, ezExpressionAST::NodeType::Greater, 9},
+    {">="_ezsv, ezExpressionAST::NodeType::GreaterEqual, 9},
+    {"&&"_ezsv, ezExpressionAST::NodeType::LogicalAnd, 14},
+    {"||"_ezsv, ezExpressionAST::NodeType::LogicalOr, 15},
   };
 
 } // namespace
@@ -259,25 +289,10 @@ ezResult ezExpressionParser::ParseAssignment()
   for (ezUInt32 i = 0; i < EZ_ARRAY_SIZE(s_assignOperators); ++i)
   {
     auto& op = s_assignOperators[i];
-    const ezUInt32 uiAssignOperatorLength = ezStringUtils::GetStringElementCount(op.m_szOperator);
-
-    if (m_uiCurrentToken + uiAssignOperatorLength - 1 >= m_TokenStream.GetCount())
-      continue;
-
-    bool match = true;
-    for (ezUInt32 charIndex = 0; charIndex < uiAssignOperatorLength; ++charIndex)
+    if (AcceptOperator(op.m_sName))
     {
-      if (m_TokenStream[m_uiCurrentToken + charIndex]->m_DataView.GetCharacter() != op.m_szOperator[charIndex])
-      {
-        match = false;
-        break;
-      }
-    }
-
-    if (match)
-    {
-      assignOperator = op.m_OperatorType;
-      m_uiCurrentToken += uiAssignOperatorLength;
+      assignOperator = op.m_NodeType;
+      m_uiCurrentToken += op.m_sName.GetElementCount();
       break;
     }
   }
@@ -374,10 +389,11 @@ ezExpressionAST::Node* ezExpressionParser::ParseExpression(int iPrecedence /* = 
 
   ezExpressionAST::NodeType::Enum binaryOp;
   int iBinaryOpPrecedence = 0;
-  while (AcceptBinaryOperator(binaryOp, iBinaryOpPrecedence) && iBinaryOpPrecedence < iPrecedence)
+  ezUInt32 uiOperatorLength = 0;
+  while (AcceptBinaryOperator(binaryOp, iBinaryOpPrecedence, uiOperatorLength) && iBinaryOpPrecedence < iPrecedence)
   {
     // Consume token.
-    ++m_uiCurrentToken;
+    m_uiCurrentToken += uiOperatorLength;
 
     auto pRightOperand = ParseExpression(iBinaryOpPrecedence);
     if (pRightOperand == nullptr)
@@ -490,51 +506,43 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
   return nullptr;
 }
 
-// Does NOT advance the current token beyond the binary operator!
-// Operator precedence according to https://en.cppreference.com/w/cpp/language/operator_precedence,
-// lower value means higher precedence
-bool ezExpressionParser::AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& out_binaryOp, int& out_iOperatorPrecedence)
+// Does NOT advance the current token beyond the operator!
+bool ezExpressionParser::AcceptOperator(ezStringView sName)
 {
-  SkipWhitespace(m_TokenStream, m_uiCurrentToken);
+  const ezUInt32 uiOperatorLength = sName.GetElementCount();
 
-  if (m_uiCurrentToken >= m_TokenStream.GetCount())
+  if (m_uiCurrentToken + uiOperatorLength - 1 >= m_TokenStream.GetCount())
     return false;
 
-  auto pCurrentToken = m_TokenStream[m_uiCurrentToken];
-  if (pCurrentToken->m_DataView.GetElementCount() != 1)
-    return false;
-
-  ezUInt32 operatorChar = pCurrentToken->m_DataView.GetCharacter();
-
-  switch (operatorChar)
+  for (ezUInt32 charIndex = 0; charIndex < uiOperatorLength; ++charIndex)
   {
-    case '+':
-      out_binaryOp = ezExpressionAST::NodeType::Add;
-      out_iOperatorPrecedence = 6;
-      break;
-    case '-':
-      out_binaryOp = ezExpressionAST::NodeType::Subtract;
-      out_iOperatorPrecedence = 6;
-      break;
-    case '*':
-      out_binaryOp = ezExpressionAST::NodeType::Multiply;
-      out_iOperatorPrecedence = 5;
-      break;
-    case '/':
-      out_binaryOp = ezExpressionAST::NodeType::Divide;
-      out_iOperatorPrecedence = 5;
-      break;
-      // Currently not supported
-      /*case '%':
-      out_binaryOp = ezExpressionAST::NodeType::Modulo;
-      out_iOperatorPrecedence = 5;
-      break;*/
-
-    default:
+    if (m_TokenStream[m_uiCurrentToken + charIndex]->m_DataView.GetCharacter() != sName.GetStartPointer()[charIndex])
+    {
       return false;
+    }
   }
 
   return true;
+}
+
+// Does NOT advance the current token beyond the binary operator!
+bool ezExpressionParser::AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& out_binaryOp, int& out_iOperatorPrecedence, ezUInt32& out_uiOperatorLength)
+{
+  SkipWhitespace(m_TokenStream, m_uiCurrentToken);
+
+  for (ezUInt32 i = 0; i < EZ_ARRAY_SIZE(s_binaryOperators); ++i)
+  {
+    auto& op = s_binaryOperators[i];
+    if (AcceptOperator(op.m_sName))
+    {
+      out_binaryOp = op.m_NodeType;
+      out_iOperatorPrecedence = op.m_iPrecedence;
+      out_uiOperatorLength = op.m_sName.GetElementCount();
+      return true;
+    }
+  }
+
+  return false;
 }
 
 ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
