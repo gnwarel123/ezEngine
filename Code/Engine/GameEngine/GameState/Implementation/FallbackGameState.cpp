@@ -302,7 +302,7 @@ void ezFallbackGameState::ProcessInput()
     switch (m_pSceneToLoad->GetLoadingState())
     {
       case ezSceneLoadUtility::LoadingState::FinishedSuccessfully:
-        SwitchToLoadedScene();
+        // SwitchToLoadedScene();
         break;
 
       case ezSceneLoadUtility::LoadingState::Failed:
