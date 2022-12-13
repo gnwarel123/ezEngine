@@ -227,6 +227,12 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(TestInstruction("output = exp(a)", 2.0f), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = exp(0.0)"), 1.0f, ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = exp(2.0)"), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
+
+    // Ln
+    EZ_TEST_FLOAT(TestInstruction("output = ln(a)", 1.0f), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = ln(a)", 2.0f), ezMath::Ln(2.0f), ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = ln(1.0)"), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = ln(2.0)"), ezMath::Ln(2.0f), ezMath::DefaultEpsilon<float>());
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")

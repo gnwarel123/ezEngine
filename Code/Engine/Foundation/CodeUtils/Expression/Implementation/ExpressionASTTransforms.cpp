@@ -144,6 +144,8 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
             return CreateConstant(ezMath::Sqrt(fValue));
           case NodeType::Exp:
             return CreateConstant(ezMath::Exp(fValue));
+          case NodeType::Ln:
+            return CreateConstant(ezMath::Ln(fValue));
           case NodeType::Sin:
             return CreateConstant(ezMath::Sin(ezAngle::Radian(fValue)));
           case NodeType::Cos:
