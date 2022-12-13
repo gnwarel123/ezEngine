@@ -20,9 +20,9 @@ namespace ezExpression
 
     union
     {
-      ezSimdVec4f f;
-      ezSimdVec4i i;
       ezSimdVec4b b;
+      ezSimdVec4i i;
+      ezSimdVec4f f;
     };
   };
 
@@ -32,21 +32,16 @@ namespace ezExpression
 
     enum Enum
     {
-      Float,
-      Int,
-      Bool,
-
       Unknown,
+
+      Bool,
+      Int,
+      Float,
 
       Count,
 
       Default = Float,
-
-      FloatBit = EZ_BIT(Float),
-      IntBit = EZ_BIT(Int),
-      BoolBit = EZ_BIT(Bool),
-      FloatAndIntBits = FloatBit | IntBit,
-      AnyBits = FloatBit | IntBit | BoolBit,
+      MaxNumBits = 4,
     };
 
     static const char* GetName(Enum registerType);
@@ -86,6 +81,8 @@ namespace ezExpression
              m_uiNumRequiredInputs == other.m_uiNumRequiredInputs &&
              m_OutputType == other.m_OutputType;
     }
+
+    bool operator<(const FunctionDesc& other) const;
 
     ezResult Serialize(ezStreamWriter& stream) const;
     ezResult Deserialize(ezStreamReader& stream);

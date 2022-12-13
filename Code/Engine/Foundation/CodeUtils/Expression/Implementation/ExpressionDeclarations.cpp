@@ -16,6 +16,7 @@ namespace
   };
 
   static_assert(EZ_ARRAY_SIZE(s_szRegisterTypeNames) == RegisterType::Count);
+  static_assert(RegisterType::Count <= EZ_BIT(RegisterType::MaxNumBits));
 } // namespace
 
 // static
@@ -47,6 +48,20 @@ ezResult StreamDesc::Deserialize(ezStreamReader& stream)
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+bool FunctionDesc::operator<(const FunctionDesc& other) const
+{
+  if (m_sName != other.m_sName)
+    return m_sName < other.m_sName;
+
+  if (m_uiNumRequiredInputs != other.m_uiNumRequiredInputs)
+    return m_uiNumRequiredInputs < other.m_uiNumRequiredInputs;
+
+  if (m_OutputType != other.m_OutputType)
+    return m_OutputType < other.m_OutputType;
+
+  return m_InputTypes.GetArrayPtr() < other.m_InputTypes.GetArrayPtr();
+}
 
 ezResult FunctionDesc::Serialize(ezStreamWriter& stream) const
 {

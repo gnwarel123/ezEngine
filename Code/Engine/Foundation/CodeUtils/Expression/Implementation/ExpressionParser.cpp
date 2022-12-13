@@ -120,7 +120,7 @@ void ezExpressionParser::RegisterKnownTypes()
   m_KnownTypes.Insert(ezMakeHashedString("vec4i"), ezExpressionAST::DataType::Int4);
 
   ezStringBuilder sTypeName;
-  for (ezUInt32 type = ezExpressionAST::DataType::Float; type < ezExpressionAST::DataType::Count; ++type)
+  for (ezUInt32 type = ezExpressionAST::DataType::Bool; type < ezExpressionAST::DataType::Count; ++type)
   {
     sTypeName = ezExpressionAST::DataType::GetName(static_cast<ezExpressionAST::DataType::Enum>(type));
     sTypeName.ToLower();
@@ -173,7 +173,7 @@ void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<ezExpression::StreamDesc> 
   {
     KnownVariable knownVariable;
     knownVariable.m_pNode = m_pAST->CreateInput(inputDesc);
-    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
+    knownVariable.m_Type = knownVariable.m_pNode->m_ReturnType;
 
     m_KnownVariables.Insert(inputDesc.m_sName, knownVariable);
   }
@@ -185,7 +185,7 @@ void ezExpressionParser::SetupInAndOutputs(ezArrayPtr<ezExpression::StreamDesc> 
 
     KnownVariable knownVariable;
     knownVariable.m_pNode = pOutputNode;
-    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
+    knownVariable.m_Type = knownVariable.m_pNode->m_ReturnType;
 
     m_KnownVariables.Insert(outputDesc.m_sName, knownVariable);
   }
@@ -554,7 +554,7 @@ ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
   if (m_KnownVariables.TryGetValue(sHashedVarName, knownVariable) == false && m_Options.m_bTreatUnknownVariablesAsInputs)
   {
     knownVariable.m_pNode = m_pAST->CreateInput({sHashedVarName, ezProcessingStream::DataType::Float});
-    knownVariable.m_Type = knownVariable.m_pNode->m_DataType;
+    knownVariable.m_Type = knownVariable.m_pNode->m_ReturnType;
     m_KnownVariables.Insert(sHashedVarName, knownVariable);
   }
 

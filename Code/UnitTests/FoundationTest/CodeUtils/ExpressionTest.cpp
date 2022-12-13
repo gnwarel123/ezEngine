@@ -149,6 +149,24 @@ namespace
   };
 
   template <typename T>
+  T TestInstruction(ezStringView code, T a = 0, T b = 0, T c = 0, T d = 0)
+  {
+    ezExpressionByteCode byteCode;
+    Compile<T>(code, byteCode);
+    return Execute<T>(byteCode, a, b, c, d);
+  }
+
+  template <typename T>
+  T TestConstant(ezStringView code)
+  {
+    ezExpressionByteCode byteCode;
+    Compile<T>(code, byteCode);
+    EZ_TEST_INT(byteCode.GetNumInstructions(), 2); // MovX_C, StoreX
+    EZ_TEST_INT(byteCode.GetNumTempRegisters(), 1);
+    return Execute<T>(byteCode);
+  }
+
+  template <typename T>
   bool CompareCode(ezStringView testCode, ezString referenceCode, ezExpressionByteCode& out_testByteCode, bool dumpASTs = false)
   {
     Compile<T>(testCode, out_testByteCode, dumpASTs ? "Test" : "");
@@ -172,6 +190,46 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
   s_pCompiler = EZ_DEFAULT_NEW(ezExpressionCompiler);
   s_pVM = EZ_DEFAULT_NEW(ezExpressionVM);
   EZ_SCOPE_EXIT(s_pParser = nullptr; s_pCompiler = nullptr; s_pVM = nullptr;);
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Unary instructions")
+  {
+    // Negate
+    EZ_TEST_INT(TestInstruction("output = -a", 2), -2);
+    EZ_TEST_FLOAT(TestInstruction("output = -a", 2.5f), -2.5f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_INT(TestConstant<int>("output = -2"), -2);
+    EZ_TEST_FLOAT(TestConstant<float>("output = -2.5"), -2.5f, ezMath::DefaultEpsilon<float>());
+
+    // Absolute
+    EZ_TEST_INT(TestInstruction("output = abs(a)", -2), 2);
+    EZ_TEST_FLOAT(TestInstruction("output = abs(a)", -2.5f), 2.5f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_INT(TestConstant<int>("output = abs(-2)"), 2);
+    EZ_TEST_FLOAT(TestConstant<float>("output = abs(-2.5)"), 2.5f, ezMath::DefaultEpsilon<float>());
+
+    // Saturate
+    EZ_TEST_INT(TestInstruction("output = saturate(a)", -1), 0);
+    EZ_TEST_INT(TestInstruction("output = saturate(a)", 2), 1);
+    EZ_TEST_FLOAT(TestInstruction("output = saturate(a)", -1.5f), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = saturate(a)", 2.5f), 1.0f, ezMath::DefaultEpsilon<float>());
+
+    EZ_TEST_INT(TestConstant<int>("output = saturate(-1)"), 0);
+    EZ_TEST_INT(TestConstant<int>("output = saturate(2)"), 1);
+    EZ_TEST_FLOAT(TestConstant<float>("output = saturate(-1.5)"), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = saturate(2.5)"), 1.0f, ezMath::DefaultEpsilon<float>());
+
+    // Sqrt
+    EZ_TEST_FLOAT(TestInstruction("output = sqrt(a)", 25.0f), 5.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = sqrt(a)", 2.0f), ezMath::Sqrt(2.0f), ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(25.0)"), 5.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(2.0)"), ezMath::Sqrt(2.0f), ezMath::DefaultEpsilon<float>());
+
+    // Exp
+    #if 0
+    EZ_TEST_FLOAT(TestInstruction("output = exp(a)", 0.0f), 1.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = exp(a)", 2.0f), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = exp(0.0)"), 1.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = exp(2.0)"), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
+    #endif
+  }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")
   {
@@ -204,7 +262,7 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(Execute(testByteCode, a, b), 10.0f, ezMath::DefaultEpsilon<float>());
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Integer arithmetic")
+  EZ_TEST_BLOCK(ezTestBlock::Disabled, "Integer arithmetic")
   {
     ezExpressionByteCode testByteCode;
 
@@ -294,6 +352,22 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     const int b = 2;
     const int c = 3;
     EZ_TEST_INT(Execute(testByteCode, a, b, c), 44);
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Bool conversions")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load Inputs")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Store Outputs")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Function overloads")
+  {
   }
 
 #if 0

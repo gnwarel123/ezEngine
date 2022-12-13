@@ -3,47 +3,22 @@
 #include <Foundation/CodeUtils/Expression/ExpressionAST.h>
 #include <Foundation/Logging/Log.h>
 
-namespace
-{
-  ezExpressionAST::DataType::Enum BiggerDataType(ezExpressionAST::DataType::Enum a, ezExpressionAST::DataType::Enum b)
-  {
-    ezExpression::RegisterType::Enum ra = ezExpressionAST::DataType::GetRegisterType(a);
-    ezExpression::RegisterType::Enum rb = ezExpressionAST::DataType::GetRegisterType(b);
-
-    const ezUInt32 ea = ezExpressionAST::DataType::GetElementCount(a);
-    const ezUInt32 eb = ezExpressionAST::DataType::GetElementCount(b);
-
-    return ezExpressionAST::DataType::FromRegisterType(ezMath::Min(ra, rb), ezMath::Max(ea, eb));
-  }
-} // namespace
-
 ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
 {
-  auto children = GetChildren(pNode);
-
   NodeType::Enum nodeType = pNode->m_Type;
-  DataType::Enum dataType = pNode->m_DataType;
-  if (dataType == DataType::Unknown)
+  DataType::Enum returnType = pNode->m_ReturnType;
+  if (returnType == DataType::Unknown)
   {
-    for (auto pChildNode : children)
-    {
-      if (pChildNode == nullptr)
-      {
-        return nullptr;
-      }
+    ResolveOverloads(pNode);
 
-      dataType = BiggerDataType(dataType, pChildNode->m_DataType);
-    }
-
-    if (dataType == DataType::Unknown)
+    if (returnType == DataType::Unknown)
     {
-      ezLog::Error("Failed to deduce type for '{}' node", NodeType::GetName(nodeType));
+      ezLog::Error("No matching overload found for '{}'", NodeType::GetName(nodeType));
       return nullptr;
     }
-
-    pNode->m_DataType = DataType::ClampToSupportedDataTypes(dataType, pNode->m_uiSupportedDataTypes);
   }
 
+  auto children = GetChildren(pNode);
   for (ezUInt32 i = 0; i < children.GetCount(); ++i)
   {
     auto& pChildNode = children[i];
@@ -54,7 +29,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
 
     DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
     
-    if (expectedChildDataType != DataType::Unknown && pChildNode->m_DataType != expectedChildDataType)
+    if (expectedChildDataType != DataType::Unknown && pChildNode->m_ReturnType != expectedChildDataType)
     {
       pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, expectedChildDataType);
     }
@@ -66,7 +41,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
 ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
-  DataType::Enum dataType = pNode->m_DataType;
+  DataType::Enum returnType = pNode->m_ReturnType;
   if (nodeType == NodeType::Negate)
   {
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
@@ -74,13 +49,13 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     {
       auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
       const double fValue = pConstantNode->m_Value.ConvertTo<double>();
-      return CreateConstant(-fValue, dataType);
+      return CreateConstant(-fValue, returnType);
     }
     else
     {
-      auto pZero = CreateConstant(0, dataType);
+      auto pZero = CreateConstant(0, returnType);
       auto pValue = pUnaryNode->m_pOperand;
-      return CreateBinaryOperator(NodeType::Subtract, pZero, pValue, dataType);
+      return CreateBinaryOperator(NodeType::Subtract, pZero, pValue);
     }
   }
   else if (nodeType == NodeType::Saturate)
@@ -90,14 +65,14 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     {
       auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
       const double fValue = pConstantNode->m_Value.ConvertTo<double>();
-      return CreateConstant(ezMath::Saturate(fValue), dataType);
+      return CreateConstant(ezMath::Saturate(fValue), returnType);
     }
     else
     {
-      auto pZero = CreateConstant(0, dataType);
-      auto pOne = CreateConstant(1, dataType);
+      auto pZero = CreateConstant(0, returnType);
+      auto pOne = CreateConstant(1, returnType);
       auto pValue = static_cast<const UnaryOperator*>(pNode)->m_pOperand;
-      return CreateBinaryOperator(NodeType::Max, pZero, CreateBinaryOperator(NodeType::Min, pOne, pValue, dataType), dataType);
+      return CreateBinaryOperator(NodeType::Max, pZero, CreateBinaryOperator(NodeType::Min, pOne, pValue));
     }
   }
   else if (nodeType == NodeType::Clamp)
@@ -106,14 +81,14 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     auto pValue = pTernaryNode->m_pFirstOperand;
     auto pMinValue = pTernaryNode->m_pSecondOperand;
     auto pMaxValue = pTernaryNode->m_pThirdOperand;
-    return CreateBinaryOperator(NodeType::Max, pMinValue, CreateBinaryOperator(NodeType::Min, pMaxValue, pValue, dataType), dataType);
+    return CreateBinaryOperator(NodeType::Max, pMinValue, CreateBinaryOperator(NodeType::Min, pMaxValue, pValue));
   }
   else if (nodeType == NodeType::ConstructorCall)
   {
     auto pConstructorCallNode = static_cast<const ConstructorCall*>(pNode);
     if (pConstructorCallNode->m_Arguments.GetCount() > 1)
     {
-      ezLog::Error("Constructor of type '{}' has too many arguments", DataType::GetName(dataType));
+      ezLog::Error("Constructor of type '{}' has too many arguments", DataType::GetName(returnType));
       return nullptr;
     }
 
@@ -128,7 +103,7 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
 ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
-  DataType::Enum dataType = pNode->m_DataType;
+  DataType::Enum returnType = pNode->m_ReturnType;
   if (NodeType::IsUnary(nodeType))
   {
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
@@ -137,7 +112,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
       auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
       if (nodeType == NodeType::TypeConversion)
       {
-        return CreateConstant(pConstantNode->m_Value, dataType);
+        return CreateConstant(pConstantNode->m_Value, returnType);
       }
       else if (nodeType >= NodeType::Negate && nodeType <= NodeType::Sqrt)
       {
@@ -146,20 +121,20 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
         switch (nodeType)
         {
           case NodeType::Negate:
-            return CreateConstant(-fValue, dataType);
+            return CreateConstant(-fValue, returnType);
           case NodeType::Absolute:
-            return CreateConstant(ezMath::Abs(fValue), dataType);
+            return CreateConstant(ezMath::Abs(fValue), returnType);
           case NodeType::Saturate:
-            return CreateConstant(ezMath::Saturate(fValue), dataType);
+            return CreateConstant(ezMath::Saturate(fValue), returnType);
           case NodeType::Sqrt:
-            return CreateConstant(ezMath::Sqrt(fValue), dataType);
+            return CreateConstant(ezMath::Sqrt(fValue), returnType);
         }
       }
       else
       {
-        if (dataType != DataType::Float)
+        if (returnType != DataType::Float)
         {
-          ezLog::Error("Unsupported data type '{}' for trig function '{}'", DataType::GetName(dataType), NodeType::GetName(nodeType));
+          ezLog::Error("Unsupported data type '{}' for trig function '{}'", DataType::GetName(returnType), NodeType::GetName(nodeType));
           return nullptr;
         }
 
@@ -204,15 +179,15 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
         switch (nodeType)
         {
           case NodeType::Add:
-            return CreateConstant(fLeftValue + fRightValue, dataType);
+            return CreateConstant(fLeftValue + fRightValue, returnType);
           case NodeType::Subtract:
-            return CreateConstant(fLeftValue - fRightValue, dataType);
+            return CreateConstant(fLeftValue - fRightValue, returnType);
           case NodeType::Multiply:
-            return CreateConstant(fLeftValue * fRightValue, dataType);
+            return CreateConstant(fLeftValue * fRightValue, returnType);
           case NodeType::Min:
-            return CreateConstant(ezMath::Min(fLeftValue, fRightValue), dataType);
+            return CreateConstant(ezMath::Min(fLeftValue, fRightValue), returnType);
           case NodeType::Max:
-            return CreateConstant(ezMath::Max(fLeftValue, fRightValue), dataType);
+            return CreateConstant(ezMath::Max(fLeftValue, fRightValue), returnType);
 
           default:
             EZ_ASSERT_NOT_IMPLEMENTED;
@@ -221,21 +196,21 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
       }
       else
       {
-        if (dataType == DataType::Float)
+        if (returnType == DataType::Float)
         {
           const float fLeftValue = pLeftConstant->m_Value.Get<float>();
           const float fRightValue = pRightConstant->m_Value.Get<float>();
-          return CreateConstant(fLeftValue / fRightValue, dataType);
+          return CreateConstant(fLeftValue / fRightValue, returnType);
         }
-        else if (dataType == DataType::Int)
+        else if (returnType == DataType::Int)
         {
           const int iLeftValue = pLeftConstant->m_Value.Get<int>();
           const int iRightValue = pRightConstant->m_Value.Get<int>();
-          return CreateConstant(iLeftValue / iRightValue, dataType);
+          return CreateConstant(iLeftValue / iRightValue, returnType);
         }
         else
         {
-          ezLog::Error("Unsupported data type '{}' for divide operation", DataType::GetName(dataType));
+          ezLog::Error("Unsupported data type '{}' for divide operation", DataType::GetName(returnType));
           return nullptr;
         }
       }
@@ -251,25 +226,25 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
         switch (nodeType)
         {
           case NodeType::Add:
-            return CreateBinaryOperator(ezExpressionAST::NodeType::Add, pConstantNode, pOperand, dataType);
+            return CreateBinaryOperator(ezExpressionAST::NodeType::Add, pConstantNode, pOperand);
           case NodeType::Subtract:
-            return CreateBinaryOperator(ezExpressionAST::NodeType::Add, CreateConstant(-fValue, dataType), pOperand, dataType);
+            return CreateBinaryOperator(ezExpressionAST::NodeType::Add, CreateConstant(-fValue, returnType), pOperand);
           case NodeType::Multiply:
-            return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, pConstantNode, pOperand, dataType);
+            return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, pConstantNode, pOperand);
           case NodeType::Min:
-            return CreateBinaryOperator(ezExpressionAST::NodeType::Min, pConstantNode, pOperand, dataType);
+            return CreateBinaryOperator(ezExpressionAST::NodeType::Min, pConstantNode, pOperand);
           case NodeType::Max:
-            return CreateBinaryOperator(ezExpressionAST::NodeType::Max, pConstantNode, pOperand, dataType);
+            return CreateBinaryOperator(ezExpressionAST::NodeType::Max, pConstantNode, pOperand);
 
           default:
             EZ_ASSERT_NOT_IMPLEMENTED;
             return pNode;
         }
       }
-      else if (dataType == DataType::Float) // Divide optimization only works for float
+      else if (returnType == DataType::Float) // Divide optimization only works for float
       {
         const float fValue = pConstantNode->m_Value.Get<float>();
-        return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, CreateConstant(1.0f / fValue), pOperand, dataType);
+        return CreateBinaryOperator(ezExpressionAST::NodeType::Multiply, CreateConstant(1.0f / fValue, returnType), pOperand);
       }
     }
   }
@@ -296,13 +271,18 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
 ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
-  DataType::Enum dataType = pNode->m_DataType;
+
+  if (pNode->m_ReturnType == DataType::Unknown)
+  {
+    ezLog::Error("Unresolved return type on '{}'", NodeType::GetName(nodeType));
+    return nullptr;
+  }
 
   if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsTernary(nodeType))
   {
-    if (DataType::IsSupported(dataType, pNode->m_uiSupportedDataTypes) == false)
+    if (pNode->m_uiOverloadIndex == 0xFF)
     {
-      ezLog::Error("Unsupported data type {} on '{}'", DataType::GetName(dataType), NodeType::GetName(nodeType));
+      ezLog::Error("Unresolved overload on '{}'", NodeType::GetName(nodeType));
       return nullptr;
     }
   }
@@ -317,10 +297,17 @@ ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
   }
   else if (NodeType::IsFunctionCall(nodeType))
   {
-    auto pFunctionCall = static_cast<FunctionCall*>(pNode);
-    if (pFunctionCall->m_Arguments.GetCount() < pFunctionCall->m_Desc.m_uiNumRequiredInputs)
+    if (pNode->m_uiOverloadIndex == 0xFF)
     {
-      ezLog::Error("Not enough arguments for function '{}'", pFunctionCall->m_Desc.m_sName);
+      ezLog::Error("Unresolved function overload on");
+      return nullptr;
+    }
+
+    auto pFunctionCall = static_cast<FunctionCall*>(pNode);
+    auto pDesc = pFunctionCall->m_Descs[pNode->m_uiOverloadIndex];
+    if (pFunctionCall->m_Arguments.GetCount() < pDesc->m_uiNumRequiredInputs)
+    {
+      ezLog::Error("Not enough arguments for function '{}'", pDesc->m_sName);
       return nullptr;
     }
   }
@@ -331,9 +318,9 @@ ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
     auto& pChildNode = children[i];
     DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
 
-    if (expectedChildDataType != DataType::Unknown && pChildNode->m_DataType != expectedChildDataType)
+    if (expectedChildDataType != DataType::Unknown && pChildNode->m_ReturnType != expectedChildDataType)
     {
-      ezLog::Error("Invalid data type for argument {} on '{}'. Expected {} got {}", i, NodeType::GetName(nodeType), DataType::GetName(expectedChildDataType), DataType::GetName(pChildNode->m_DataType));
+      ezLog::Error("Invalid data type for argument {} on '{}'. Expected {} got {}", i, NodeType::GetName(nodeType), DataType::GetName(expectedChildDataType), DataType::GetName(pChildNode->m_ReturnType));
       return nullptr;
     }
   }

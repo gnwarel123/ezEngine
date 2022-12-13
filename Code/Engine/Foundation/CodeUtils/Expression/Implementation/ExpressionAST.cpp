@@ -74,6 +74,8 @@ namespace
     "ASin",
     "ACos",
     "ATan",
+    "RadToDeg",
+    "DegToRad",
     "Round",
     "Floor",
     "Ceil",
@@ -126,78 +128,115 @@ namespace
 
   static_assert(EZ_ARRAY_SIZE(s_szNodeTypeNames) == ezExpressionAST::NodeType::Count);
 
-  static ezUInt8 s_uiNodeTypeValidDataTypes[] = {
-    0, // Invalid,
+  static constexpr ezUInt16 BuildSignature(ezExpression::RegisterType::Enum returnType, ezExpression::RegisterType::Enum a, ezExpression::RegisterType::Enum b = ezExpression::RegisterType::Unknown, ezExpression::RegisterType::Enum c = ezExpression::RegisterType::Unknown)
+  {
+    ezUInt32 signature = static_cast<ezUInt32>(returnType);
+    signature |= a << ezExpression::RegisterType::MaxNumBits * 1;
+    signature |= b << ezExpression::RegisterType::MaxNumBits * 2;
+    signature |= c << ezExpression::RegisterType::MaxNumBits * 3;
+    return static_cast<ezUInt16>(signature);
+  }
 
-    // Unary
-    0,                                           // FirstUnary,
-    ezExpression::RegisterType::FloatAndIntBits, // Negate,
-    ezExpression::RegisterType::FloatAndIntBits, // Absolute,
-    ezExpression::RegisterType::FloatAndIntBits, // Saturate,
-    ezExpression::RegisterType::FloatBit,        // Sqrt,
-    ezExpression::RegisterType::FloatBit,        // Exp,
-    ezExpression::RegisterType::FloatBit,        // Exp2,
-    ezExpression::RegisterType::FloatBit,        // Log,
-    ezExpression::RegisterType::FloatBit,        // Log2,
-    ezExpression::RegisterType::FloatBit,        // Log10,
-    ezExpression::RegisterType::FloatBit,        // Sin,
-    ezExpression::RegisterType::FloatBit,        // Cos,
-    ezExpression::RegisterType::FloatBit,        // Tan,
-    ezExpression::RegisterType::FloatBit,        // ASin,
-    ezExpression::RegisterType::FloatBit,        // ACos,
-    ezExpression::RegisterType::FloatBit,        // ATan,
-    ezExpression::RegisterType::FloatBit,        // Round,
-    ezExpression::RegisterType::FloatBit,        // Floor,
-    ezExpression::RegisterType::FloatBit,        // Ceil,
-    ezExpression::RegisterType::FloatBit,        // Trunc,
-    ezExpression::RegisterType::FloatBit,        // Frac,
-    ezExpression::RegisterType::IntBit,          // BitwiseNot,
-    ezExpression::RegisterType::BoolBit,         // LogicalNot,
-    ezExpression::RegisterType::AnyBits,         // TypeConversion,
-    0,                                           // LastUnary,
+  static constexpr ezExpression::RegisterType::Enum GetReturnTypeFromSignature(ezUInt16 uiSignature)
+  {
+    ezUInt32 uiMask = EZ_BIT(ezExpression::RegisterType::MaxNumBits) - 1;
+    return static_cast<ezExpression::RegisterType::Enum>(uiSignature & uiMask);
+  }
 
-    // Binary
-    0,                                           // FirstBinary,
-    ezExpression::RegisterType::FloatAndIntBits, // Add,
-    ezExpression::RegisterType::FloatAndIntBits, // Subtract,
-    ezExpression::RegisterType::FloatAndIntBits, // Multiply,
-    ezExpression::RegisterType::FloatAndIntBits, // Divide,
-    ezExpression::RegisterType::IntBit,          // Modulo,
-    ezExpression::RegisterType::FloatAndIntBits, // Pow,
-    ezExpression::RegisterType::FloatAndIntBits, // Min,
-    ezExpression::RegisterType::FloatAndIntBits, // Max,
-    ezExpression::RegisterType::IntBit,          // BitshiftLeft,
-    ezExpression::RegisterType::IntBit,          // BitshiftRight,
-    ezExpression::RegisterType::IntBit,          // BitwiseAnd,
-    ezExpression::RegisterType::IntBit,          // BitwiseXor,
-    ezExpression::RegisterType::IntBit,          // BitwiseOr,
-    ezExpression::RegisterType::AnyBits,         // Equal,
-    ezExpression::RegisterType::AnyBits,         // NotEqual,
-    ezExpression::RegisterType::FloatAndIntBits, // Less,
-    ezExpression::RegisterType::FloatAndIntBits, // LessEqual,
-    ezExpression::RegisterType::FloatAndIntBits, // Greater,
-    ezExpression::RegisterType::FloatAndIntBits, // GreaterEqual,
-    ezExpression::RegisterType::BoolBit,         // LogicalAnd,
-    ezExpression::RegisterType::BoolBit,         // LogicalOr,
-    0,                                           // LastBinary,
+  static constexpr ezExpression::RegisterType::Enum GetArgumentTypeFromSignature(ezUInt16 uiSignature, ezUInt32 uiArgumentIndex)
+  {
+    ezUInt32 uiShift = ezExpression::RegisterType::MaxNumBits * (uiArgumentIndex + 1);
+    ezUInt32 uiMask = EZ_BIT(ezExpression::RegisterType::MaxNumBits) - 1;
+    return static_cast<ezExpression::RegisterType::Enum>((uiSignature >> uiShift) & uiMask);
+  }
 
-    // Ternary
-    0,                                           // FirstTernary,
-    ezExpression::RegisterType::FloatAndIntBits, // Clamp,
-    ezExpression::RegisterType::AnyBits,         // Select,
-    ezExpression::RegisterType::FloatBit,        // Lerp,
-    0,                                           // LastTernary,
+#define SIG1(r, a) BuildSignature(ezExpression::RegisterType::r, ezExpression::RegisterType::a)
+#define SIG2(r, a, b) BuildSignature(ezExpression::RegisterType::r, ezExpression::RegisterType::a, ezExpression::RegisterType::b)
+#define SIG3(r, a, b, c) BuildSignature(ezExpression::RegisterType::r, ezExpression::RegisterType::a, ezExpression::RegisterType::b, ezExpression::RegisterType::c)
 
-    ezExpression::RegisterType::AnyBits, // Constant,
-    ezExpression::RegisterType::AnyBits, // Input,
-    ezExpression::RegisterType::AnyBits, // Output,
-
-    ezExpression::RegisterType::AnyBits, // FunctionCall,
-    ezExpression::RegisterType::AnyBits, // ConstructorCall,
+  struct Overloads
+  {
+    ezUInt16 m_Signatures[4] = {};
   };
 
-  static_assert(EZ_ARRAY_SIZE(s_uiNodeTypeValidDataTypes) == ezExpressionAST::NodeType::Count);
+  static Overloads s_NodeTypeOverloads[] = {
+    {}, // Invalid,
+
+    // Unary
+    {},                                   // FirstUnary,
+    {SIG1(Float, Float), SIG1(Int, Int)}, // Negate,
+    {SIG1(Float, Float), SIG1(Int, Int)}, // Absolute,
+    {SIG1(Float, Float), SIG1(Int, Int)}, // Saturate,
+    {SIG1(Float, Float)},                 // Sqrt,
+    {SIG1(Float, Float)},                 // Exp,
+    {SIG1(Float, Float)},                 // Exp2,
+    {SIG1(Float, Float)},                 // Log,
+    {SIG1(Float, Float)},                 // Log2,
+    {SIG1(Float, Float)},                 // Log10,
+    {SIG1(Float, Float)},                 // Sin,
+    {SIG1(Float, Float)},                 // Cos,
+    {SIG1(Float, Float)},                 // Tan,
+    {SIG1(Float, Float)},                 // ASin,
+    {SIG1(Float, Float)},                 // ACos,
+    {SIG1(Float, Float)},                 // ATan,
+    {SIG1(Float, Float)},                 // RadToDeg,
+    {SIG1(Float, Float)},                 // DegToRad,
+    {SIG1(Float, Float)},                 // Round,
+    {SIG1(Float, Float)},                 // Floor,
+    {SIG1(Float, Float)},                 // Ceil,
+    {SIG1(Float, Float)},                 // Trunc,
+    {SIG1(Float, Float)},                 // Frac,
+    {SIG1(Int, Int)},                     // BitwiseNot,
+    {SIG1(Bool, Bool)},                   // LogicalNot,
+    {},                                   // TypeConversion,
+    {},                                   // LastUnary,
+
+    // Binary
+    {},                                                                       // FirstBinary,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Add,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Subtract,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Multiply,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Divide,
+    {SIG2(Int, Int, Int)},                                                    // Modulo,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Pow,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Min,
+    {SIG2(Float, Float, Float), SIG2(Int, Int, Int)},                         // Max,
+    {SIG2(Int, Int, Int)},                                                    // BitshiftLeft,
+    {SIG2(Int, Int, Int)},                                                    // BitshiftRight,
+    {SIG2(Int, Int, Int)},                                                    // BitwiseAnd,
+    {SIG2(Int, Int, Int)},                                                    // BitwiseXor,
+    {SIG2(Int, Int, Int)},                                                    // BitwiseOr,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int), SIG2(Bool, Bool, Bool)}, // Equal,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int), SIG2(Bool, Bool, Bool)}, // NotEqual,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int)},                         // Less,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int)},                         // LessEqual,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int)},                         // Greater,
+    {SIG2(Bool, Float, Float), SIG2(Bool, Int, Int)},                         // GreaterEqual,
+    {SIG2(Bool, Bool, Bool)},                                                 // LogicalAnd,
+    {SIG2(Bool, Bool, Bool)},                                                 // LogicalOr,
+    {},                                                                       // LastBinary,
+
+    // Ternary
+    {},                                                                                         // FirstTernary,
+    {SIG3(Float, Float, Float, Float), SIG3(Int, Int, Int, Int)},                               // Clamp,
+    {SIG3(Float, Bool, Float, Float), SIG3(Int, Bool, Int, Int), SIG3(Bool, Bool, Bool, Bool)}, // Select,
+    {SIG3(Float, Float, Float, Float)},                                                         // Lerp,
+    {},                                                                                         // LastTernary,
+
+    {}, // Constant,
+    {}, // Input,
+    {}, // Output,
+
+    {}, // FunctionCall,
+    {}, // ConstructorCall,
+  };
+
+  static_assert(EZ_ARRAY_SIZE(s_NodeTypeOverloads) == ezExpressionAST::NodeType::Count);
 } // namespace
+
+#undef SIG1
+#undef SIG2
+#undef SIG3
 
 // static
 const char* ezExpressionAST::NodeType::GetName(Enum nodeType)
@@ -211,22 +250,25 @@ const char* ezExpressionAST::NodeType::GetName(Enum nodeType)
 namespace
 {
   static ezVariantType::Enum s_DataTypeVariantTypes[] = {
-    ezVariantType::Float,   // Float,
-    ezVariantType::Vector2, // Float2,
-    ezVariantType::Vector3, // Float3,
-    ezVariantType::Vector4, // Float4,
-
-    ezVariantType::Int32,    // Int,
-    ezVariantType::Vector2I, // Int2,
-    ezVariantType::Vector3I, // Int3,
-    ezVariantType::Vector4I, // Int4,
+    ezVariantType::Invalid, // Unknown,
+    ezVariantType::Invalid, // Unknown2,
+    ezVariantType::Invalid, // Unknown3,
+    ezVariantType::Invalid, // Unknown4,
 
     ezVariantType::Bool,    // Bool,
     ezVariantType::Invalid, // Bool2,
     ezVariantType::Invalid, // Bool3,
     ezVariantType::Invalid, // Bool4,
 
-    ezVariantType::Invalid, // Unknown,
+    ezVariantType::Int32,    // Int,
+    ezVariantType::Vector2I, // Int2,
+    ezVariantType::Vector3I, // Int3,
+    ezVariantType::Vector4I, // Int4,
+
+    ezVariantType::Float,   // Float,
+    ezVariantType::Vector2, // Float2,
+    ezVariantType::Vector3, // Float3,
+    ezVariantType::Vector4, // Float4,
   };
   static_assert(EZ_ARRAY_SIZE(s_DataTypeVariantTypes) == (size_t)ezExpressionAST::DataType::Count);
 
@@ -264,22 +306,25 @@ namespace
   static_assert(ezExpressionAST::DataType::Unknown >> 2 == ezExpression::RegisterType::Unknown);
 
   static const char* s_szDataTypeNames[] = {
-    "Float",  // Float,
-    "Float2", // Float2,
-    "Float3", // Float3,
-    "Float4", // Float4,
-
-    "Int",  // Int,
-    "Int2", // Int2,
-    "Int3", // Int3,
-    "Int4", // Int4,
+    "Unknown",  // Unknown,
+    "Unknown2", // Unknown2,
+    "Unknown3", // Unknown3,
+    "Unknown4", // Unknown4,
 
     "Bool",  // Bool,
     "Bool2", // Bool2,
     "Bool3", // Bool3,
     "Bool4", // Bool4,
 
-    "Unknown", // Unknown,
+    "Int",  // Int,
+    "Int2", // Int2,
+    "Int3", // Int3,
+    "Int4", // Int4,
+
+    "Float",  // Float,
+    "Float2", // Float2,
+    "Float3", // Float3,
+    "Float4", // Float4,
   };
 
   static_assert(EZ_ARRAY_SIZE(s_szDataTypeNames) == ezExpressionAST::DataType::Count);
@@ -301,17 +346,6 @@ ezExpressionAST::DataType::Enum ezExpressionAST::DataType::FromStreamType(ezProc
 }
 
 // static
-ezExpressionAST::DataType::Enum ezExpressionAST::DataType::ClampToSupportedDataTypes(Enum dataType, ezUInt32 uiSupportedDataTypes)
-{
-  auto lowerType = static_cast<ezExpression::RegisterType::Enum>(ezMath::FirstBitLow(uiSupportedDataTypes));
-  auto upperType = static_cast<ezExpression::RegisterType::Enum>(ezMath::FirstBitHigh(uiSupportedDataTypes));
-  if (dataType == Unknown && lowerType != upperType)
-    return Unknown;
-
-  return ezMath::Clamp(dataType, FromRegisterType(lowerType), FromRegisterType(upperType));
-}
-
-// static
 const char* ezExpressionAST::DataType::GetName(Enum dataType)
 {
   EZ_ASSERT_DEBUG(dataType >= 0 && dataType < EZ_ARRAY_SIZE(s_szDataTypeNames), "Out of bounds access");
@@ -327,44 +361,47 @@ ezExpressionAST::ezExpressionAST()
 
 ezExpressionAST::~ezExpressionAST() {}
 
-ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum dataType /*= DataType::Unknown*/)
+ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum returnType /*= DataType::Unknown*/)
 {
   EZ_ASSERT_DEBUG(NodeType::IsUnary(type), "Type '{}' is not an unary operator", NodeType::GetName(type));
 
   auto pUnaryOperator = EZ_NEW(&m_Allocator, UnaryOperator);
   pUnaryOperator->m_Type = type;
-  pUnaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
-  pUnaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
+  pUnaryOperator->m_ReturnType = returnType;
   pUnaryOperator->m_pOperand = pOperand;
+
+  ResolveOverloads(pUnaryOperator);
 
   return pUnaryOperator;
 }
 
-ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand, DataType::Enum dataType /*= DataType::Unknown*/)
+ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand)
 {
   EZ_ASSERT_DEBUG(NodeType::IsBinary(type), "Type '{}' is not a binary operator", NodeType::GetName(type));
 
   auto pBinaryOperator = EZ_NEW(&m_Allocator, BinaryOperator);
   pBinaryOperator->m_Type = type;
-  pBinaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
-  pBinaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
+  pBinaryOperator->m_ReturnType = DataType::Unknown;
   pBinaryOperator->m_pLeftOperand = pLeftOperand;
   pBinaryOperator->m_pRightOperand = pRightOperand;
+
+  ResolveOverloads(pBinaryOperator);
 
   return pBinaryOperator;
 }
 
-ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand, DataType::Enum dataType /*= DataType::Unknown*/)
+ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand)
 {
   EZ_ASSERT_DEBUG(NodeType::IsTernary(type), "Type '{}' is not a ternary operator", NodeType::GetName(type));
 
   auto pTernaryOperator = EZ_NEW(&m_Allocator, TernaryOperator);
   pTernaryOperator->m_Type = type;
-  pTernaryOperator->m_DataType = DataType::ClampToSupportedDataTypes(dataType, s_uiNodeTypeValidDataTypes[type]);
-  pTernaryOperator->m_uiSupportedDataTypes = s_uiNodeTypeValidDataTypes[type];
+  pTernaryOperator->m_ReturnType = DataType::Unknown;
   pTernaryOperator->m_pFirstOperand = pFirstOperand;
   pTernaryOperator->m_pSecondOperand = pSecondOperand;
   pTernaryOperator->m_pThirdOperand = pThirdOperand;
+
+  ResolveOverloads(pTernaryOperator);
 
   return pTernaryOperator;
 }
@@ -376,7 +413,7 @@ ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& valu
 
   auto pConstant = EZ_NEW(&m_Allocator, Constant);
   pConstant->m_Type = NodeType::Constant;
-  pConstant->m_DataType = dataType;
+  pConstant->m_ReturnType = dataType;
   pConstant->m_Value = value.ConvertTo(DataType::GetVariantType(dataType));
 
   EZ_ASSERT_DEV(pConstant->m_Value.IsValid(), "Invalid constant value or conversion to target data type failed");
@@ -388,7 +425,7 @@ ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezExpression::StreamD
 {
   auto pInput = EZ_NEW(&m_Allocator, Input);
   pInput->m_Type = NodeType::Input;
-  pInput->m_DataType = DataType::FromStreamType(desc.m_DataType);
+  pInput->m_ReturnType = DataType::FromStreamType(desc.m_DataType);
   pInput->m_Desc = desc;
 
   return pInput;
@@ -398,7 +435,7 @@ ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::Strea
 {
   auto pOutput = EZ_NEW(&m_Allocator, Output);
   pOutput->m_Type = NodeType::Output;
-  pOutput->m_DataType = DataType::FromStreamType(desc.m_DataType);
+  pOutput->m_ReturnType = DataType::FromStreamType(desc.m_DataType);
   pOutput->m_Desc = desc;
   pOutput->m_pExpression = pExpression;
 
@@ -407,21 +444,32 @@ ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::Strea
 
 ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpression::FunctionDesc& desc)
 {
+  return CreateFunctionCall(ezMakeArrayPtr(&desc, 1));
+}
+
+ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs)
+{
   auto pFunctionCall = EZ_NEW(&m_Allocator, FunctionCall);
   pFunctionCall->m_Type = NodeType::FunctionCall;
-  pFunctionCall->m_DataType = DataType::FromRegisterType(desc.m_OutputType);
-  pFunctionCall->m_Desc = desc;
+  pFunctionCall->m_ReturnType = DataType::Unknown;
+
+  for (auto& desc : descs)
+  {
+    auto it = m_FunctionDescs.Insert(desc);
+
+    pFunctionCall->m_Descs.PushBack(&it.Key());
+  }
 
   return pFunctionCall;
 }
 
 ezExpressionAST::ConstructorCall* ezExpressionAST::CreateConstructorCall(DataType::Enum dataType)
 {
-  EZ_ASSERT_DEV(dataType < DataType::Unknown, "Invalid data type for constructor");
+  EZ_ASSERT_DEV(dataType >= DataType::Bool, "Invalid data type for constructor");
 
   auto pConstructorCall = EZ_NEW(&m_Allocator, ConstructorCall);
   pConstructorCall->m_Type = NodeType::ConstructorCall;
-  pConstructorCall->m_DataType = dataType;
+  pConstructorCall->m_ReturnType = dataType;
 
   return pConstructorCall;
 }
@@ -504,37 +552,107 @@ ezArrayPtr<const ezExpressionAST::Node*> ezExpressionAST::GetChildren(const Node
   return ezArrayPtr<const Node*>();
 }
 
-ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex)
+void ezExpressionAST::ResolveOverloads(Node* pNode)
 {
-  NodeType::Enum nodeType = pNode->m_Type;
-  DataType::Enum dataType = pNode->m_DataType;
-  EZ_ASSERT_DEV(dataType != DataType::Unknown, "Data type must not be unknown");
-  if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsOutput(nodeType))
+  if (pNode->m_uiOverloadIndex != 0xFF)
   {
-    if (nodeType == NodeType::TypeConversion)
-    {
-      return DataType::Unknown;
-    }
-
-    return dataType;
+    // already resolved
+    return;
   }
-  else if (NodeType::IsTernary(nodeType))
-  {
-    if (nodeType == NodeType::Select && uiChildIndex == 0)
-    {
-      return DataType::FromRegisterType(ezExpression::RegisterType::Bool, DataType::GetElementCount(dataType));
-    }
 
-    return dataType;
+  const NodeType::Enum nodeType = pNode->m_Type;
+  if (nodeType == NodeType::TypeConversion)
+  {
+    EZ_ASSERT_DEV(pNode->m_ReturnType != DataType::Unknown, "Return type must be specified for conversion nodes");
+    pNode->m_uiOverloadIndex = 0;
+    return;
+  }
+
+  if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsTernary(nodeType))
+  {
+    auto children = GetChildren(pNode);
+    ezUInt32 uiBestMatchDistance = ezInvalidIndex;
+
+    for (ezUInt32 uiSigIndex = 0; uiSigIndex < EZ_ARRAY_SIZE(Overloads::m_Signatures); ++uiSigIndex)
+    {
+      const ezUInt16 uiSignature = s_NodeTypeOverloads[nodeType].m_Signatures[uiSigIndex];
+      if (uiSignature == 0)
+        break;
+
+      ezUInt32 uiMatchDistance = 0;
+      for (ezUInt32 i = 0; i < children.GetCount(); ++i)
+      {
+        auto& pChildNode = children[i];
+        if (pChildNode == nullptr || pChildNode->m_ReturnType == DataType::Unknown)
+        {
+          // Can't resolve yet
+          return;
+        }
+
+        ezUInt32 uiDistance = 0;
+        auto childType = DataType::GetRegisterType(pChildNode->m_ReturnType);
+        auto expectedType = GetArgumentTypeFromSignature(uiSignature, i);
+
+        // Expected type is 'bigger', e.g. expected type is float but child type is int
+        if (expectedType > childType)
+        {
+          uiDistance = 1;
+        }
+        else if (expectedType < childType)
+        {
+          // Penalty to prevent 'narrowing' conversions
+          uiDistance = ezExpression::RegisterType::Count;
+        }
+        uiMatchDistance += uiDistance;
+      }
+
+      if (uiMatchDistance < uiBestMatchDistance)
+      {
+        pNode->m_ReturnType = DataType::FromRegisterType(GetReturnTypeFromSignature(uiSignature));
+        pNode->m_uiOverloadIndex = static_cast<ezUInt8>(uiSigIndex);
+        uiBestMatchDistance = uiMatchDistance;
+      }
+    }
   }
   else if (NodeType::IsFunctionCall(nodeType))
   {
-    auto& desc = static_cast<const FunctionCall*>(pNode)->m_Desc;
-    return DataType::FromRegisterType(desc.m_InputTypes[uiChildIndex]);
+    EZ_ASSERT_NOT_IMPLEMENTED;
+  }
+}
+
+ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex)
+{
+  const NodeType::Enum nodeType = pNode->m_Type;
+  const DataType::Enum returnType = pNode->m_ReturnType;
+  const ezUInt32 uiOverloadIndex = pNode->m_uiOverloadIndex;
+  EZ_ASSERT_DEV(returnType != DataType::Unknown, "Return type must not be unknown");
+
+  if (nodeType == NodeType::TypeConversion)
+  {
+    return DataType::Unknown;
+  }
+  else if (NodeType::IsUnary(nodeType) || NodeType::IsBinary(nodeType) || NodeType::IsTernary(nodeType))
+  {
+    EZ_ASSERT_DEV(uiOverloadIndex != 0xFF, "Unresolved overload");
+    ezUInt16 uiSignature = s_NodeTypeOverloads[nodeType].m_Signatures[uiOverloadIndex];
+    return DataType::FromRegisterType(GetArgumentTypeFromSignature(uiSignature, uiChildIndex));
+  }
+  else if (NodeType::IsOutput(nodeType))
+  {
+    return returnType;
+  }
+  else if (NodeType::IsFunctionCall(nodeType))
+  {
+    EZ_ASSERT_DEV(uiOverloadIndex != 0xFF, "Unresolved overload");
+
+    auto pDesc = static_cast<const FunctionCall*>(pNode)->m_Descs[uiOverloadIndex];
+    return DataType::FromRegisterType(pDesc->m_InputTypes[uiChildIndex]);
   }
   else if (NodeType::IsConstructorCall(nodeType))
   {
-    return DataType::FromRegisterType(DataType::GetRegisterType(dataType));
+    // EZ_ASSERT_DEV(uiOverloadIndex != 0xFF, "Unresolved overload");
+
+    return DataType::FromRegisterType(DataType::GetRegisterType(returnType));
   }
 
   EZ_ASSERT_NOT_IMPLEMENTED;
@@ -563,7 +681,7 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
       continue;
 
     sTmp = NodeType::GetName(pOutputNode->m_Type);
-    sTmp.Append("(", DataType::GetName(pOutputNode->m_DataType), ")");
+    sTmp.Append("(", DataType::GetName(pOutputNode->m_ReturnType), ")");
     sTmp.Append(": ", pOutputNode->m_Desc.m_sName);
 
     ezDGMLGraph::NodeDesc nd;
@@ -587,7 +705,7 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
       {
         NodeType::Enum nodeType = currentNodeInfo.m_pNode->m_Type;
         sTmp = NodeType::GetName(nodeType);
-        sTmp.Append("(", DataType::GetName(currentNodeInfo.m_pNode->m_DataType), ")");
+        sTmp.Append("(", DataType::GetName(currentNodeInfo.m_pNode->m_ReturnType), ")");
         ezColor color = ezColor::White;
 
         if (NodeType::IsConstant(nodeType))
@@ -602,7 +720,8 @@ void ezExpressionAST::PrintGraph(ezDGMLGraph& graph) const
         }
         else if (NodeType::IsFunctionCall(nodeType))
         {
-          sTmp.Append(": ", static_cast<const FunctionCall*>(currentNodeInfo.m_pNode)->m_Desc.m_sName);
+          auto pDesc = static_cast<const FunctionCall*>(currentNodeInfo.m_pNode)->m_Descs[currentNodeInfo.m_pNode->m_uiOverloadIndex];
+          sTmp.Append(": ", pDesc->m_sName);
           color = ezColorScheme::LightUI(ezColorScheme::Yellow);
         }
 

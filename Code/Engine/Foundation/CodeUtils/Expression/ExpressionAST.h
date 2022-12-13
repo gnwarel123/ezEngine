@@ -34,6 +34,8 @@ public:
       ASin,
       ACos,
       ATan,
+      RadToDeg,
+      DegToRad,
       Round,
       Floor,
       Ceil,
@@ -104,25 +106,29 @@ public:
 
     enum Enum
     {
-      Float,
-      Float2,
-      Float3,
-      Float4,
-
-      Int,
-      Int2,
-      Int3,
-      Int4,
+      Unknown,
+      Unknown2,
+      Unknown3,
+      Unknown4,
 
       Bool,
       Bool2,
       Bool3,
       Bool4,
 
-      Unknown,
-      Default = Unknown,
+      Int,
+      Int2,
+      Int3,
+      Int4,
 
-      Count
+      Float,
+      Float2,
+      Float3,
+      Float4,
+
+      Count,
+
+      Default = Unknown,
     };
 
     static ezVariantType::Enum GetVariantType(Enum dataType);
@@ -141,22 +147,15 @@ public:
 
     EZ_ALWAYS_INLINE static ezUInt32 GetElementCount(Enum dataType) { return (dataType & 0x3) + 1; }
 
-    EZ_ALWAYS_INLINE static bool IsSupported(Enum dataType, ezUInt32 uiSupportedDataTypes)
-    {
-      ezUInt32 dataTypeBit = EZ_BIT(DataType::GetRegisterType(dataType));
-      return (uiSupportedDataTypes & dataTypeBit) != 0;
-    }
-
-    static Enum ClampToSupportedDataTypes(Enum dataType, ezUInt32 uiSupportedDataTypes);
-
     static const char* GetName(Enum dataType);
   };
 
   struct Node
   {
     ezEnum<NodeType> m_Type;
-    ezEnum<DataType> m_DataType;
-    ezUInt8 m_uiSupportedDataTypes = 0;
+    ezEnum<DataType> m_ReturnType;
+    ezUInt8 m_uiOverloadIndex = 0xFF;
+    ezUInt8 m_uiNumElements = 0;
   };
 
   struct UnaryOperator : public Node
@@ -195,7 +194,7 @@ public:
 
   struct FunctionCall : public Node
   {
-    ezExpression::FunctionDesc m_Desc;
+    ezSmallArray<const ezExpression::FunctionDesc*, 1> m_Descs;
     ezSmallArray<Node*, 8> m_Arguments;
   };
 
@@ -208,18 +207,20 @@ public:
   ezExpressionAST();
   ~ezExpressionAST();
 
-  UnaryOperator* CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum dataType = DataType::Unknown);
-  BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand, DataType::Enum dataType = DataType::Unknown);
-  TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand, DataType::Enum dataType = DataType::Unknown);
+  UnaryOperator* CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum returnType = DataType::Unknown);
+  BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand);
+  TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand);
   Constant* CreateConstant(const ezVariant& value, DataType::Enum dataType = DataType::Float);
   Input* CreateInput(const ezExpression::StreamDesc& desc);
   Output* CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression);
   FunctionCall* CreateFunctionCall(const ezExpression::FunctionDesc& desc);
+  FunctionCall* CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs);
   ConstructorCall* CreateConstructorCall(DataType::Enum dataType);
 
   static ezArrayPtr<Node*> GetChildren(Node* pNode);
   static ezArrayPtr<const Node*> GetChildren(const Node* pNode);
 
+  static void ResolveOverloads(Node* pNode);
   static DataType::Enum GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex);
 
   void PrintGraph(ezDGMLGraph& graph) const;
@@ -234,4 +235,6 @@ public:
 
 private:
   ezStackAllocator<> m_Allocator;
+
+  ezSet<ezExpression::FunctionDesc> m_FunctionDescs;
 };
