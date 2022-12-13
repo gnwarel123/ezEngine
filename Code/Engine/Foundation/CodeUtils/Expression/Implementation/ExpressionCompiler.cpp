@@ -18,6 +18,17 @@ namespace
       case ezExpressionAST::NodeType::Sqrt:
         return ezExpressionByteCode::OpCode::SqrtF_R;
 
+      case ezExpressionAST::NodeType::Exp:
+        return ezExpressionByteCode::OpCode::ExpF_R;      
+      case ezExpressionAST::NodeType::Ln:
+        return ezExpressionByteCode::OpCode::LnF_R;
+      case ezExpressionAST::NodeType::Log2:
+        return ezExpressionByteCode::OpCode::Log2F_R;
+      case ezExpressionAST::NodeType::Log10:
+        return ezExpressionByteCode::OpCode::Log10F_R;
+      case ezExpressionAST::NodeType::Pow2:
+        return ezExpressionByteCode::OpCode::Pow2F_R;
+
       case ezExpressionAST::NodeType::Sin:
         return ezExpressionByteCode::OpCode::SinF_R;
       case ezExpressionAST::NodeType::Cos:

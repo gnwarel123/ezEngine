@@ -379,6 +379,31 @@ ezResult ezExpressionVM::ExecuteUnaryOp(const ezExpressionByteCode::StorageType*
       r->f = a->f.GetSqrt();
       END_OP_LOOP_UNARY();
 
+    case ezExpressionByteCode::OpCode::ExpF_R:
+      BEGIN_OP_LOOP();
+      r->f = ezSimdMath::Exp(a->f);
+      END_OP_LOOP_UNARY();
+
+    case ezExpressionByteCode::OpCode::LnF_R:
+      BEGIN_OP_LOOP();
+      r->f = ezSimdMath::Ln(a->f);
+      END_OP_LOOP_UNARY();
+
+    case ezExpressionByteCode::OpCode::Log2F_R:
+      BEGIN_OP_LOOP();
+      r->f = ezSimdMath::Log2(a->f);
+      END_OP_LOOP_UNARY();
+
+    case ezExpressionByteCode::OpCode::Log10F_R:
+      BEGIN_OP_LOOP();
+      r->f = ezSimdMath::Log10(a->f);
+      END_OP_LOOP_UNARY();
+
+    case ezExpressionByteCode::OpCode::Pow2F_R:
+      BEGIN_OP_LOOP();
+      r->f = ezSimdMath::Pow2(a->f);
+      END_OP_LOOP_UNARY();
+
     case ezExpressionByteCode::OpCode::SinF_R:
       BEGIN_OP_LOOP();
       r->f = ezSimdMath::Sin(a->f);

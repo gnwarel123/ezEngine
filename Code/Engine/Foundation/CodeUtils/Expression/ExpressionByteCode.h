@@ -22,6 +22,12 @@ public:
       AbsI_R,
       SqrtF_R,
 
+      ExpF_R,
+      LnF_R,
+      Log2F_R,
+      Log10F_R,
+      Pow2F_R,
+
       SinF_R,
       CosF_R,
       TanF_R,
@@ -29,6 +35,14 @@ public:
       ASinF_R,
       ACosF_R,
       ATanF_R,
+
+      RoundF_R,
+      FloorF_R,
+      CeilF_R,
+      TruncF_R,
+
+      NotI_R,
+      NotB_R,
 
       IToF_R,
       FToI_R,
@@ -80,7 +94,15 @@ public:
 
       LastBinaryWithConstant,
 
-      FirstSpecial = 400,
+      FirstTernary = 400,
+
+      SelF_RRR,
+      SelI_RRR,
+      SelB_RRR,
+
+      LastTernary,
+
+      FirstSpecial = 500,
 
       MovX_R,
       MovX_C,

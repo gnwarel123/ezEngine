@@ -139,10 +139,10 @@ void ezExpressionParser::RegisterBuiltinFunctions()
   m_BuiltinFunctions.Insert(ezMakeHashedString("saturate"), ezExpressionAST::NodeType::Saturate);
   m_BuiltinFunctions.Insert(ezMakeHashedString("sqrt"), ezExpressionAST::NodeType::Sqrt);
   m_BuiltinFunctions.Insert(ezMakeHashedString("exp"), ezExpressionAST::NodeType::Exp);
-  m_BuiltinFunctions.Insert(ezMakeHashedString("exp2"), ezExpressionAST::NodeType::Exp2);
-  m_BuiltinFunctions.Insert(ezMakeHashedString("log"), ezExpressionAST::NodeType::Log);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("ln"), ezExpressionAST::NodeType::Ln);
   m_BuiltinFunctions.Insert(ezMakeHashedString("log2"), ezExpressionAST::NodeType::Log2);
   m_BuiltinFunctions.Insert(ezMakeHashedString("log10"), ezExpressionAST::NodeType::Log10);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("pow2"), ezExpressionAST::NodeType::Pow2);
   m_BuiltinFunctions.Insert(ezMakeHashedString("sin"), ezExpressionAST::NodeType::Sin);
   m_BuiltinFunctions.Insert(ezMakeHashedString("cos"), ezExpressionAST::NodeType::Cos);
   m_BuiltinFunctions.Insert(ezMakeHashedString("tan"), ezExpressionAST::NodeType::Tan);
@@ -156,6 +156,7 @@ void ezExpressionParser::RegisterBuiltinFunctions()
   m_BuiltinFunctions.Insert(ezMakeHashedString("frac"), ezExpressionAST::NodeType::Frac);
 
   // Binary
+  m_BuiltinFunctions.Insert(ezMakeHashedString("log"), ezExpressionAST::NodeType::Log);
   m_BuiltinFunctions.Insert(ezMakeHashedString("pow"), ezExpressionAST::NodeType::Pow);
   m_BuiltinFunctions.Insert(ezMakeHashedString("min"), ezExpressionAST::NodeType::Min);
   m_BuiltinFunctions.Insert(ezMakeHashedString("max"), ezExpressionAST::NodeType::Max);

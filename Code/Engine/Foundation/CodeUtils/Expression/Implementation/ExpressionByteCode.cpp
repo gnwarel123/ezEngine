@@ -17,6 +17,12 @@ namespace
     "AbsI_R",
     "SqrtF_R",
 
+    "ExpF_R",
+    "LnF_R",
+    "Log2F_R",
+    "Log10F_R",
+    "Pow2F_R",
+
     "SinF_R",
     "CosF_R",
     "TanF_R",
@@ -24,6 +30,14 @@ namespace
     "ASinF_R",
     "ACosF_R",
     "ATanF_R",
+
+    "RoundF_R",
+    "FloorF_R",
+    "CeilF_R",
+    "TruncF_R",
+
+    "NotB_R",
+    "NotI_R",
 
     "IToF_R",
     "FToI_R",
@@ -73,6 +87,14 @@ namespace
     "MaxI_CR",
   };
 
+  static constexpr const char* s_szOpCodeNames_Ternary[] = {
+    "",
+
+    "SelF_RRR",
+    "SelI_RRR",
+    "SelB_RRR",
+  };
+
   static constexpr const char* s_szOpCodeNames_Special[] = {
     "",
 
@@ -89,6 +111,7 @@ namespace
   static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Unary) == ezExpressionByteCode::OpCode::LastUnary - ezExpressionByteCode::OpCode::FirstUnary);
   static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Binary) == ezExpressionByteCode::OpCode::LastBinary - ezExpressionByteCode::OpCode::FirstBinary);
   static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_BinaryWithConstant) == ezExpressionByteCode::OpCode::LastBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinaryWithConstant);
+  static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Ternary) == ezExpressionByteCode::OpCode::LastTernary - ezExpressionByteCode::OpCode::FirstTernary);
   static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames_Special) == ezExpressionByteCode::OpCode::LastSpecial - ezExpressionByteCode::OpCode::FirstSpecial);
   static_assert(ezExpressionByteCode::OpCode::LastBinary - ezExpressionByteCode::OpCode::FirstBinary == ezExpressionByteCode::OpCode::LastBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinaryWithConstant);
 
@@ -97,6 +120,7 @@ namespace
     s_szOpCodeNames_Unary,
     s_szOpCodeNames_Binary,
     s_szOpCodeNames_BinaryWithConstant,
+    s_szOpCodeNames_Ternary,
     s_szOpCodeNames_Special,
   };
   static constexpr ezUInt32 s_uiOpCodeNameCounts[] = {
@@ -104,6 +128,7 @@ namespace
     EZ_ARRAY_SIZE(s_szOpCodeNames_Unary),
     EZ_ARRAY_SIZE(s_szOpCodeNames_Binary),
     EZ_ARRAY_SIZE(s_szOpCodeNames_BinaryWithConstant),
+    EZ_ARRAY_SIZE(s_szOpCodeNames_Ternary),
     EZ_ARRAY_SIZE(s_szOpCodeNames_Special),
   };
   static_assert(EZ_ARRAY_SIZE(s_szOpCodeNames) == EZ_ARRAY_SIZE(s_uiOpCodeNameCounts));

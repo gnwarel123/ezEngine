@@ -219,16 +219,14 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     // Sqrt
     EZ_TEST_FLOAT(TestInstruction("output = sqrt(a)", 25.0f), 5.0f, ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestInstruction("output = sqrt(a)", 2.0f), ezMath::Sqrt(2.0f), ezMath::DefaultEpsilon<float>());
-    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(25.0)"), 5.0f, ezMath::DefaultEpsilon<float>());
-    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(2.0)"), ezMath::Sqrt(2.0f), ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(25)"), 5.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = sqrt(2)"), ezMath::Sqrt(2.0f), ezMath::DefaultEpsilon<float>());
 
     // Exp
-    #if 0
     EZ_TEST_FLOAT(TestInstruction("output = exp(a)", 0.0f), 1.0f, ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestInstruction("output = exp(a)", 2.0f), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = exp(0.0)"), 1.0f, ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = exp(2.0)"), ezMath::Exp(2.0f), ezMath::DefaultEpsilon<float>());
-    #endif
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")

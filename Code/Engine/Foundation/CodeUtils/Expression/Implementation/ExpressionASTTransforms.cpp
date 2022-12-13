@@ -114,7 +114,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
       {
         return CreateConstant(pConstantNode->m_Value, returnType);
       }
-      else if (nodeType >= NodeType::Negate && nodeType <= NodeType::Sqrt)
+      else if (nodeType >= NodeType::Negate && nodeType <= NodeType::Saturate)
       {
         const double fValue = pConstantNode->m_Value.ConvertTo<double>();
 
@@ -126,8 +126,6 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
             return CreateConstant(ezMath::Abs(fValue), returnType);
           case NodeType::Saturate:
             return CreateConstant(ezMath::Saturate(fValue), returnType);
-          case NodeType::Sqrt:
-            return CreateConstant(ezMath::Sqrt(fValue), returnType);
         }
       }
       else
@@ -142,6 +140,10 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
 
         switch (nodeType)
         {
+          case NodeType::Sqrt:
+            return CreateConstant(ezMath::Sqrt(fValue));
+          case NodeType::Exp:
+            return CreateConstant(ezMath::Exp(fValue));
           case NodeType::Sin:
             return CreateConstant(ezMath::Sin(ezAngle::Radian(fValue)));
           case NodeType::Cos:

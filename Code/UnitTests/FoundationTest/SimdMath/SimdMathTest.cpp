@@ -4,11 +4,37 @@
 
 namespace
 {
-  ezSimdVec4f SimdDegree(float degree) { return ezSimdVec4f(ezAngle::Degree(degree)); }
+  ezSimdVec4f SimdDegree(float degree)
+  {
+    return ezSimdVec4f(ezAngle::Degree(degree));
+  }
 } // namespace
 
 EZ_CREATE_SIMPLE_TEST(SimdMath, SimdMath)
 {
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Exp")
+  {
+    EZ_TEST_BOOL(ezSimdMath::Exp(ezSimdVec4f(0.0f)).IsEqual(ezSimdVec4f(1.0f), 0.000001f).AllSet());
+    EZ_TEST_BOOL(ezSimdMath::Exp(ezSimdVec4f(1.0f)).IsEqual(ezSimdVec4f(2.7182818284f), 0.000001f).AllSet());
+    EZ_TEST_BOOL(ezSimdMath::Exp(ezSimdVec4f(2.0f)).IsEqual(ezSimdVec4f(7.3890560989f), 0.000001f).AllSet());
+  }  
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Ln")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Log2")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Log10")
+  {
+  }
+
+  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Pow2")
+  {
+  }
+
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Sin")
   {
     EZ_TEST_BOOL(ezSimdMath::Sin(SimdDegree(0.0f)).IsEqual(ezSimdVec4f(0.0f), 0.000001f).AllSet());

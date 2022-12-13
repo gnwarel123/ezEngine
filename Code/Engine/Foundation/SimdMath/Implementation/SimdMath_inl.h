@@ -3,6 +3,32 @@
 ///\todo optimize these methods if needed
 
 // static
+EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Exp(const ezSimdVec4f& f)
+{
+  return ezSimdVec4f(ezMath::Exp(f.x()), ezMath::Exp(f.y()), ezMath::Exp(f.z()), ezMath::Exp(f.w()));
+}
+
+//static
+EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Ln(const ezSimdVec4f& f)
+{
+}
+
+//static
+EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Log2(const ezSimdVec4f& f)
+{
+}
+
+//static
+EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Log10(const ezSimdVec4f& f)
+{
+}
+
+// static
+EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Pow2(const ezSimdVec4f& f)
+{
+}
+
+// static
 EZ_FORCE_INLINE ezSimdVec4f ezSimdMath::Sin(const ezSimdVec4f& f)
 {
   return ezSimdVec4f(ezMath::Sin(ezAngle::Radian(f.x())), ezMath::Sin(ezAngle::Radian(f.y())), ezMath::Sin(ezAngle::Radian(f.z())),
