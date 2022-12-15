@@ -6,10 +6,10 @@
 
 namespace
 {
-  static ezExpressionByteCode::OpCode::Enum NodeTypeToOpCode(ezExpressionAST::NodeType::Enum nodeType, ezExpressionAST::DataType::Enum returnType, bool bLeftIsConstant)
+  static ezExpressionByteCode::OpCode::Enum NodeTypeToOpCode(ezExpressionAST::NodeType::Enum nodeType, ezExpressionAST::DataType::Enum returnType, bool bRightIsConstant)
   {
     const ezExpression::RegisterType::Enum registerType = ezExpressionAST::DataType::GetRegisterType(returnType);
-    const ezUInt32 uiOffset = bLeftIsConstant ? ezExpressionByteCode::OpCode::FirstBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinary : 0;
+    const ezUInt32 uiOffset = bRightIsConstant ? ezExpressionByteCode::OpCode::FirstBinaryWithConstant - ezExpressionByteCode::OpCode::FirstBinary : 0;
 
     switch (nodeType)
     {
@@ -19,7 +19,7 @@ namespace
         return ezExpressionByteCode::OpCode::SqrtF_R;
 
       case ezExpressionAST::NodeType::Exp:
-        return ezExpressionByteCode::OpCode::ExpF_R;      
+        return ezExpressionByteCode::OpCode::ExpF_R;
       case ezExpressionAST::NodeType::Ln:
         return ezExpressionByteCode::OpCode::LnF_R;
       case ezExpressionAST::NodeType::Log2:
@@ -109,7 +109,7 @@ ezResult ezExpressionCompiler::Compile(ezExpressionAST& ast, ezExpressionByteCod
 
 ezResult ezExpressionCompiler::TransformAndOptimizeAST(ezExpressionAST& ast)
 {
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeDeductionAndConversion, &ast)));
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::InsertTypeConversions, &ast)));
   EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ReplaceUnsupportedInstructions, &ast)));
   EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
   EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::Validate, &ast)));
@@ -124,7 +124,7 @@ ezResult ezExpressionCompiler::BuildNodeInstructions(const ezExpressionAST& ast)
   auto& nodeStackTemp = m_NodeInstructions;
 
   // Build node instruction order aka post order tree traversal
-  for (ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
+  for (const ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       continue;
@@ -147,16 +147,16 @@ ezResult ezExpressionCompiler::BuildNodeInstructions(const ezExpressionAST& ast)
 
       if (ezExpressionAST::NodeType::IsBinary(pCurrentNode->m_Type))
       {
-        // Do not push the left operand if it is a constant, we don't want a separate mov instruction for it
-        // since all binary operators can take a constant as left operand in place.
         auto pBinary = static_cast<const ezExpressionAST::BinaryOperator*>(pCurrentNode);
-        bool bLeftIsConstant = ezExpressionAST::NodeType::IsConstant(pBinary->m_pLeftOperand->m_Type);
-        if (!bLeftIsConstant)
-        {
-          nodeStackTemp.PushBack(pBinary->m_pLeftOperand);
-        }
+        nodeStackTemp.PushBack(pBinary->m_pLeftOperand);
 
-        nodeStackTemp.PushBack(pBinary->m_pRightOperand);
+        // Do not push the right operand if it is a constant, we don't want a separate mov instruction for it
+        // since all binary operators can take a constant as right operand in place.
+        const bool bRightIsConstant = ezExpressionAST::NodeType::IsConstant(pBinary->m_pRightOperand->m_Type);
+        if (!bRightIsConstant)
+        {
+          nodeStackTemp.PushBack(pBinary->m_pRightOperand);
+        }
       }
       else
       {
@@ -300,14 +300,14 @@ ezResult ezExpressionCompiler::GenerateByteCode(const ezExpressionAST& ast, ezEx
       return EZ_FAILURE;
     }
 
-    bool bLeftIsConstant = false;
+    bool bRightIsConstant = false;
     if (ezExpressionAST::NodeType::IsBinary(nodeType))
     {
       auto pBinary = static_cast<const ezExpressionAST::BinaryOperator*>(pCurrentNode);
-      bLeftIsConstant = ezExpressionAST::NodeType::IsConstant(pBinary->m_pLeftOperand->m_Type);
+      bRightIsConstant = ezExpressionAST::NodeType::IsConstant(pBinary->m_pRightOperand->m_Type);
     }
 
-    const auto opCode = NodeTypeToOpCode(nodeType, returnType, bLeftIsConstant);
+    const auto opCode = NodeTypeToOpCode(nodeType, returnType, bRightIsConstant);
     if (opCode == ezExpressionByteCode::OpCode::Nop)
       return EZ_FAILURE;
 
@@ -325,17 +325,16 @@ ezResult ezExpressionCompiler::GenerateByteCode(const ezExpressionAST& ast, ezEx
 
       byteCode.PushBack(opCode);
       byteCode.PushBack(uiTargetRegister);
+      byteCode.PushBack(m_NodeToRegisterIndex[pBinary->m_pLeftOperand]);
 
-      if (bLeftIsConstant)
+      if (bRightIsConstant)
       {
-        EZ_SUCCEED_OR_RETURN(GenerateConstantByteCode(static_cast<const ezExpressionAST::Constant*>(pBinary->m_pLeftOperand), out_byteCode));
+        EZ_SUCCEED_OR_RETURN(GenerateConstantByteCode(static_cast<const ezExpressionAST::Constant*>(pBinary->m_pRightOperand), out_byteCode));
       }
       else
       {
-        byteCode.PushBack(m_NodeToRegisterIndex[pBinary->m_pLeftOperand]);
+        byteCode.PushBack(m_NodeToRegisterIndex[pBinary->m_pRightOperand]);
       }
-
-      byteCode.PushBack(m_NodeToRegisterIndex[pBinary->m_pRightOperand]);
     }
     else if (ezExpressionAST::NodeType::IsConstant(nodeType))
     {
@@ -436,7 +435,7 @@ ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, Transf
   m_NodeStack.Clear();
   m_TransformCache.Clear();
 
-  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
+  for (const ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       continue;
@@ -469,7 +468,7 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
   m_NodeInstructions.Clear();
   auto& nodeStackTemp = m_NodeInstructions;
 
-  for (ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
+  for (const ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       continue;
@@ -508,7 +507,7 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
     }
   }
 
-  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
+  for (const ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
   {
     EZ_SUCCEED_OR_RETURN(TransformOutputNode(pOutputNode, func));
   }
@@ -516,12 +515,12 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformNode(ezExpressionAST::Node*& pNode, TransformFunc func)
+ezResult ezExpressionCompiler::TransformNode(const ezExpressionAST::Node*& pNode, TransformFunc func)
 {
   if (pNode == nullptr)
     return EZ_SUCCESS;
 
-  ezExpressionAST::Node* pNewNode = nullptr;
+  const ezExpressionAST::Node* pNewNode = nullptr;
   if (m_TransformCache.TryGetValue(pNode, pNewNode) == false)
   {
     pNewNode = func(pNode);
@@ -538,7 +537,7 @@ ezResult ezExpressionCompiler::TransformNode(ezExpressionAST::Node*& pNode, Tran
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformOutputNode(ezExpressionAST::Output*& pOutputNode, TransformFunc func)
+ezResult ezExpressionCompiler::TransformOutputNode(const ezExpressionAST::Output*& pOutputNode, TransformFunc func)
 {
   if (pOutputNode == nullptr)
     return EZ_SUCCESS;
@@ -548,7 +547,7 @@ ezResult ezExpressionCompiler::TransformOutputNode(ezExpressionAST::Output*& pOu
   {
     if (pNewOutput != nullptr && ezExpressionAST::NodeType::IsOutput(pNewOutput->m_Type))
     {
-      pOutputNode = static_cast<ezExpressionAST::Output*>(pNewOutput);
+      pOutputNode = static_cast<const ezExpressionAST::Output*>(pNewOutput);
     }
     else
     {

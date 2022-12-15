@@ -64,28 +64,40 @@ namespace
 
     "MaxF_RR",
     "MaxI_RR",
+
+    "ShlI_RR",
+    "ShrI_RR",
+    "AndI_RR",
+    "XorI_RR",
+    "OrI_RR",
   };
 
   static constexpr const char* s_szOpCodeNames_BinaryWithConstant[] = {
     "",
 
-    "AddF_CR",
-    "AddI_CR",
+    "AddF_RC",
+    "AddI_RC",
 
-    "SubF_CR",
-    "SubI_CR",
+    "SubF_RC",
+    "SubI_RC",
 
-    "MulF_CR",
-    "MulI_CR",
+    "MulF_RC",
+    "MulI_RC",
 
-    "DivF_CR",
-    "DivI_CR",
+    "DivF_RC",
+    "DivI_RC",
 
-    "MinF_CR",
-    "MinI_CR",
+    "MinF_RC",
+    "MinI_RC",
 
-    "MaxF_CR",
-    "MaxI_CR",
+    "MaxF_RC",
+    "MaxI_RC",
+
+    "ShlI_RC",
+    "ShrI_RC",
+    "AndI_RC",
+    "XorI_RC",
+    "OrI_RC",
   };
 
   static constexpr const char* s_szOpCodeNames_Ternary[] = {

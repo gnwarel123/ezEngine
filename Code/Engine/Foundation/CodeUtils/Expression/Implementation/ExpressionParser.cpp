@@ -264,7 +264,7 @@ ezResult ezExpressionParser::ParseVariableDefinition(ezEnum<ezExpressionAST::Dat
   }
 
   EZ_SUCCEED_OR_RETURN(Expect("="));
-  ezExpressionAST::Node* pExpression = ParseExpression();
+  const ezExpressionAST::Node* pExpression = ParseExpression();
   if (pExpression == nullptr)
     return EZ_FAILURE;
 
@@ -281,7 +281,7 @@ ezResult ezExpressionParser::ParseAssignment()
   EZ_SUCCEED_OR_RETURN(Expect(ezTokenType::Identifier, &pIdentifierToken));
 
   const ezStringView sIdentifier = pIdentifierToken->m_DataView;
-  ezExpressionAST::Node* pVarNode = GetVariable(sIdentifier);
+  auto pVarNode = GetVariable(sIdentifier);
   if (pVarNode == nullptr)
   {
     ReportError(pIdentifierToken, "Syntax error, expected a valid variable");
@@ -307,7 +307,7 @@ ezResult ezExpressionParser::ParseAssignment()
     EZ_SUCCEED_OR_RETURN(Expect("="));
   }
 
-  ezExpressionAST::Node* pExpression = ParseExpression();
+  auto pExpression = ParseExpression();
   if (pExpression == nullptr)
     return EZ_FAILURE;
 
@@ -334,7 +334,7 @@ ezResult ezExpressionParser::ParseAssignment()
   return EZ_SUCCESS;
 }
 
-ezExpressionAST::Node* ezExpressionParser::ParseFactor()
+const ezExpressionAST::Node* ezExpressionParser::ParseFactor()
 {
   ezUInt32 uiIdentifierToken = 0;
   if (Accept(m_TokenStream, m_uiCurrentToken, ezTokenType::Identifier, &uiIdentifierToken))
@@ -386,7 +386,7 @@ ezExpressionAST::Node* ezExpressionParser::ParseFactor()
 
 // Parsing the expression - recursive parser using "precedence climbing".
 // http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm
-ezExpressionAST::Node* ezExpressionParser::ParseExpression(int iPrecedence /* = s_iLowestPrecedence*/)
+const ezExpressionAST::Node* ezExpressionParser::ParseExpression(int iPrecedence /* = s_iLowestPrecedence*/)
 {
   auto pExpression = ParseUnaryExpression();
   if (pExpression == nullptr)
@@ -410,7 +410,7 @@ ezExpressionAST::Node* ezExpressionParser::ParseExpression(int iPrecedence /* = 
   return pExpression;
 }
 
-ezExpressionAST::Node* ezExpressionParser::ParseUnaryExpression()
+const ezExpressionAST::Node* ezExpressionParser::ParseUnaryExpression()
 {
   while (Accept(m_TokenStream, m_uiCurrentToken, "+"))
   {
@@ -425,12 +425,12 @@ ezExpressionAST::Node* ezExpressionParser::ParseUnaryExpression()
   return ParseFactor();
 }
 
-ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunctionName)
+const ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunctionName)
 {
   // "(" of the function call
   const ezToken* pFunctionToken = m_TokenStream[m_uiCurrentToken - 1];
 
-  ezSmallArray<ezExpressionAST::Node*, 8> arguments;
+  ezSmallArray<const ezExpressionAST::Node*, 4> arguments;
   if (Accept(m_TokenStream, m_uiCurrentToken, ")") == false)
   {
     do
@@ -461,9 +461,7 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
     if (arguments.GetCount() != 1 && CheckArgumentCount(uiElementCount).Failed())
       return nullptr;
 
-    auto pConstructorCall = m_pAST->CreateConstructorCall(dataType);
-    pConstructorCall->m_Arguments = std::move(arguments);
-    return pConstructorCall;
+    return m_pAST->CreateConstructorCall(dataType, std::move(arguments));
   }
 
   ezEnum<ezExpressionAST::NodeType> builtinType;
@@ -502,9 +500,7 @@ ezExpressionAST::Node* ezExpressionParser::ParseFunctionCall(ezStringView sFunct
     if (CheckArgumentCount(pFunctionDesc->m_InputTypes.GetCount()).Failed())
       return nullptr;
 
-    auto pFunctionCall = m_pAST->CreateFunctionCall(*pFunctionDesc);
-    pFunctionCall->m_Arguments = std::move(arguments);
-    return pFunctionCall;
+    return m_pAST->CreateFunctionCall(*pFunctionDesc, std::move(arguments));
   }
 
   EZ_ASSERT_NOT_IMPLEMENTED;
@@ -550,7 +546,7 @@ bool ezExpressionParser::AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& o
   return false;
 }
 
-ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
+const ezExpressionAST::Node* ezExpressionParser::GetVariable(ezStringView sVarName)
 {
   ezHashedString sHashedVarName;
   sHashedVarName.Assign(sVarName);

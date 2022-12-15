@@ -359,11 +359,15 @@ const char* ezExpressionAST::DataType::GetName(Enum dataType)
 ezExpressionAST::ezExpressionAST()
   : m_Allocator("Expression AST", ezFoundation::GetAlignedAllocator())
 {
+  static_assert(sizeof(Node) == 8);
+  static_assert(sizeof(UnaryOperator) == 16);
+  static_assert(sizeof(BinaryOperator) == 24);
+  static_assert(sizeof(FunctionCall) == 64);
 }
 
-ezExpressionAST::~ezExpressionAST() {}
+ezExpressionAST::~ezExpressionAST() = default;
 
-ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum returnType /*= DataType::Unknown*/)
+const ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::Enum type, const Node* pOperand, DataType::Enum returnType /*= DataType::Unknown*/)
 {
   EZ_ASSERT_DEBUG(NodeType::IsUnary(type), "Type '{}' is not an unary operator", NodeType::GetName(type));
 
@@ -377,7 +381,7 @@ ezExpressionAST::UnaryOperator* ezExpressionAST::CreateUnaryOperator(NodeType::E
   return pUnaryOperator;
 }
 
-ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand)
+const ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType::Enum type, const Node* pLeftOperand, const Node* pRightOperand)
 {
   EZ_ASSERT_DEBUG(NodeType::IsBinary(type), "Type '{}' is not a binary operator", NodeType::GetName(type));
 
@@ -392,7 +396,7 @@ ezExpressionAST::BinaryOperator* ezExpressionAST::CreateBinaryOperator(NodeType:
   return pBinaryOperator;
 }
 
-ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand)
+const ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeType::Enum type, const Node* pFirstOperand, const Node* pSecondOperand, const Node* pThirdOperand)
 {
   EZ_ASSERT_DEBUG(NodeType::IsTernary(type), "Type '{}' is not a ternary operator", NodeType::GetName(type));
 
@@ -408,7 +412,7 @@ ezExpressionAST::TernaryOperator* ezExpressionAST::CreateTernaryOperator(NodeTyp
   return pTernaryOperator;
 }
 
-ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& value, DataType::Enum dataType /*= DataType::Float*/)
+const ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& value, DataType::Enum dataType /*= DataType::Float*/)
 {
   ezVariantType::Enum variantType = DataType::GetVariantType(dataType);
   EZ_ASSERT_DEV(variantType != ezVariantType::Invalid, "Invalid constant type '{}'", DataType::GetName(dataType));
@@ -423,7 +427,7 @@ ezExpressionAST::Constant* ezExpressionAST::CreateConstant(const ezVariant& valu
   return pConstant;
 }
 
-ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezExpression::StreamDesc& desc)
+const ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezExpression::StreamDesc& desc)
 {
   auto pInput = EZ_NEW(&m_Allocator, Input);
   pInput->m_Type = NodeType::Input;
@@ -433,7 +437,7 @@ ezExpressionAST::Input* ezExpressionAST::CreateInput(const ezExpression::StreamD
   return pInput;
 }
 
-ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression)
+const ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::StreamDesc& desc, const Node* pExpression)
 {
   auto pOutput = EZ_NEW(&m_Allocator, Output);
   pOutput->m_Type = NodeType::Output;
@@ -444,12 +448,12 @@ ezExpressionAST::Output* ezExpressionAST::CreateOutput(const ezExpression::Strea
   return pOutput;
 }
 
-ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpression::FunctionDesc& desc)
+const ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(const ezExpression::FunctionDesc& desc, ezSmallArray<const Node*, 4>&& arguments)
 {
-  return CreateFunctionCall(ezMakeArrayPtr(&desc, 1));
+  return CreateFunctionCall(ezMakeArrayPtr(&desc, 1), std::move(arguments));
 }
 
-ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs)
+const ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs, ezSmallArray<const Node*, 4>&& arguments)
 {
   auto pFunctionCall = EZ_NEW(&m_Allocator, FunctionCall);
   pFunctionCall->m_Type = NodeType::FunctionCall;
@@ -462,57 +466,21 @@ ezExpressionAST::FunctionCall* ezExpressionAST::CreateFunctionCall(ezArrayPtr<co
     pFunctionCall->m_Descs.PushBack(&it.Key());
   }
 
+  pFunctionCall->m_Arguments = std::move(arguments);
+
   return pFunctionCall;
 }
 
-ezExpressionAST::ConstructorCall* ezExpressionAST::CreateConstructorCall(DataType::Enum dataType)
+const ezExpressionAST::ConstructorCall* ezExpressionAST::CreateConstructorCall(DataType::Enum dataType, ezSmallArray<const Node*, 4>&& arguments)
 {
   EZ_ASSERT_DEV(dataType >= DataType::Bool, "Invalid data type for constructor");
 
   auto pConstructorCall = EZ_NEW(&m_Allocator, ConstructorCall);
   pConstructorCall->m_Type = NodeType::ConstructorCall;
   pConstructorCall->m_ReturnType = dataType;
+  pConstructorCall->m_Arguments = std::move(arguments);
 
   return pConstructorCall;
-}
-
-// static
-ezArrayPtr<ezExpressionAST::Node*> ezExpressionAST::GetChildren(Node* pNode)
-{
-  NodeType::Enum nodeType = pNode->m_Type;
-  if (NodeType::IsUnary(nodeType))
-  {
-    auto& pChild = static_cast<UnaryOperator*>(pNode)->m_pOperand;
-    return ezMakeArrayPtr(&pChild, 1);
-  }
-  else if (NodeType::IsBinary(nodeType))
-  {
-    auto& pChildren = static_cast<BinaryOperator*>(pNode)->m_pLeftOperand;
-    return ezMakeArrayPtr(&pChildren, 2);
-  }
-  else if (NodeType::IsTernary(nodeType))
-  {
-    auto& pChildren = static_cast<TernaryOperator*>(pNode)->m_pFirstOperand;
-    return ezMakeArrayPtr(&pChildren, 3);
-  }
-  else if (NodeType::IsOutput(nodeType))
-  {
-    auto& pChild = static_cast<Output*>(pNode)->m_pExpression;
-    return ezMakeArrayPtr(&pChild, 1);
-  }
-  else if (NodeType::IsFunctionCall(nodeType))
-  {
-    auto& args = static_cast<FunctionCall*>(pNode)->m_Arguments;
-    return args;
-  }
-  else if (NodeType::IsConstructorCall(nodeType))
-  {
-    auto& args = static_cast<ConstructorCall*>(pNode)->m_Arguments;
-    return args;
-  }
-
-  EZ_ASSERT_DEV(NodeType::IsInput(nodeType) || NodeType::IsConstant(nodeType), "Unknown node type");
-  return ezArrayPtr<Node*>();
 }
 
 // static
@@ -541,13 +509,11 @@ ezArrayPtr<const ezExpressionAST::Node*> ezExpressionAST::GetChildren(const Node
   }
   else if (NodeType::IsFunctionCall(nodeType))
   {
-    auto& args = static_cast<const FunctionCall*>(pNode)->m_Arguments;
-    return ezArrayPtr<const Node*>((const Node**)args.GetData(), args.GetCount());
+    return static_cast<const FunctionCall*>(pNode)->m_Arguments.GetArrayPtr();
   }
   else if (NodeType::IsConstructorCall(nodeType))
   {
-    auto& args = static_cast<const ConstructorCall*>(pNode)->m_Arguments;
-    return ezArrayPtr<const Node*>((const Node**)args.GetData(), args.GetCount());
+    return static_cast<const ConstructorCall*>(pNode)->m_Arguments.GetArrayPtr();
   }
 
   EZ_ASSERT_DEV(NodeType::IsInput(nodeType) || NodeType::IsConstant(nodeType), "Unknown node type");
@@ -622,7 +588,7 @@ void ezExpressionAST::ResolveOverloads(Node* pNode)
   }
 }
 
-ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex)
+ezExpressionAST::DataType::Enum ezExpressionAST::GetExpectedChildDataType(const Node* pNode, ezUInt32 uiChildIndex)
 {
   const NodeType::Enum nodeType = pNode->m_Type;
   const DataType::Enum returnType = pNode->m_ReturnType;

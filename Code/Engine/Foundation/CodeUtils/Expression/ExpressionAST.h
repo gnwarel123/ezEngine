@@ -10,7 +10,7 @@ class EZ_FOUNDATION_DLL ezExpressionAST
 public:
   struct NodeType
   {
-    using StorageType = ezUInt32;
+    using StorageType = ezUInt8;
 
     enum Enum
     {
@@ -157,24 +157,26 @@ public:
     ezEnum<DataType> m_ReturnType;
     ezUInt8 m_uiOverloadIndex = 0xFF;
     ezUInt8 m_uiNumElements = 0;
+
+    ezUInt32 m_uiHash = 0;
   };
 
   struct UnaryOperator : public Node
   {
-    Node* m_pOperand = nullptr;
+    const Node* m_pOperand = nullptr;
   };
 
   struct BinaryOperator : public Node
   {
-    Node* m_pLeftOperand = nullptr;
-    Node* m_pRightOperand = nullptr;
+    const Node* m_pLeftOperand = nullptr;
+    const Node* m_pRightOperand = nullptr;
   };
 
   struct TernaryOperator : public Node
   {
-    Node* m_pFirstOperand = nullptr;
-    Node* m_pSecondOperand = nullptr;
-    Node* m_pThirdOperand = nullptr;
+    const Node* m_pFirstOperand = nullptr;
+    const Node* m_pSecondOperand = nullptr;
+    const Node* m_pThirdOperand = nullptr;
   };
 
   struct Constant : public Node
@@ -190,51 +192,50 @@ public:
   struct Output : public Node
   {
     ezExpression::StreamDesc m_Desc;
-    Node* m_pExpression = nullptr;
+    const Node* m_pExpression = nullptr;
   };
 
   struct FunctionCall : public Node
   {
     ezSmallArray<const ezExpression::FunctionDesc*, 1> m_Descs;
-    ezSmallArray<Node*, 8> m_Arguments;
+    ezSmallArray<const Node*, 4> m_Arguments;
   };
 
   struct ConstructorCall : public Node
   {
-    ezSmallArray<Node*, 4> m_Arguments;
+    ezSmallArray<const Node*, 4> m_Arguments;
   };
 
 public:
   ezExpressionAST();
   ~ezExpressionAST();
 
-  UnaryOperator* CreateUnaryOperator(NodeType::Enum type, Node* pOperand, DataType::Enum returnType = DataType::Unknown);
-  BinaryOperator* CreateBinaryOperator(NodeType::Enum type, Node* pLeftOperand, Node* pRightOperand);
-  TernaryOperator* CreateTernaryOperator(NodeType::Enum type, Node* pFirstOperand, Node* pSecondOperand, Node* pThirdOperand);
-  Constant* CreateConstant(const ezVariant& value, DataType::Enum dataType = DataType::Float);
-  Input* CreateInput(const ezExpression::StreamDesc& desc);
-  Output* CreateOutput(const ezExpression::StreamDesc& desc, Node* pExpression);
-  FunctionCall* CreateFunctionCall(const ezExpression::FunctionDesc& desc);
-  FunctionCall* CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs);
-  ConstructorCall* CreateConstructorCall(DataType::Enum dataType);
+  const UnaryOperator* CreateUnaryOperator(NodeType::Enum type, const Node* pOperand, DataType::Enum returnType = DataType::Unknown);
+  const BinaryOperator* CreateBinaryOperator(NodeType::Enum type, const Node* pLeftOperand, const Node* pRightOperand);
+  const TernaryOperator* CreateTernaryOperator(NodeType::Enum type, const Node* pFirstOperand, const Node* pSecondOperand, const Node* pThirdOperand);
+  const Constant* CreateConstant(const ezVariant& value, DataType::Enum dataType = DataType::Float);
+  const Input* CreateInput(const ezExpression::StreamDesc& desc);
+  const Output* CreateOutput(const ezExpression::StreamDesc& desc, const Node* pExpression);
+  const FunctionCall* CreateFunctionCall(const ezExpression::FunctionDesc& desc, ezSmallArray<const Node*, 4>&& arguments);
+  const FunctionCall* CreateFunctionCall(ezArrayPtr<const ezExpression::FunctionDesc> descs, ezSmallArray<const Node*, 4>&& arguments);
+  const ConstructorCall* CreateConstructorCall(DataType::Enum dataType, ezSmallArray<const Node*, 4>&& arguments);
 
-  static ezArrayPtr<Node*> GetChildren(Node* pNode);
   static ezArrayPtr<const Node*> GetChildren(const Node* pNode);
-
-  static void ResolveOverloads(Node* pNode);
-  static DataType::Enum GetExpectedChildDataType(Node* pNode, ezUInt32 uiChildIndex);
 
   void PrintGraph(ezDGMLGraph& graph) const;
 
-  ezHybridArray<Output*, 8> m_OutputNodes;
+  ezHybridArray<const Output*, 8> m_OutputNodes;
 
   // Transforms
-  Node* TypeDeductionAndConversion(Node* pNode);
-  Node* ReplaceUnsupportedInstructions(Node* pNode);
-  Node* FoldConstants(Node* pNode);
-  Node* Validate(Node* pNode);
+  const Node* InsertTypeConversions(const Node* pNode);
+  const Node* ReplaceUnsupportedInstructions(const Node* pNode);
+  const Node* FoldConstants(const Node* pNode);
+  const Node* Validate(const Node* pNode);
 
 private:
+  static void ResolveOverloads(Node* pNode);
+  static DataType::Enum GetExpectedChildDataType(const Node* pNode, ezUInt32 uiChildIndex);
+
   ezStackAllocator<> m_Allocator;
 
   ezSet<ezExpression::FunctionDesc> m_FunctionDescs;

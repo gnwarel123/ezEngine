@@ -30,15 +30,15 @@ private:
   ezResult ParseVariableDefinition(ezEnum<ezExpressionAST::DataType> type);
   ezResult ParseAssignment();
 
-  ezExpressionAST::Node* ParseFactor();
-  ezExpressionAST::Node* ParseExpression(int iPrecedence = s_iLowestPrecedence);
-  ezExpressionAST::Node* ParseUnaryExpression();
-  ezExpressionAST::Node* ParseFunctionCall(ezStringView sFunctionName);
+  const ezExpressionAST::Node* ParseFactor();
+  const ezExpressionAST::Node* ParseExpression(int iPrecedence = s_iLowestPrecedence);
+  const ezExpressionAST::Node* ParseUnaryExpression();
+  const ezExpressionAST::Node* ParseFunctionCall(ezStringView sFunctionName);
 
   bool AcceptStatementTerminator();
   bool AcceptOperator(ezStringView sName);
   bool AcceptBinaryOperator(ezExpressionAST::NodeType::Enum& out_binaryOp, int& out_iOperatorPrecedence, ezUInt32& out_uiOperatorLength);
-  ezExpressionAST::Node* GetVariable(ezStringView sVarName);
+  const ezExpressionAST::Node* GetVariable(ezStringView sVarName);
 
   ezResult Expect(const char* szToken, const ezToken** pExpectedToken = nullptr);
   ezResult Expect(ezTokenType::Enum Type, const ezToken** pExpectedToken = nullptr);
@@ -60,7 +60,7 @@ private:
   {
     EZ_DECLARE_POD_TYPE();
 
-    ezExpressionAST::Node* m_pNode = nullptr;
+    const ezExpressionAST::Node* m_pNode = nullptr;
     ezEnum<ezExpressionAST::DataType> m_Type;
   };
 

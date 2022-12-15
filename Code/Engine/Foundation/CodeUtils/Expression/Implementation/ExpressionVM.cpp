@@ -324,7 +324,8 @@ ezResult ezExpressionVM::MapFunctions(ezArrayPtr<const ezExpression::FunctionDes
 #define DEFINE_OP_REGISTER(name) \
   const ezExpression::Register* name = pRegisters + ezExpressionByteCode::GetRegisterIndex(pByteCode) * uiNumSimd4Instances;
 
-#define DEFINE_CONSTANT(name) \
+#define DEFINE_CONSTANT(name)                         \
+  const ezUInt32 EZ_CONCAT(name, Raw) = *pByteCode; \
   const ezExpression::Register name = ezExpressionByteCode::GetConstant(pByteCode);
 
 #define BEGIN_OP_LOOP() \
@@ -351,7 +352,7 @@ ezResult ezExpressionVM::MapFunctions(ezArrayPtr<const ezExpression::FunctionDes
 
 #define END_OP_LOOP_BINARY_C() \
   ++r;                         \
-  ++b;                         \
+  ++a;                         \
   }                            \
   break;
 
@@ -536,69 +537,79 @@ ezResult ezExpressionVM::ExecuteBinaryWithConstantOp(const ezExpressionByteCode:
   ezExpression::Register* pRegisters = m_Registers.GetData();
 
   DEFINE_TARGET_REGISTER();
-  DEFINE_CONSTANT(a);
-  DEFINE_OP_REGISTER(b);
+  DEFINE_OP_REGISTER(a);
+  DEFINE_CONSTANT(b);
 
   switch (opCode)
   {
-    case ezExpressionByteCode::OpCode::AddF_CR:
+    case ezExpressionByteCode::OpCode::AddF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f + b->f;
+      r->f = a->f + b.f;
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::AddI_CR:
+    case ezExpressionByteCode::OpCode::AddI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i + b->i;
+      r->i = a->i + b.i;
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::SubF_CR:
+    case ezExpressionByteCode::OpCode::SubF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f - b->f;
+      r->f = a->f - b.f;
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::SubI_CR:
+    case ezExpressionByteCode::OpCode::SubI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i - b->i;
+      r->i = a->i - b.i;
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MulF_CR:
+    case ezExpressionByteCode::OpCode::MulF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f.CompMul(b->f);
+      r->f = a->f.CompMul(b.f);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MulI_CR:
+    case ezExpressionByteCode::OpCode::MulI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i.CompMul(b->i);
+      r->i = a->i.CompMul(b.i);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::DivF_CR:
+    case ezExpressionByteCode::OpCode::DivF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f.CompDiv(b->f);
+      r->f = a->f.CompDiv(b.f);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::DivI_CR:
+    case ezExpressionByteCode::OpCode::DivI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i.CompDiv(b->i);
+      r->i = a->i.CompDiv(b.i);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MinF_CR:
+    case ezExpressionByteCode::OpCode::MinF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f.CompMin(b->f);
+      r->f = a->f.CompMin(b.f);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MinI_CR:
+    case ezExpressionByteCode::OpCode::MinI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i.CompMin(b->i);
+      r->i = a->i.CompMin(b.i);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MaxF_CR:
+    case ezExpressionByteCode::OpCode::MaxF_RC:
       BEGIN_OP_LOOP();
-      r->f = a.f.CompMax(b->f);
+      r->f = a->f.CompMax(b.f);
       END_OP_LOOP_BINARY_C();
 
-    case ezExpressionByteCode::OpCode::MaxI_CR:
+    case ezExpressionByteCode::OpCode::MaxI_RC:
       BEGIN_OP_LOOP();
-      r->i = a.i.CompMax(b->i);
+      r->i = a->i.CompMax(b.i);
+      END_OP_LOOP_BINARY_C();
+
+    case ezExpressionByteCode::OpCode::ShlI_RC:
+      BEGIN_OP_LOOP();
+      r->i = a->i << bRaw;
+      END_OP_LOOP_BINARY_C();
+
+    case ezExpressionByteCode::OpCode::ShrI_RC:
+      BEGIN_OP_LOOP();
+      r->i = a->i >> bRaw;
       END_OP_LOOP_BINARY_C();
 
     default:

@@ -21,16 +21,16 @@ private:
   ezResult GenerateByteCode(const ezExpressionAST& ast, ezExpressionByteCode& out_byteCode);
   ezResult GenerateConstantByteCode(const ezExpressionAST::Constant* pConstant, ezExpressionByteCode& out_byteCode);
 
-  using TransformFunc = ezDelegate<ezExpressionAST::Node*(ezExpressionAST::Node*)>;
+  using TransformFunc = ezDelegate<const ezExpressionAST::Node*(const ezExpressionAST::Node*)>;
   ezResult TransformASTPreOrder(ezExpressionAST& ast, TransformFunc func);
   ezResult TransformASTPostOrder(ezExpressionAST& ast, TransformFunc func);
-  ezResult TransformNode(ezExpressionAST::Node*& pNode, TransformFunc func);
-  ezResult TransformOutputNode(ezExpressionAST::Output*& pOutputNode, TransformFunc func);
+  ezResult TransformNode(const ezExpressionAST::Node*& pNode, TransformFunc func);
+  ezResult TransformOutputNode(const ezExpressionAST::Output*& pOutputNode, TransformFunc func);
 
-  ezHybridArray<ezExpressionAST::Node*, 64> m_NodeStack;
-  ezHybridArray<ezExpressionAST::Node*, 64> m_NodeInstructions;
+  ezHybridArray<const ezExpressionAST::Node*, 64> m_NodeStack;
+  ezHybridArray<const ezExpressionAST::Node*, 64> m_NodeInstructions;
   ezHashTable<const ezExpressionAST::Node*, ezUInt32> m_NodeToRegisterIndex;
-  ezHashTable<ezExpressionAST::Node*, ezExpressionAST::Node*> m_TransformCache;
+  ezHashTable<const ezExpressionAST::Node*, const ezExpressionAST::Node*> m_TransformCache;
 
   ezHashTable<ezHashedString, ezUInt32> m_InputToIndex;
   ezHashTable<ezHashedString, ezUInt32> m_OutputToIndex;

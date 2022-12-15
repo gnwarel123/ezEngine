@@ -3,19 +3,14 @@
 #include <Foundation/CodeUtils/Expression/ExpressionAST.h>
 #include <Foundation/Logging/Log.h>
 
-ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
+const ezExpressionAST::Node* ezExpressionAST::InsertTypeConversions(const Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
   DataType::Enum returnType = pNode->m_ReturnType;
   if (returnType == DataType::Unknown)
   {
-    ResolveOverloads(pNode);
-
-    if (returnType == DataType::Unknown)
-    {
-      ezLog::Error("No matching overload found for '{}'", NodeType::GetName(nodeType));
-      return nullptr;
-    }
+    ezLog::Error("No matching overload found for '{}'", NodeType::GetName(nodeType));
+    return nullptr;
   }
 
   auto children = GetChildren(pNode);
@@ -38,7 +33,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
   return pNode;
 }
 
-ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNode)
+const ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(const Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
   DataType::Enum returnType = pNode->m_ReturnType;
@@ -47,7 +42,7 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
     if (NodeType::IsConstant(pUnaryNode->m_pOperand->m_Type))
     {
-      auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
+      auto pConstantNode = static_cast<const Constant*>(pUnaryNode->m_pOperand);
       const double fValue = pConstantNode->m_Value.ConvertTo<double>();
       return CreateConstant(-fValue, returnType);
     }
@@ -63,7 +58,7 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
     if (NodeType::IsConstant(pUnaryNode->m_pOperand->m_Type))
     {
-      auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
+      auto pConstantNode = static_cast<const Constant*>(pUnaryNode->m_pOperand);
       const double fValue = pConstantNode->m_Value.ConvertTo<double>();
       return CreateConstant(ezMath::Saturate(fValue), returnType);
     }
@@ -80,9 +75,18 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
     if (returnType == DataType::Int)
     {
-      auto pOne = CreateConstant(1, returnType);
-      auto pValue = pUnaryNode->m_pOperand;
-      return CreateBinaryOperator(NodeType::BitshiftLeft, pOne, pValue);
+      if (NodeType::IsConstant(pUnaryNode->m_pOperand->m_Type))
+      {
+        auto pConstantNode = static_cast<const Constant*>(pUnaryNode->m_pOperand);
+        const int iValue = pConstantNode->m_Value.Get<int>();
+        return CreateConstant(ezMath::Pow2(iValue), returnType);
+      }
+      else
+      {
+        auto pOne = CreateConstant(1, returnType);
+        auto pValue = pUnaryNode->m_pOperand;
+        return CreateBinaryOperator(NodeType::BitshiftLeft, pOne, pValue);
+      }
     }
   }
   else if (nodeType == NodeType::Clamp)
@@ -110,7 +114,7 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
 
 //////////////////////////////////////////////////////////////////////////
 
-ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
+const ezExpressionAST::Node* ezExpressionAST::FoldConstants(const Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
   DataType::Enum returnType = pNode->m_ReturnType;
@@ -119,7 +123,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
     auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
     if (NodeType::IsConstant(pUnaryNode->m_pOperand->m_Type))
     {
-      auto pConstantNode = static_cast<Constant*>(pUnaryNode->m_pOperand);
+      auto pConstantNode = static_cast<const Constant*>(pUnaryNode->m_pOperand);
       if (nodeType == NodeType::TypeConversion)
       {
         return CreateConstant(pConstantNode->m_Value, returnType);
@@ -260,7 +264,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
     else if (bRightIsConstant)
     {
       auto pOperand = pBinaryNode->m_pLeftOperand;
-      auto pConstantNode = static_cast<Constant*>(pBinaryNode->m_pRightOperand);
+      auto pConstantNode = static_cast<const Constant*>(pBinaryNode->m_pRightOperand);
       if (nodeType != NodeType::Divide)
       {
         const double fValue = pConstantNode->m_Value.ConvertTo<double>();
@@ -297,7 +301,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
     {
       if (NodeType::IsConstant(pTernaryNode->m_pFirstOperand->m_Type))
       {
-        auto pConstantNode = static_cast<Constant*>(pTernaryNode->m_pFirstOperand);
+        auto pConstantNode = static_cast<const Constant*>(pTernaryNode->m_pFirstOperand);
         const bool bValue = pConstantNode->m_Value.Get<bool>();
         return bValue ? pTernaryNode->m_pSecondOperand : pTernaryNode->m_pThirdOperand;
       }
@@ -310,7 +314,7 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
   return pNode;
 }
 
-ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
+const ezExpressionAST::Node* ezExpressionAST::Validate(const Node* pNode)
 {
   NodeType::Enum nodeType = pNode->m_Type;
 
@@ -330,7 +334,7 @@ ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
   }
   else if (NodeType::IsConstant(nodeType))
   {
-    auto pConstantNode = static_cast<Constant*>(pNode);
+    auto pConstantNode = static_cast<const Constant*>(pNode);
     if (pConstantNode->m_Value.IsValid() == false)
     {
       ezLog::Error("Invalid constant value");
@@ -345,7 +349,7 @@ ezExpressionAST::Node* ezExpressionAST::Validate(Node* pNode)
       return nullptr;
     }
 
-    auto pFunctionCall = static_cast<FunctionCall*>(pNode);
+    auto pFunctionCall = static_cast<const FunctionCall*>(pNode);
     auto pDesc = pFunctionCall->m_Descs[pNode->m_uiOverloadIndex];
     if (pFunctionCall->m_Arguments.GetCount() < pDesc->m_uiNumRequiredInputs)
     {
