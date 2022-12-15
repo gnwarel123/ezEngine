@@ -20,6 +20,7 @@ namespace
     "ExpF_R",
     "LnF_R",
     "Log2F_R",
+    "Log2I_R",
     "Log10F_R",
     "Pow2F_R",
 

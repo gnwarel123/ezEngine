@@ -28,7 +28,7 @@ ezExpressionAST::Node* ezExpressionAST::TypeDeductionAndConversion(Node* pNode)
     }
 
     DataType::Enum expectedChildDataType = GetExpectedChildDataType(pNode, i);
-    
+
     if (expectedChildDataType != DataType::Unknown && pChildNode->m_ReturnType != expectedChildDataType)
     {
       pChildNode = CreateUnaryOperator(NodeType::TypeConversion, pChildNode, expectedChildDataType);
@@ -71,8 +71,18 @@ ezExpressionAST::Node* ezExpressionAST::ReplaceUnsupportedInstructions(Node* pNo
     {
       auto pZero = CreateConstant(0, returnType);
       auto pOne = CreateConstant(1, returnType);
-      auto pValue = static_cast<const UnaryOperator*>(pNode)->m_pOperand;
+      auto pValue = pUnaryNode->m_pOperand;
       return CreateBinaryOperator(NodeType::Max, pZero, CreateBinaryOperator(NodeType::Min, pOne, pValue));
+    }
+  }
+  else if (nodeType == NodeType::Pow2)
+  {
+    auto pUnaryNode = static_cast<const UnaryOperator*>(pNode);
+    if (returnType == DataType::Int)
+    {
+      auto pOne = CreateConstant(1, returnType);
+      auto pValue = pUnaryNode->m_pOperand;
+      return CreateBinaryOperator(NodeType::BitshiftLeft, pOne, pValue);
     }
   }
   else if (nodeType == NodeType::Clamp)
@@ -114,38 +124,67 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
       {
         return CreateConstant(pConstantNode->m_Value, returnType);
       }
-      else if (nodeType >= NodeType::Negate && nodeType <= NodeType::Saturate)
+
+      if (returnType == DataType::Bool)
       {
-        const double fValue = pConstantNode->m_Value.ConvertTo<double>();
+        const bool bValue = pConstantNode->m_Value.Get<bool>();
+
+        switch (nodeType)
+        {
+          case NodeType::LogicalNot:
+            return CreateConstant(!bValue, returnType);
+          default:
+            EZ_ASSERT_NOT_IMPLEMENTED;
+            return pNode;
+        }
+      }
+      else if (returnType == DataType::Int)
+      {
+        const int iValue = pConstantNode->m_Value.Get<int>();
 
         switch (nodeType)
         {
           case NodeType::Negate:
-            return CreateConstant(-fValue, returnType);
+            return CreateConstant(-iValue, returnType);
           case NodeType::Absolute:
-            return CreateConstant(ezMath::Abs(fValue), returnType);
+            return CreateConstant(ezMath::Abs(iValue), returnType);
           case NodeType::Saturate:
-            return CreateConstant(ezMath::Saturate(fValue), returnType);
+            return CreateConstant(ezMath::Saturate(iValue), returnType);
+          case NodeType::Log2:
+            return CreateConstant(ezMath::Log2i(iValue), returnType);
+          case NodeType::Pow2:
+            return CreateConstant(ezMath::Pow2(iValue), returnType);
+          case NodeType::BitwiseNot:
+            return CreateConstant(~iValue, returnType);
+          default:
+            EZ_ASSERT_NOT_IMPLEMENTED;
+            return pNode;
         }
       }
-      else
+      else if (returnType == DataType::Float)
       {
-        if (returnType != DataType::Float)
-        {
-          ezLog::Error("Unsupported data type '{}' for trig function '{}'", DataType::GetName(returnType), NodeType::GetName(nodeType));
-          return nullptr;
-        }
-
         const float fValue = pConstantNode->m_Value.Get<float>();
 
         switch (nodeType)
         {
+          case NodeType::Negate:
+            return CreateConstant(-fValue);
+          case NodeType::Absolute:
+            return CreateConstant(ezMath::Abs(fValue));
+          case NodeType::Saturate:
+            return CreateConstant(ezMath::Saturate(fValue));
           case NodeType::Sqrt:
             return CreateConstant(ezMath::Sqrt(fValue));
           case NodeType::Exp:
             return CreateConstant(ezMath::Exp(fValue));
           case NodeType::Ln:
             return CreateConstant(ezMath::Ln(fValue));
+          case NodeType::Log2:
+            return CreateConstant(ezMath::Log2(fValue));
+          case NodeType::Log10:
+            return CreateConstant(ezMath::Log10(fValue));
+          case NodeType::Pow2:
+            return CreateConstant(ezMath::Pow2(fValue));
           case NodeType::Sin:
             return CreateConstant(ezMath::Sin(ezAngle::Radian(fValue)));
           case NodeType::Cos:
@@ -158,7 +197,6 @@ ezExpressionAST::Node* ezExpressionAST::FoldConstants(Node* pNode)
             return CreateConstant(ezMath::ACos(fValue).GetRadian());
           case NodeType::ATan:
             return CreateConstant(ezMath::ATan(fValue).GetRadian());
-
           default:
             EZ_ASSERT_NOT_IMPLEMENTED;
             return pNode;

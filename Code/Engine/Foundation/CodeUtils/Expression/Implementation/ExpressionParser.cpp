@@ -149,6 +149,10 @@ void ezExpressionParser::RegisterBuiltinFunctions()
   m_BuiltinFunctions.Insert(ezMakeHashedString("asin"), ezExpressionAST::NodeType::ASin);
   m_BuiltinFunctions.Insert(ezMakeHashedString("acos"), ezExpressionAST::NodeType::ACos);
   m_BuiltinFunctions.Insert(ezMakeHashedString("atan"), ezExpressionAST::NodeType::ATan);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("radToDeg"), ezExpressionAST::NodeType::RadToDeg);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("rad_to_deg"), ezExpressionAST::NodeType::RadToDeg);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("degToRad"), ezExpressionAST::NodeType::DegToRad);
+  m_BuiltinFunctions.Insert(ezMakeHashedString("deg_to_rad"), ezExpressionAST::NodeType::DegToRad);
   m_BuiltinFunctions.Insert(ezMakeHashedString("round"), ezExpressionAST::NodeType::Round);
   m_BuiltinFunctions.Insert(ezMakeHashedString("floor"), ezExpressionAST::NodeType::Floor);
   m_BuiltinFunctions.Insert(ezMakeHashedString("ceil"), ezExpressionAST::NodeType::Ceil);

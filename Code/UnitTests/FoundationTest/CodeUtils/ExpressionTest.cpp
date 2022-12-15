@@ -233,6 +233,34 @@ EZ_CREATE_SIMPLE_TEST(CodeUtils, Expression)
     EZ_TEST_FLOAT(TestInstruction("output = ln(a)", 2.0f), ezMath::Ln(2.0f), ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = ln(1.0)"), 0.0f, ezMath::DefaultEpsilon<float>());
     EZ_TEST_FLOAT(TestConstant<float>("output = ln(2.0)"), ezMath::Ln(2.0f), ezMath::DefaultEpsilon<float>());
+
+    // Log2
+    EZ_TEST_INT(TestInstruction("output = log2(a)", 1), 0);
+    EZ_TEST_INT(TestInstruction("output = log2(a)", 8), 3);
+    EZ_TEST_FLOAT(TestInstruction("output = log2(a)", 1.0f), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = log2(a)", 4.0f), 2.0f, ezMath::DefaultEpsilon<float>());
+
+    EZ_TEST_INT(TestConstant<int>("output = log2(1)"), 0);
+    EZ_TEST_INT(TestConstant<int>("output = log2(16)"), 4);
+    EZ_TEST_FLOAT(TestConstant<float>("output = log2(1.0)"), 0.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = log2(32.0)"), 5.0f, ezMath::DefaultEpsilon<float>());
+
+    // Log10
+    EZ_TEST_FLOAT(TestInstruction("output = log10(a)", 10.0f), 1.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = log10(a)", 1000.0f), 3.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = log10(10.0)"), 1.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = log10(100.0)"), 2.0f, ezMath::DefaultEpsilon<float>());
+
+    // Pow2
+    EZ_TEST_INT(TestInstruction("output = pow2(a)", 0), 1);
+    EZ_TEST_INT(TestInstruction("output = pow2(a)", 3), 8);
+    EZ_TEST_FLOAT(TestInstruction("output = pow2(a)", 4.0f), 16.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestInstruction("output = pow2(a)", 6.0f), 64.0f, ezMath::DefaultEpsilon<float>());
+
+    EZ_TEST_INT(TestConstant<int>("output = pow2(0)"), 1);
+    EZ_TEST_INT(TestConstant<int>("output = pow2(3)"), 8);
+    EZ_TEST_FLOAT(TestConstant<float>("output = pow2(3.0)"), 8.0f, ezMath::DefaultEpsilon<float>());
+    EZ_TEST_FLOAT(TestConstant<float>("output = pow2(5.0)"), 32.0f, ezMath::DefaultEpsilon<float>());
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Local variables")

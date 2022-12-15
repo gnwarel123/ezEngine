@@ -394,6 +394,11 @@ ezResult ezExpressionVM::ExecuteUnaryOp(const ezExpressionByteCode::StorageType*
       r->f = ezSimdMath::Log2(a->f);
       END_OP_LOOP_UNARY();
 
+    case ezExpressionByteCode::OpCode::Log2I_R:
+      BEGIN_OP_LOOP();
+      r->i = ezSimdMath::Log2i(a->i);
+      END_OP_LOOP_UNARY();
+
     case ezExpressionByteCode::OpCode::Log10F_R:
       BEGIN_OP_LOOP();
       r->f = ezSimdMath::Log10(a->f);

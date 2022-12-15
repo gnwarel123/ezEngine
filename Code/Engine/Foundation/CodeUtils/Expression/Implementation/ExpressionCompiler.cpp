@@ -23,7 +23,7 @@ namespace
       case ezExpressionAST::NodeType::Ln:
         return ezExpressionByteCode::OpCode::LnF_R;
       case ezExpressionAST::NodeType::Log2:
-        return ezExpressionByteCode::OpCode::Log2F_R;
+        return registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::Log2F_R : ezExpressionByteCode::OpCode::Log2I_R;
       case ezExpressionAST::NodeType::Log10:
         return ezExpressionByteCode::OpCode::Log10F_R;
       case ezExpressionAST::NodeType::Pow2:
@@ -54,10 +54,23 @@ namespace
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::MulF_RR : ezExpressionByteCode::OpCode::MulI_RR) + uiOffset);
       case ezExpressionAST::NodeType::Divide:
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::DivF_RR : ezExpressionByteCode::OpCode::DivI_RR) + uiOffset);
+      case ezExpressionAST::NodeType::Modulo:
+        EZ_ASSERT_NOT_IMPLEMENTED;
+        return ezExpressionByteCode::OpCode::Nop;
       case ezExpressionAST::NodeType::Min:
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::MinF_RR : ezExpressionByteCode::OpCode::MinI_RR) + uiOffset);
       case ezExpressionAST::NodeType::Max:
         return static_cast<ezExpressionByteCode::OpCode::Enum>((registerType == ezExpression::RegisterType::Float ? ezExpressionByteCode::OpCode::MaxF_RR : ezExpressionByteCode::OpCode::MaxI_RR) + uiOffset);
+      case ezExpressionAST::NodeType::BitshiftLeft:
+        return static_cast<ezExpressionByteCode::OpCode::Enum>(ezExpressionByteCode::OpCode::ShlI_RR + uiOffset);
+      case ezExpressionAST::NodeType::BitshiftRight:
+        return static_cast<ezExpressionByteCode::OpCode::Enum>(ezExpressionByteCode::OpCode::ShrI_RR + uiOffset);
+      case ezExpressionAST::NodeType::BitwiseAnd:
+        return static_cast<ezExpressionByteCode::OpCode::Enum>(ezExpressionByteCode::OpCode::AndI_RR + uiOffset);
+      case ezExpressionAST::NodeType::BitwiseXor:
+        return static_cast<ezExpressionByteCode::OpCode::Enum>(ezExpressionByteCode::OpCode::XorI_RR + uiOffset);
+      case ezExpressionAST::NodeType::BitwiseOr:
+        return static_cast<ezExpressionByteCode::OpCode::Enum>(ezExpressionByteCode::OpCode::OrI_RR + uiOffset);
 
       case ezExpressionAST::NodeType::Constant:
         return ezExpressionByteCode::OpCode::MovX_C;

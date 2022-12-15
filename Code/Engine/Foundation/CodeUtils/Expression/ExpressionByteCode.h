@@ -25,6 +25,7 @@ public:
       ExpF_R,
       LnF_R,
       Log2F_R,
+      Log2I_R,
       Log10F_R,
       Pow2F_R,
 
@@ -69,6 +70,12 @@ public:
 
       MaxF_RR,
       MaxI_RR,
+
+      ShlI_RR,
+      ShrI_RR,
+      AndI_RR,
+      XorI_RR,
+      OrI_RR,
 
       LastBinary,
 
