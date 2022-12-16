@@ -119,6 +119,72 @@ ezResult ezStateMachineState_SendMsg::Deserialize(ezStreamReader& stream)
 
 //////////////////////////////////////////////////////////////////////////
 
+// clang-format off
+EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezStateMachineState_SwitchObject, 1, ezRTTIDefaultAllocator<ezStateMachineState_SwitchObject>)
+{
+  EZ_BEGIN_PROPERTIES
+  {
+    EZ_MEMBER_PROPERTY("PathToGroup", m_sGroupPath),
+    EZ_MEMBER_PROPERTY("ObjectToEnable", m_sObjectToEnable),
+    EZ_MEMBER_PROPERTY("DeactivateOthers", m_bDeactivateOthers)->AddAttributes(new ezDefaultValueAttribute(true)),
+  }
+  EZ_END_PROPERTIES;
+}
+EZ_END_DYNAMIC_REFLECTED_TYPE;
+// clang-format on
+
+ezStateMachineState_SwitchObject::ezStateMachineState_SwitchObject(ezStringView sName)
+  : ezStateMachineState(sName)
+{
+}
+
+ezStateMachineState_SwitchObject::~ezStateMachineState_SwitchObject() = default;
+
+void ezStateMachineState_SwitchObject::OnEnter(ezStateMachineInstance& instance, void* pInstanceData, const ezStateMachineState* pFromState) const
+{
+  ezHashedString sFromState = (pFromState != nullptr) ? pFromState->GetNameHashed() : ezHashedString();
+
+  if (auto pOwner = ezDynamicCast<ezStateMachineComponent*>(&instance.GetOwner()))
+  {
+    if (ezGameObject* pOwnerGO = pOwner->GetOwner()->FindChildByPath(m_sGroupPath))
+    {
+      for (auto it = pOwnerGO->GetChildren(); it.IsValid(); ++it)
+      {
+        if (it->GetName() == m_sObjectToEnable)
+        {
+          it->SetActiveFlag(true);
+        }
+        else if (m_bDeactivateOthers)
+        {
+          it->SetActiveFlag(false);
+        }
+      }
+    }
+  }
+}
+
+ezResult ezStateMachineState_SwitchObject::Serialize(ezStreamWriter& stream) const
+{
+  EZ_SUCCEED_OR_RETURN(SUPER::Serialize(stream));
+
+  stream << m_sGroupPath;
+  stream << m_sObjectToEnable;
+  stream << m_bDeactivateOthers;
+  return EZ_SUCCESS;
+}
+
+ezResult ezStateMachineState_SwitchObject::Deserialize(ezStreamReader& stream)
+{
+  EZ_SUCCEED_OR_RETURN(SUPER::Deserialize(stream));
+
+  stream >> m_sGroupPath;
+  stream >> m_sObjectToEnable;
+  stream >> m_bDeactivateOthers;
+  return EZ_SUCCESS;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 ezStateMachineComponentManager::ezStateMachineComponentManager(ezWorld* pWorld)
   : ezComponentManager<ComponentType, ezBlockStorageType::Compact>(pWorld)
 {
